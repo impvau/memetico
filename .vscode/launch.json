@@ -1,0 +1,80 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "CFR Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/main",
+            "args": [
+                //"-d", "0.1",
+                //"-f", "4",
+                //"-sd", "0.75",
+                "-s","242478129",
+                "-t", "~/codes/mtbtm/results/data/heating_data/242478129.Train.csv",
+                "-T", "~/codes/mtbtm/results/data/heating_data/242478129.Test.csv",
+                "-lt", "~/codes/mtbtm/results/memetico-cpp/heating_data/"
+                //"-g", "200",
+                //"-ld", "0.2",
+                //"-mr", "0.1",
+                //"-p", "0.35"
+                //"-t", "${workspaceFolder}/TestData/Argon1dx.csv",
+                //"-T", "${workspaceFolder}/TestData/Argon1dx.csv",
+                //"-log", "${workspaceFolder}/Output/Run.log",
+                //"-t", "~/codes/datas/enviro/airfoil.csv",
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "Build Main"
+        },
+        {
+            "name": "CFR Tests",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/main",
+            "args": [
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "Build Tests"
+        },
+        {
+            "name": "Python Data Plots",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/postproc/regen.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python Evolution Plots",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/postproc/evolve.py",
+            "console": "integratedTerminal"
+        },
+    ],
+    
+}

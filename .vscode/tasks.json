@@ -1,0 +1,29 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Main",
+            "type": "shell",
+            // Simple make
+            //"command": "make",
+            // Clean make, required when function structure in the headers is being modified or headers are using .tpp files
+            "command": "make clean; make",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Build Tests",
+            "type": "shell",
+            // Simple make
+            //"command": "make",
+            // Clean make, required when function structure in the headers is being modified or headers are using .tpp files
+            "command": "make -f test.make clean; make -f test.make",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
