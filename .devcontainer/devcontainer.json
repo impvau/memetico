@@ -18,6 +18,11 @@
 		"github.vscode-pull-request-github"
 	],
 
+	// Update devsomejunk with your windows username
+	//"mounts": [
+	//	"source=c:/Users/devsomejunk/.ssh,target=/root/.ssh,type=bind,consistency=cached"
+	//]
+
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 
