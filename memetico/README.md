@@ -1,35 +1,43 @@
 # Memetico
 
-An implementation of a C++ memetic algorithm under the direction of its innovator Prof. Moscato. The original concept was proposed in his 1988 <a href="https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.27.9474&rep=rep1&type=pdf" target="_blank">technical report</a>
+An implementation of a C++ memetic algorithm under the direction of its inceptor Prof. Moscato as proposed in his 1988 <a href="https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.27.9474&rep=rep1&type=pdf" target="_blank">technical report</a>. 
 
-This respository is based on the work originally by Haoyuan Sun, continued by Mohammad Haque & Andrew Ciezak towards a continued fractions representations within a memetic implementation.
+Prof. Moscato collaborated with Haoyuan Sun in 2018 to introduce <a href="https://ieeexplore.ieee.org/abstract/document/8789889" target="_blank">a memetico algorithm for symbolic regression that utilised a continued fractions representation </a> known as Continued Fractions Regression (CFR). This was later adapted by Mohammad Haque and later Andrew Ciezak.
 
-Major developement was performed toward a general form of memetic algorithm and a framework that facilitates regression representation as one of many possible representations, for instance a graph-based representation can be implemented and it will seemlessly integrate with the core memetic algorithm.
+This repository is a major re-developement to achieve a generalised memetic framework utilisatble by CFR but can be extended to problem classes outside of regression and any solution representation (e.g. graph, distance matrix, etc.)
 
-See [main.cpp](./main_8cpp.html) for entry into the program and key global variables [globals.h](./globals_8h.html)
+# Regression Usage
 
-# Code Design
-
-- As a consequence of the heavy reliance on templates, many class definitions appear in `.tpp` files which are included by the `.h` files. If we do not do so, we must explicitly define the used templates within multiple classes. e.g. `template class Population<int><ContinuedFraction>, Population<double><ContinuedFraction>, Population<int><EngelExpansion>` etc. This would require modification of the code each time a new representation was introduced thus the adoption of `.tpp` 
-
-# Symbolic Regression
-
-Models are represented in the Regression template class that implements a simple linear model with a constant. The template faciliates double and integer only representations and can be extended to other forms such as done in the ContinuedFraction class.
+The Regression template class extends the base Model class for a traditional linear form, taking a numeric type for float or integer models. 
 
 ## Continued Fration Representation
 
-Of particular interest is the Continued Fractions represetnation in regression problems. Papers related to this development include the following
+The ContinuedFractions class extends the Regression class and facilitates depth functionality.
+
+Papers related to this development include the following
 
 * <a href="https://ieeexplore.ieee.org/abstract/document/8789889/" target="_blank"> CFR-V1 - H. Sun and P. Moscato, "A Memetic Algorithm for Symbolic Regression," 2019 IEEE Congress on Evolutionary Computation (CEC), Wellington, New Zealand, 2019, pp. 2167-2174, DOI: 10.1109/CEC.2019.8789889.</a>
 * <a href="https://arxiv.org/abs/2001.00624" target="_blank"> CFR-V2 - Moscato, P., Sun, H. and Haque, M.N., 2019. Analytic Continued Fractions for Regression: A Memetic Algorithm Approach. arXiv preprint arXiv:2001.00624. </a>
 
 # Documentation
 
-Project documentation is viewable at `.../memetico-cpp/docs/index.html`
+Project documentation is viewable at `.../memetico-cpp/docs/index.html` and rebuilt with `doxygen doxy.config` from the base directory
 
 Adherance to the <a href="https://people.canonical.com/~msawicz/guides/c++/cppguide.html" target="_blank"> Canonical C++ Style Guide </a> is observed and <a href="https://www.doxygen.nl/index.html" target="_blank"> Doxygen </a> rebuilds the documentation output to the `docs/` directory with `doxygen doxy.config`. 
 
-# Development
+# Code
+
+See [main.cpp](./main_8cpp.html) for entry into the program and key global variables [globals.h](./globals_8h.html)
+
+// Define how the model classes are used
+
+// Define how they are extendable
+
+// Define how the main.cpp is prepped up for an experiement
+
+`.tpp` usage: Due to heavy reliance on templates, class definitions are within `.tpp` files referenced at the end of `.h` files so that explicit definition of template classes (e.g. Population\<ContinuedFraction\<int\>\>) are not required for compilation.
+
+## Setup
 
 This project assumes development in <a href="https://code.visualstudio.com/" target="_blank"> Visual Studio Code (VCS) </a> with <a href="https://code.visualstudio.com/docs/remote/containers" target="_blank"> Development Containers </a>
 
@@ -46,3 +54,4 @@ The container will be build as per `.devcontainer/Dockerfile` which defines the 
 Pressing F5 will run the `Makefile` and code debugger, stopping at any configured breakpoints.
 
 This process is all that is required to compile and run the code and is agnostic of standard iOS, Windows and Linux operation environments.
+
