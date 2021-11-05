@@ -6,6 +6,9 @@
  * @author Andrew Ciezak <andy@ium.solutions>
  * @version 1.0
  * @brief Entry point and harness for the memetic algorithm
+ * 
+ * @bug Need to add .devcontainer and .vscode configurations files to the list of files 
+ * 
  */
 
 // Local
