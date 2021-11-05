@@ -1,0 +1,122 @@
+
+
+/**
+ * @file
+ * @author Haoyuan Sun <hsun2@caltech.edu>
+ * @author Mohammad Haque <Mohammad.Haque@newcastle.edu.au>
+ * @author Andrew Ciezak <andy@ium.solutions>
+ * @version 1.0
+ * @brief Header for global variables and functions
+ * 
+ */
+
+#ifndef MEMETICO_GLOBALS_H
+#define MEMETICO_GLOBALS_H
+
+#include <chrono>
+#include <memetico/rng.h>
+#include <regex>
+
+/**
+ * @file
+ * @author Haoyuan Sun <hsun2@caltech.edu>
+ * @author Mohammad Haque <Mohammad.Haque@newcastle.edu.au>
+ * @author Andrew Ciezak <andy@ium.solutions>
+ * @version 1.0
+ * 
+ * @brief Global variables for memetic algorithm
+ * 
+ */ 
+namespace memetico {
+    
+/** Program seed value for reproducibility */
+extern int              SEED;
+
+/** Number of generations of evolution  */
+extern size_t           GENERATIONS;
+
+/** Chance of mutation for each agent during the evolution process  */
+extern double           MUTATE_RATE;
+
+/** Penalty factor added for each parameter used Fitness = Error * (1+params_used()*PENALTY) */
+extern double           PENALTY;
+
+/** Run local search after this many generations  */
+extern size_t           LOCAL_SEARCH_INTERVAL;
+
+/** Number of times to repeat local search for each agent each generation  */
+extern size_t           LOCAL_SEARCH_RUNS;
+
+/** Percentage of data to consider in local search  */
+extern double           LOCAL_SEARCH_DATA_PCT;
+
+/** Number of Neader-Mead  iterations before the model is stale  */
+extern size_t           NELDER_MEAD_STALE;
+
+/** Mumber of iterations of the Neader-Mead  */
+extern size_t           NELDER_MEAD_MOVES;
+
+/** Numnber of stagnant generates to re-randomise the currents */
+extern size_t           STALE_RESET;
+
+/** Integer only models */
+extern bool             INT_ONLY;
+
+/** File where data resides */
+extern string           TRAIN_FILE;
+
+/** File where data resides */
+extern string           TEST_FILE;
+
+/** Output folder */
+extern string           LOG_DIR;
+
+/** Global double randomisation object */
+extern RandReal         RANDREAL;
+
+/** Global integer randomisation object */
+extern RandInt          RANDINT;
+
+/** Global real precision within the application */
+extern size_t           PREC; 
+
+/** Execution time of the algorithm from the last Population.run() in milliseconds */
+extern size_t           RUN_TIME;
+
+/** Global DEBUG flag for function tracing */
+extern bool             DEBUG;
+
+/** Global Current Generation */
+extern size_t           GEN;
+
+extern bool             do_debug;
+
+/** Master log */
+extern ofstream         master_log;
+
+/**
+ * @brief format to output in print functions like show(), show_min() 
+ */
+enum PrintType {
+    PrintLatex,
+    PrintExcel,
+    PrintNumpy
+};
+
+string  ltrim(string str);
+string  rtrim(string s);
+string  trim(string s);
+bool    match_suffix(string file, string suffix);
+
+string  excel_name(size_t col = 2, size_t row = 2);
+
+double  multiply(double, double);
+double  divide(double, double);
+double  add(double, double);
+double  exp(double);
+double  pow(double, double);
+
+}
+
+#endif
+
