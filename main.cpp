@@ -25,7 +25,7 @@
 using namespace std;
 
 // Default Logic Globals
-int             memetico::SEED = 42;
+uint_fast32_t   memetico::SEED = 42;
 size_t          memetico::GENERATIONS = 200;
 double          memetico::MUTATE_RATE = 0.2;
 size_t          memetico::LOCAL_SEARCH_INTERVAL = 1;
@@ -54,6 +54,9 @@ size_t          memetico::RUN_TIME = 0;
 // Global Heplers
 RandReal        memetico::RANDREAL;
 RandInt         memetico::RANDINT;
+
+FILE* std_out;
+FILE* std_err;
 
 // Integer or Double models
 typedef double DataType;
@@ -93,7 +96,7 @@ void load_args(int argc, char * argv[]) {
     // Seed
     arg_string = arg_value(argv, argv+argc, "-s", "--seed");
     if(arg_string != "")
-        memetico::SEED = stoi(arg_string);
+        memetico::SEED = stol(arg_string);
     else  {
         RandInt seed_init = RandInt();
         memetico::SEED = seed_init(1, numeric_limits<int>::max());
@@ -109,8 +112,8 @@ void load_args(int argc, char * argv[]) {
             memetico::LOG_DIR += "/";
 
         // Change STD out if the log dir is specified. If not, use normal stdout / stderr
-        freopen( (memetico::LOG_DIR + to_string(memetico::SEED) + ".Std.log").c_str(), "a", stdout);
-        freopen( (memetico::LOG_DIR + to_string(memetico::SEED) + ".Err.log").c_str(), "a", stderr);
+        std_out = freopen( (memetico::LOG_DIR + to_string(memetico::SEED) + ".Std.log").c_str(), "a", stdout);
+        std_err = freopen( (memetico::LOG_DIR + to_string(memetico::SEED) + ".Err.log").c_str(), "a", stderr);
 
     }
     // Master log
@@ -142,7 +145,7 @@ void load_args(int argc, char * argv[]) {
     arg_string = arg_value(argv, argv+argc, "-g", "--gens");
     if(arg_string != "")    memetico::GENERATIONS = stoi(arg_string);
 
-    // Local Search Data
+    // Must we split dataset
     arg_string = arg_value(argv, argv+argc, "-sd", "--split-data");
     if(arg_string != "")    Data::SPLIT = stod(arg_string);
 
@@ -152,8 +155,12 @@ void load_args(int argc, char * argv[]) {
     
     // Local Search function
     arg_string = arg_value(argv, argv+argc, "-ls", "--local-search");
-    if( arg_string == "cnm" ||
-        arg_string == "")       Agent<ModelType>::LOCAL_SEARCH = local_search::custom_nelder_mead<ModelType>;
+    if( arg_string == "cnm" || arg_string == "")    Agent<ModelType>::LOCAL_SEARCH = local_search::custom_nelder_mead_redo<ModelType>;
+    if( arg_string == "cnms" )                      Agent<ModelType>::LOCAL_SEARCH = local_search::custom_nelder_mead_alg4<ModelType>;  
+
+        //arg_string == "")       Agent<ModelType>::LOCAL_SEARCH = local_search::custom_nelder_mead_redo<ModelType>;
+        //arg_string == "")       Agent<ModelType>::LOCAL_SEARCH = local_search::custom_nelder_mead<ModelType>;
+        
     
     // Objective function
     arg_string = arg_value(argv, argv+argc, "-o", "--objective");
@@ -290,12 +297,10 @@ int main(int argc, char *argv[]) {
     if(store->has_test)
         p.root_agent->show_errors(cout, memetico::PREC, store->test);
 
-    cout << " Writing " << memetico::LOG_DIR+to_string(memetico::SEED)+".Run.csv" << endl;
-    ofstream log(memetico::LOG_DIR+to_string(memetico::SEED)+".Run.csv");
+    cout << " Writing " << memetico::LOG_DIR+to_string(memetico::SEED)+".Run.log" << endl;
+    ofstream log(memetico::LOG_DIR+to_string(memetico::SEED)+".Run.log");
     if (log.is_open())
         p.root_agent->show_solution(log, memetico::PREC, store->train, store->test);
 
-    
-    
     return EXIT_SUCCESS;
 }
