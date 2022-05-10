@@ -24,12 +24,28 @@ double model_evaluate(vector<double>* params, vector<size_t> positions, U* model
 template <class U>
 double custom_nelder_mead(U* model, DataSet* data, vector<size_t>&);
 
+template <class U>
+double custom_nelder_mead_redo(U* model, DataSet* data, vector<size_t>&);
+
+template <class U>
+double custom_nelder_mead_alg4(U* model, DataSet* data, vector<size_t>&);
+
 size_t nm_iters;
 
 unsigned int nm_duration;
 
+template <typename Operator>
+vector<double> vo(vector<double> a, vector<double> b, Operator);
+vector<double> vm(vector<double> a, double b);
+vector<double> contr(vector<double> a, vector<double> b);
+vector<double> refl(vector<double> a, vector<double> b);
+vector<double> expa(vector<double> a, vector<double> b);
 
 }
+
+template <class T>
+ostream& operator << (ostream& os, const vector<T>& v);
+
 
 #include <memetico/local_search.tpp>
 
