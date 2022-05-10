@@ -308,33 +308,37 @@ void Data::read_meta_data(string filename, bool is_test) {
 
         if( header ) {
             
-            size_t column = 0;
-            string substr;
-            while (ss.good()) {
+            // Only read in header information from training file
+            if( is_test ) {
 
-                getline(ss, substr, ',');
+                size_t column = 0;
+                string substr;
+                while (ss.good()) {
 
-                // Remove return character
-                string word = memetico::trim(substr);
-                size_t index = word.find("\r", 0);
-                if (index != string::npos)
-                    word.replace(index, 1, ""); 
+                    getline(ss, substr, ',');
 
-                // If weight header
-                if( word.compare("w") == 0 ) {
-                    has_weight = true;
-                    weight_col = column;
+                    // Remove return character
+                    string word = memetico::trim(substr);
+                    size_t index = word.find("\r", 0);
+                    if (index != string::npos)
+                        word.replace(index, 1, ""); 
+
+                    // If weight header
+                    if( word.compare("w") == 0 ) {
+                        has_weight = true;
+                        weight_col = column;
+                    }
+                    // If uncertainty header
+                    else if( word.compare("dy") == 0 ) {
+                        has_dy = true;   
+                        dy_col = column;
+                    }
+                    // If independent varaible header
+                    else if ( column != 0 ) {
+                        Data::IVS.push_back(word);
+                    }
+                    column++;
                 }
-                // If uncertainty header
-                else if( word.compare("dy") == 0 ) {
-                    has_dy = true;   
-                    dy_col = column;
-                }
-                // If independent varaible header
-                else if ( column != 0 ) {
-                    Data::IVS.push_back(word);
-                }
-                column++;
             }
 
             header = false;
