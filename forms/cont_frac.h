@@ -67,7 +67,7 @@ class ContinuedFraction : public Regression<T> {
 
         // See implementation for details on the following functions
 
-        ContinuedFraction(size_t frac_depth = ContinuedFraction<T>::DEPTH, ostream& log = cout, bool do_log = false);
+        ContinuedFraction(size_t frac_depth = ContinuedFraction<T>::DEPTH, bool do_log = false);
 
         ~ContinuedFraction();
 
@@ -75,7 +75,7 @@ class ContinuedFraction : public Regression<T> {
 
         double  evaluate(double* values, size_t from_param = 0) override;
 
-        void    mutate(Model<T>* pocket, ostream& log = cout) override;
+        void    mutate(Model<T>* pocket) override;
 
         //void    recombine(Model<T>* model1, Model<T>* model2, int min, int max) override;
 

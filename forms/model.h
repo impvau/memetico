@@ -102,9 +102,9 @@ class Model {
          */
         virtual double evaluate(double* values, size_t from_param = 0) { return numeric_limits<double>::max(); }
 
-        virtual void mutate(Model<T>* pocket = nullptr, ostream& log = cout);                                  
+        virtual void mutate(Model<T>* pocket = nullptr);                                  
 
-        virtual void recombine(Model<T>* model1, Model<T>* model2, int min, int max, ostream& log = cout); 
+        virtual void recombine(Model<T>* model1, Model<T>* model2, int min, int max); 
 
         virtual size_t params_used();
 

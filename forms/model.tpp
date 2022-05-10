@@ -116,7 +116,7 @@ void Model<T>::allocate() {
  *           
  */
 template <class T>
-void Model<T>::mutate(Model<T>* model, ostream& log) {
+void Model<T>::mutate(Model<T>* model) {
 
     // Select a random parameter
     size_t param_pos = memetico::RANDINT(0, this->count);
@@ -150,10 +150,11 @@ void Model<T>::mutate(Model<T>* model, ostream& log) {
  *           
  */
 template <class T>
-void Model<T>::recombine(Model<T>* model1, Model<T>* model2, int min, int max, ostream& log) {
+void Model<T>::recombine(Model<T>* model1, Model<T>* model2, int min, int max) {
 
- 
     int method = memetico::RANDINT(0,2);
+    
+    /*
     switch(method) {
         case 0:     log << "Type: Intersection";  break;       
         case 1:     log << "Type: Union"; break;
@@ -164,6 +165,7 @@ void Model<T>::recombine(Model<T>* model1, Model<T>* model2, int min, int max, o
     log << "\t Original: "; show_min(log, memetico::PREC,0,memetico::PrintExcel, false); log << endl;
     log << "\t    First: "; model1->show_min(log, memetico::PREC,0,memetico::PrintExcel, false); log << endl;
     log << "\t   Second: "; model2->show_min(log, memetico::PREC,0,memetico::PrintExcel, false); log << endl;
+    */
 
     for(size_t i = 0; i < count; i++) {
 
@@ -187,7 +189,8 @@ void Model<T>::recombine(Model<T>* model1, Model<T>* model2, int min, int max, o
 
         }
     }
-    log << "\t      New: "; show_min(log, memetico::PREC,0,memetico::PrintExcel, false); log << endl;
+    
+    //log << "\t      New: "; show_min(log, memetico::PREC,0,memetico::PrintExcel, false); log << endl;
 }
 
 /**

@@ -22,7 +22,7 @@
  * @bug Check if the Model is constructed first with memeory of frac_depth. Memory leak here?
  */
 template <class T>
-ContinuedFraction<T>::ContinuedFraction(size_t frac_depth, ostream& log, bool do_log) {
+ContinuedFraction<T>::ContinuedFraction(size_t frac_depth, bool do_log) {
     
     // Default values
     depth = frac_depth;
@@ -38,8 +38,8 @@ ContinuedFraction<T>::ContinuedFraction(size_t frac_depth, ostream& log, bool do
 
     randomise_all();
 
-    if( do_log )   
-        show_min(log, memetico::PREC, 0, memetico::PrintExcel, false);
+    //if( do_log )   
+    //    show_min(log, memetico::PREC, 0, memetico::PrintExcel, false);
 }
 
 /**
@@ -264,7 +264,7 @@ double ContinuedFraction<T>::evaluate(double* values, size_t from_param) {
  *           
  */
 template <class T>
-void ContinuedFraction<T>::mutate(Model<T>* model, ostream& log) {
+void ContinuedFraction<T>::mutate(Model<T>* model) {
 
     size_t param_pos;
 
@@ -294,10 +294,12 @@ void ContinuedFraction<T>::mutate(Model<T>* model, ostream& log) {
                 this->active[param_pos+(i*params_per_term)] = false;
         }
 
+        /*
         log << "Hard Mutation. Current Fitness: " << this->fitness;
         log << " Pocket Fitness: " << model->fitness;
         log << " IV: " << Data::IVS[param_pos];
         log << " Now Active? " << boolalpha << global_active[param_pos] << endl;
+        */
 
     }
     // Else soft mutate
@@ -317,10 +319,11 @@ void ContinuedFraction<T>::mutate(Model<T>* model, ostream& log) {
 
         //cout << "potential params: " << potential_params.size() << endl;
         // We can only mutate if we have a valid variable we can turn on
+        /*
         if(potential_params.empty()) {
             log << "Soft Mutation. Potential Params to turn on is empty" << endl;
             return;
-        }
+        }*/
             
             
         // Select a random parameter
@@ -334,13 +337,14 @@ void ContinuedFraction<T>::mutate(Model<T>* model, ostream& log) {
         // Toggle the parameter on/off
         this->active[param_pos] = !this->active[param_pos];
 
-
+        /*
         log << "Soft Mutation. IV: ";
         bool is_const = this->is_constant(param_pos);
         if( is_const )  log << "constant";
         else            log << Data::IVS[param_pos % (Data::IVS.size()+1)];
 
         log << " Term: " << floor(param_pos/(Data::IVS.size()+1)) << " Now Active? " << boolalpha << global_active[param_pos] << "  Value: " << this->params[param_pos] << endl;
+        */
 
     }
 
