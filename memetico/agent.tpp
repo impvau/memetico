@@ -32,6 +32,7 @@ template <class U>
 Agent<U>::Agent(size_t agent_depth, size_t parent_number, size_t child_number) {
 
     // Stat Fields
+    /*
     stat_local_search_pocket = 0;
     stat_local_search_pocket_improve = 0;
     stat_local_search_pocket_nm_iters = 0;
@@ -45,6 +46,7 @@ Agent<U>::Agent(size_t agent_depth, size_t parent_number, size_t child_number) {
     stat_pocket_update = 0;
     stat_renew = 0;
     stat_bubble_up = 0;
+    */
 
     // Check Static variables are set
     if( Agent<U>::DEGREE == 0)
@@ -70,9 +72,8 @@ Agent<U>::Agent(size_t agent_depth, size_t parent_number, size_t child_number) {
         size_t this_depth_start_node = 0;
 
         // Sum nodes at each depth to determine the first agent in the parent depth
-        for(size_t i = 0; i < depth-1; i++)  {
+        for(size_t i = 0; i < depth-1; i++)
             parent_depth_start_node += pow(Agent<U>::DEGREE, i);
-        }
 
         // Sum nodes at each depth to determine the first agent in the current depth
         this_depth_start_node = parent_depth_start_node+parent_depth_items;
@@ -86,10 +87,10 @@ Agent<U>::Agent(size_t agent_depth, size_t parent_number, size_t child_number) {
     }
 
     //
-    log = ofstream(memetico::LOG_DIR+to_string(memetico::SEED)+".Agent."+to_string(number)+".csv");
-    log_small = ofstream(memetico::LOG_DIR+to_string(memetico::SEED)+".Agent."+to_string(number)+".min.csv");
-    if( !log.is_open() or !log_small.is_open())
-        throw runtime_error("Unable to open agent " +to_string(number)+ " log" );
+    //log = ofstream(memetico::LOG_DIR+to_string(memetico::SEED)+".Agent."+to_string(number)+".csv");
+    //log_small = ofstream(memetico::LOG_DIR+to_string(memetico::SEED)+".Agent."+to_string(number)+".min.csv");
+    //if( !log.is_open() or !log_small.is_open())
+    //    throw runtime_error("Unable to open agent " +to_string(number)+ " log" );
 
     // Create members of derived model type U
     members = new U*[2];
@@ -98,10 +99,10 @@ Agent<U>::Agent(size_t agent_depth, size_t parent_number, size_t child_number) {
     evaluate(Agent<U>::TRAIN);
     
     // Master Log of construction
-    memetico::master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",AgentConstruct," << number;
-    memetico::master_log << ",\""; members[Agent<U>::POCKET]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintNumpy, false); memetico::master_log << "\"," << members[Agent<U>::POCKET]->fitness << "," << members[Agent<U>::POCKET]->error;
-    memetico::master_log << ",\""; members[Agent<U>::CURRENT]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintNumpy, false); memetico::master_log << "\"," << members[Agent<U>::CURRENT]->fitness << "," << members[Agent<U>::CURRENT]->error;
-    memetico::master_log << endl;
+    //memetico::master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",AgentConstruct," << number;
+    //memetico::master_log << ",\""; members[Agent<U>::POCKET]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintNumpy, false); memetico::master_log << "\"," << members[Agent<U>::POCKET]->fitness << "," << members[Agent<U>::POCKET]->error;
+    //memetico::master_log << ",\""; members[Agent<U>::CURRENT]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintNumpy, false); memetico::master_log << "\"," << members[Agent<U>::CURRENT]->fitness << "," << members[Agent<U>::CURRENT]->error;
+    //memetico::master_log << endl;
 
     // Assume root node that has no parent (we update this later)
     this->parent = nullptr;
@@ -183,16 +184,16 @@ void Agent<U>::exchange() {
 
         // Master Log of construction
         memetico::master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",AgentSwap," << number;
-        memetico::master_log << ",\""; members[Agent<U>::POCKET]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintNumpy, false); memetico::master_log << "\"," << members[Agent<U>::POCKET]->fitness << "," << members[Agent<U>::POCKET]->error;
-        memetico::master_log << ",\""; members[Agent<U>::CURRENT]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintNumpy, false); memetico::master_log << "\"," << members[Agent<U>::CURRENT]->fitness << "," << members[Agent<U>::CURRENT]->error;
+        memetico::master_log << ",\""; members[Agent<U>::POCKET]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintExcel, false); memetico::master_log << "\"," << members[Agent<U>::POCKET]->fitness << "," << members[Agent<U>::POCKET]->error;
+        memetico::master_log << ",\""; members[Agent<U>::CURRENT]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintExcel, false); memetico::master_log << "\"," << members[Agent<U>::CURRENT]->fitness << "," << members[Agent<U>::CURRENT]->error;
         memetico::master_log << endl;
 
         //log << "Exchanging Pocket and Current... " << endl;
-        log_small << "Exchaning Pocket " <<  members[Agent<U>::POCKET]->fitness << " Current " << members[Agent<U>::CURRENT]->fitness << endl;
+        //log_small << "Exchaning Pocket " <<  members[Agent<U>::POCKET]->fitness << " Current " << members[Agent<U>::CURRENT]->fitness << endl;
         //log << setw(20) << " Pocket: "; members[Agent<U>::POCKET]->show_min(log, memetico::PREC);
         //log << setw(20) << " Current: "; members[Agent<U>::CURRENT]->show_min(log, memetico::PREC);
         
-        stat_pocket_update++;
+        //stat_pocket_update++;
         U* temp_model = members[Agent<U>::POCKET];
         members[Agent<U>::POCKET] = members[Agent<U>::CURRENT];
         members[Agent<U>::CURRENT] = temp_model;
@@ -230,13 +231,13 @@ void Agent<U>::bubble() {
     // Change if best child beats parent
     if( best_fitness < members[Agent::POCKET]->fitness ) {
 
-        log_small << "Bubbling Agent " << number << " Pocket Fitness: " <<  members[Agent<U>::POCKET]->fitness << " with Agent " << children[best_child]->number << " Pocket (Child: " << best_child << ") Child Pocket Fitness: " << children[best_child]->members[Agent<U>::POCKET]->fitness << endl; 
+        //log_small << "Bubbling Agent " << number << " Pocket Fitness: " <<  members[Agent<U>::POCKET]->fitness << " with Agent " << children[best_child]->number << " Pocket (Child: " << best_child << ") Child Pocket Fitness: " << children[best_child]->members[Agent<U>::POCKET]->fitness << endl; 
         // Master Log of construction
-        memetico::master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN <<  ",AgentBubbleUp," << number;
-        memetico::master_log << ",\""; members[Agent<U>::POCKET]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintNumpy, false); memetico::master_log << "\"," << members[Agent<U>::POCKET]->fitness << "," << members[Agent<U>::POCKET]->error;
-        memetico::master_log << "," << children[best_child]->number;
-        memetico::master_log << ",\""; children[best_child]->members[Agent::POCKET]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintNumpy, false); memetico::master_log << "\"," << children[best_child]->members[Agent::POCKET]->fitness << "," << children[best_child]->members[Agent::POCKET]->error;
-        memetico::master_log << endl;
+        //memetico::master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN <<  ",AgentBubbleUp," << number;
+        //memetico::master_log << ",\""; members[Agent<U>::POCKET]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintNumpy, false); memetico::master_log << "\"," << members[Agent<U>::POCKET]->fitness << "," << members[Agent<U>::POCKET]->error;
+        //memetico::master_log << "," << children[best_child]->number;
+        //memetico::master_log << ",\""; children[best_child]->members[Agent::POCKET]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintNumpy, false); memetico::master_log << "\"," << children[best_child]->members[Agent::POCKET]->fitness << "," << children[best_child]->members[Agent::POCKET]->error;
+        //memetico::master_log << endl;
         
         //log_small << "\t Parent: "; members[Agent::POCKET]->show_min(log_small, memetico::PREC, 0, memetico::PrintExcel, false); log_small << endl;
         //log_small << "\t  Child: "; children[best_child]->members[Agent::POCKET]->show_min(log_small, memetico::PREC, 0, memetico::PrintExcel, false); log_small << endl;
@@ -255,9 +256,9 @@ void Agent<U>::bubble() {
         // Both the pocket and current of the child may be better than the pocket of the parent
         // When we bubble the child pocket up, and the parent pocket down, the childs pocket
         // may actually be less fit than the childs current, so we exchange there
-        children[best_child]->log_small << "Bubbling Agent with Parent " << number << " Pocket Fitness: " <<  members[Agent<U>::POCKET]->fitness << " with Agent " << children[best_child]->number << " Pocket (Child: " << best_child << ") Child Pocket Fitness: " << children[best_child]->members[Agent<U>::POCKET]->fitness << endl; 
+        //children[best_child]->log_small << "Bubbling Agent with Parent " << number << " Pocket Fitness: " <<  members[Agent<U>::POCKET]->fitness << " with Agent " << children[best_child]->number << " Pocket (Child: " << best_child << ") Child Pocket Fitness: " << children[best_child]->members[Agent<U>::POCKET]->fitness << endl; 
         children[best_child]->exchange();
-        children[best_child]->stat_bubble_up++;
+        //children[best_child]->stat_bubble_up++;
 
         //log_small << "After Child Exchange" << endl;
         //log_small << "\t Parent: "; members[Agent::POCKET]->show_min(log_small, memetico::PREC, 0, memetico::PrintExcel, false); log_small << endl;
@@ -274,15 +275,15 @@ void Agent<U>::bubble() {
 template <class U>
 void Agent<U>::renew() {
 
-    stat_renew++;
+    //stat_renew++;
 
     delete members[Agent::CURRENT];
     members[Agent::CURRENT] = new U();
     evaluate(Agent::TRAIN);
 
-    log << "Renewing Current.. " << endl;
-    log_small << "Renew Current " <<  members[Agent<U>::CURRENT]->error << endl; 
-    log << setw(20) << "Current Pocket: "; members[Agent<U>::CURRENT]->show_min(log, memetico::PREC);
+    //log << "Renewing Current.. " << endl;
+    //log_small << "Renew Current " <<  members[Agent<U>::CURRENT]->error << endl; 
+    //log << setw(20) << "Current Pocket: "; members[Agent<U>::CURRENT]->show_min(log, memetico::PREC);
 
     exchange();
 }
@@ -356,9 +357,11 @@ void Agent<U>::show(ostream& out, size_t precision, bool minimal) {
  * 
  * @return void
  */
+/*
 template <class U>
 void Agent<U>::show_stats(ostream& out, size_t precision) {
 
+    
     size_t big_space = 17;
     if( number == 0 ) {
         
@@ -428,7 +431,9 @@ void Agent<U>::show_stats(ostream& out, size_t precision) {
     // Add a break at the end of the table
     if( number == 0 )
         out << endl;
+    
 }
+*/
 
 /** 
  * @brief Ouput the Agent error statistics
@@ -471,11 +476,25 @@ void Agent<U>::show_solution(ostream& out, size_t precision, DataSet* train, Dat
 
     vector<size_t> selection = vector<size_t>();
 
-    out << "Seed, Duration, Model Excel, Model Numpy, Model Latex, Objective, t.Error, t.Penalty, t.Fitness, T.Error, T.Penalty, T.Fitness, t.MSE, t.NMSE, T.MSE, T.NMSE" << endl;
+    //out << "Seed, Duration, Model Excel, Model Numpy, Model Latex, Objective, t.Error, t.Penalty, t.Fitness, T.Error, T.Penalty, T.Fitness, t.MSE, t.NMSE, T.MSE, T.NMSE" << endl;
+    out << "Seed,Train MSE,Test MSE,Dur,Model,Train X2,Train X2 %,Train NMSE,Test NMSE" << endl;
     
     out << memetico::SEED;
+    out << "," << objective::mse(members[Agent<U>::POCKET], train, selection);
+
+    if( test != nullptr )       out << "," << objective::mse(members[Agent<U>::POCKET], test, selection);
+    else                        out << ",";
+
     out << "," << memetico::RUN_TIME/1000.0;
 
+    out << ",\""; members[Agent<U>::POCKET]->show_min(out, precision, 0, memetico::PrintExcel, false); out << "\"";
+    out << ",,";
+
+    out << "," << objective::nmse(members[Agent<U>::POCKET], train, selection);
+    if( test != nullptr )       out << "," << objective::nmse(members[Agent<U>::POCKET], test, selection);
+    else                        out << ",";
+
+    /*
     // Fanciness to force excel to treat as string
     out << ",\""; members[Agent<U>::POCKET]->show_min(out, precision, 0, memetico::PrintExcel, false); out << "\"";
     out << ",\""; members[Agent<U>::POCKET]->show_min(out, precision, 0, memetico::PrintNumpy, false); out << "\"";
@@ -506,5 +525,7 @@ void Agent<U>::show_solution(ostream& out, size_t precision, DataSet* train, Dat
     }
      
     out << endl;
+    */
+
 }
 

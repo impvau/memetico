@@ -56,48 +56,48 @@ class Agent {
 
     public:
 
-        ofstream    log;
+        //ofstream    log;
         
-        ofstream    log_small;
+        //ofstream    log_small;
 
         /**  */
-        size_t      stat_local_search_current;
+        //size_t      stat_local_search_current;
 
         /**  */
-        size_t      stat_local_search_current_nm_iters;
+        //size_t      stat_local_search_current_nm_iters;
 
         /**  */
-        size_t      stat_local_search_current_improve;
+        //size_t      stat_local_search_current_improve;
 
         /**  */
-        double      stat_local_search_current_nm_time;
+        //double      stat_local_search_current_nm_time;
 
         /**  */
-        size_t      stat_local_search_pocket;
+        //size_t      stat_local_search_pocket;
 
         /**  */
-        size_t      stat_local_search_pocket_nm_iters;
+        //size_t      stat_local_search_pocket_nm_iters;
 
         /**  */
-        double      stat_local_search_pocket_nm_time;
+        //double      stat_local_search_pocket_nm_time;
 
         /**  */
-        size_t      stat_local_search_pocket_improve;
+        //size_t      stat_local_search_pocket_improve;
 
         /**  */
-        size_t      stat_mutate;
+        //size_t      stat_mutate;
 
         /**  */
-        size_t      stat_recombine;
+        //size_t      stat_recombine;
 
         /**  */
-        size_t      stat_pocket_update;
+        //size_t      stat_pocket_update;
 
         /**  */
-        size_t      stat_renew;
+        //size_t      stat_renew;
 
         /**  */
-        size_t      stat_bubble_up;
+        //size_t      stat_bubble_up;
 
         /** Zero-based Agent number, from left to right, top to bottom */
         size_t          number;
@@ -143,7 +143,7 @@ class Agent {
 
         void        show(ostream& out = cout, size_t precision = memetico::PREC, bool minimal = false);
 
-        void        show_stats(ostream& out = cout, size_t precision = memetico::PREC);
+        //void        show_stats(ostream& out = cout, size_t precision = memetico::PREC);
 
         void        show_errors(ostream& out = cout, size_t precision = memetico::PREC, DataSet* = nullptr);
         
