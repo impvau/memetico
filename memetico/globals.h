@@ -30,7 +30,7 @@
 namespace memetico {
     
 /** Program seed value for reproducibility */
-extern int              SEED;
+extern uint_fast32_t    SEED;
 
 /** Number of generations of evolution  */
 extern size_t           GENERATIONS;
