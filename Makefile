@@ -2,7 +2,6 @@
 ROOT_DIR:=$(shell pwd)
 
 CXX = g++
-#CXXFLAGS = -std=c++17 -O2 -Wall -pedantic -g -fopenmp -I "/usr/include/eigen3" -I "/usr/include/nlohmann/" -I "$(ROOT_DIR)/"
 CXXFLAGS = -std=c++17 -O2 -Wall -pedantic -g -fopenmp -I "/usr/include/eigen3" -I "/usr/include/nlohmann/" -I "$(ROOT_DIR)/"
 LDFLAGS =  -lgomp
 
