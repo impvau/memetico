@@ -13,7 +13,7 @@ template <class U>
 double local_search::model_evaluate(vector<double> params, vector<size_t> positions, U* model, DataSet* data, vector<size_t>& selected) {
 
     for(size_t i = 0; i < params.size(); i++)
-        model->params[positions[i]] = params[i];
+        model->set_param(positions[i], params[i]);
 
     return Agent<U>::OBJECTIVE(model, data, selected);
 
@@ -59,9 +59,9 @@ double local_search::custom_nelder_mead(U* model, DataSet* data, vector<size_t>&
     // Determine the number of parameters to optimise
     size_t params = 0;
     vector<size_t> positions;
-    for(size_t i = 0; i < model->count; i++) {
+    for(size_t i = 0; i < model->get_count(); i++) {
         
-        if (model->active[i])  {
+        if (model->get_active(i))  {
             params++;
             positions.push_back(i);
         }
@@ -106,7 +106,7 @@ double local_search::custom_nelder_mead(U* model, DataSet* data, vector<size_t>&
     //cout << "Extracting Fraction" << endl;
     coord tmp(params);
     for (size_t i = 0; i < params; ++i) {
-        tmp[i] = model->params[positions[i]];
+        tmp[i] = model->get_param(positions[i]);
         //cout << tmp[i] << endl;
     }
 
@@ -115,7 +115,7 @@ double local_search::custom_nelder_mead(U* model, DataSet* data, vector<size_t>&
     double cent_fit;
 
     // Evaluation of the simplex at the current point
-    simplex.insert({model->fitness, tmp});
+    simplex.insert({model->get_fitness(), tmp});
 
     // Create simplex points by steping forward in each dimension a length of 'step' and appending
     // to the simplex. After this operation our simplex will be params+1 in length, as we have the original
@@ -253,12 +253,12 @@ double local_search::custom_nelder_mead(U* model, DataSet* data, vector<size_t>&
     coord best_found = (--simplex.end())->second;
 
     for(size_t i = 0; i < best_found.size(); i++)
-        model->params[positions[i]] = best_found[i];
+        model->get_param(positions[i]) = best_found[i];
 
     selected = vector<size_t>();
     Agent<U>::OBJECTIVE(model, data, selected);
 
-    return model->fitness;
+    return model->get_fitness();
 }
 
 /**
@@ -281,9 +281,9 @@ double local_search::custom_nelder_mead_alg4(U* model, DataSet* data, vector<siz
     // Determine the number of parameters to optimise
     size_t params = 0;
     vector<size_t> positions;
-    for(size_t i = 0; i < model->count; i++) {
+    for(size_t i = 0; i < model->get_count(); i++) {
         
-        if (model->active[i])  {
+        if (model->get_active(i))  {
             params++;
             positions.push_back(i);
         }
@@ -299,8 +299,8 @@ double local_search::custom_nelder_mead_alg4(U* model, DataSet* data, vector<siz
     // Extract values from the current continued fraction
     coord tmp(params);
     for (size_t i = 0; i < params; ++i)
-        tmp[i] = model->params[positions[i]];
-    simplex.insert({model->fitness, tmp});
+        tmp[i] = model->get_param(positions[i]);
+    simplex.insert({model->get_fitness(), tmp});
 
     // Step in each direction of each dimension to make a new point
     for (size_t i = 0; i < params; ++i) {
@@ -388,7 +388,7 @@ double local_search::custom_nelder_mead_alg4(U* model, DataSet* data, vector<siz
     selected = vector<size_t>();
     local_search::model_evaluate(best_found, positions, model, data, selected);
 
-    return model->fitness;
+    return model->get_fitness();
 }
 
 /**
@@ -404,15 +404,8 @@ double local_search::custom_nelder_mead_redo(U* model, DataSet* data, vector<siz
     using coord = vector<double>;
 
     // Determine the number of parameters to optimise
-    size_t ndim = 0;
-    vector<size_t> positions;
-    for(size_t i = 0; i < model->count; i++) {
-        
-        if (model->active[i])  {
-            ndim++;
-            positions.push_back(i);
-        }
-    }
+    vector<size_t> positions = model->get_active_positions();
+    size_t ndim = positions.size();
 
     // Simplex object with fitness value and the associated values for each dimension
     // greater is the sorting mechanism 
@@ -432,8 +425,8 @@ double local_search::custom_nelder_mead_redo(U* model, DataSet* data, vector<siz
     // Extract values from the current continued fraction
     coord tmp(ndim);
     for (size_t i = 0; i < ndim; ++i)
-        tmp[i] = model->params[positions[i]];
-    simplex.insert({model->fitness, tmp});
+        tmp[i] = model->get_param(positions[i]);
+    simplex.insert({model->get_fitness(), tmp});
     //coord tmp(ndim);
     //for (int i = 0; i < ndim; ++i) {
     //    const pii& pos = var_map[i];
@@ -579,7 +572,7 @@ double local_search::custom_nelder_mead_redo(U* model, DataSet* data, vector<siz
     //double ret_fit_full = e.eval_fit_full(buf);
     selected = vector<size_t>();
     coord& vb = (--simplex.end())->second;
-    double ret_fit_full = local_search::model_evaluate(vb, positions, model, data, selected);
+    double ret_fit_full = local_search::model_evaluate(vb, positions, model, data, selected);      
 
     return ret_fit_full;
 }

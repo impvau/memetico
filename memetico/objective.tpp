@@ -75,17 +75,17 @@ double objective::mse(U* model, DataSet* train, vector<size_t>& selected ) {
         //model->show_min();
         //cout << memetico::PENALTY << endl;
 
-        model->error = error_sum / train->count;
-        model->penalty = 1+model->params_used()*memetico::PENALTY;
-        model->fitness = memetico::multiply(model->error,model->penalty);
-        //cout << " mse: " << model->error << endl;
+        model->set_error( error_sum / train->count );
+        model->set_penalty( 1+model->params_used()*memetico::PENALTY );
+        model->set_fitness( memetico::multiply(model->get_error(),model->get_penalty()) );
+        //cout << " mse: " << model->get_error() << endl;
 
     } catch (exception& e) {
 
-        model->error = numeric_limits<double>::max();
-        model->penalty = numeric_limits<double>::max();
-        model->fitness = numeric_limits<double>::max();
-        //cout << " exception!: " << e.what() << " error: " << model->error << " fitness: " << model->fitness << endl;
+        model->set_error(numeric_limits<double>::max());
+        model->set_penalty(numeric_limits<double>::max());
+        model->set_fitness(numeric_limits<double>::max());
+        //cout << " exception!: " << e.what() << " error: " << model->get_error() << " fitness: " << model->fitness << endl;
 
     }
 
@@ -93,7 +93,7 @@ double objective::mse(U* model, DataSet* train, vector<size_t>& selected ) {
     //chrono::duration<double, std::milli> ms_double = t2 - t1;
     //std::cout << " mse: " << ms_double.count() << "ms" << endl;
 
-    return model->fitness;
+    return model->get_fitness();
     
 }
 
@@ -159,9 +159,9 @@ double objective::nmse(U* model, DataSet* train, vector<size_t>& selected ) {
             }
             variance = variance_sum/(train->count-1);
 
-            model->error = mse/variance;
-            model->penalty = 1+model->params_used()*memetico::PENALTY;
-            model->fitness = memetico::multiply(model->error,model->penalty);
+            model->set_error(mse/variance);
+            model->set_penalty(1+model->params_used()*memetico::PENALTY);
+            model->set_fitness(memetico::multiply(model->get_error(),model->get_penalty()));
 
         } else {
 
@@ -195,20 +195,20 @@ double objective::nmse(U* model, DataSet* train, vector<size_t>& selected ) {
             }
             variance = variance_sum/(train->count-1);
 
-            model->error = mse/variance;
-            model->penalty = 1+model->params_used()*memetico::PENALTY;
-            model->fitness = memetico::multiply(model->error,model->penalty);
+            model->set_error(mse/variance);
+            model->set_penalty(1+model->params_used()*memetico::PENALTY);
+            model->set_fitness(memetico::multiply(model->get_error(),model->get_penalty()));
 
         }
 
     } catch (exception& e) {
 
-        model->error = numeric_limits<double>::max();
-        model->penalty = numeric_limits<double>::max();
-        model->fitness = numeric_limits<double>::max();
+        model->set_error(numeric_limits<double>::max());
+        model->set_penalty(numeric_limits<double>::max());
+        model->set_fitness(numeric_limits<double>::max());
 
     }
 
-    return model->fitness;
+    return model->get_fitness();
 
 }

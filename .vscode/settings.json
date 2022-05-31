@@ -69,7 +69,8 @@
         "cinttypes": "cpp",
         "typeindex": "cpp",
         "variant": "cpp",
-        "*.tpp": "cpp"
+        "*.tpp": "cpp",
+        "csignal": "cpp"
     },
     "testMate.cpp.test.executables": "filename.exe"
 }

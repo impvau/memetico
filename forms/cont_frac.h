@@ -31,7 +31,7 @@
  * 
  */
 template<class T>
-class ContinuedFraction : public Regression<T> {
+class ContinuedFraction : public Model<T> {
 
     private:
 
@@ -47,11 +47,15 @@ class ContinuedFraction : public Regression<T> {
         /** Number of parameters in each term. As this is a linear model we have Data::IVS.size()+1 where the +1 is the constant*/
         size_t  params_per_term;
 
+        T** objs;
+
         // See implementation for details on the following functions
 
-        void    randomise_at(size_t frac_term, size_t frac_param, int min = ContinuedFraction<T>::RAND_LOWER, int max = ContinuedFraction<T>::RAND_UPPER);
+        //void    randomise_at(size_t frac_term, size_t frac_param, int min = ContinuedFraction<T>::RAND_LOWER, int max = ContinuedFraction<T>::RAND_UPPER);
 
-        void    randomise_all(int min = ContinuedFraction<T>::RAND_LOWER, int max = ContinuedFraction<T>::RAND_UPPER);
+        //void    randomise_all(int min = ContinuedFraction<T>::RAND_LOWER, int max = ContinuedFraction<T>::RAND_UPPER);
+
+        void    randomise(int min = ContinuedFraction<T>::RAND_LOWER, int max = ContinuedFraction<T>::RAND_UPPER);
 
     public:
 
@@ -66,24 +70,43 @@ class ContinuedFraction : public Regression<T> {
 
 
         // See implementation for details on the following functions
-
-        ContinuedFraction(size_t frac_depth = ContinuedFraction<T>::DEPTH, bool do_log = false);
+        //ContinuedFraction();
+        ContinuedFraction(size_t frac_depth = ContinuedFraction<T>::DEPTH);
 
         ~ContinuedFraction();
 
         ContinuedFraction<T>* clone() override;
 
-        double  evaluate(double* values, size_t from_param = 0) override;
+        double  evaluate(double* values);
 
-        void    mutate(Model<T>* pocket) override;
+        void    mutate(Model<T>* pocket = nullptr) override;
 
-        //void    recombine(Model<T>* model1, Model<T>* model2, int min, int max) override;
+        void    recombine(Model<T>* model1, Model<T>* model2);
 
-        size_t params_used() override;
+        size_t  params_used() override;
 
         void    show(ostream& out = cout, size_t precision = memetico::PREC, size_t from_param = 0, memetico::PrintType print_type = memetico::PrintExcel) override;
 
         void    show_min(ostream& out = cout, size_t precision = memetico::PREC, size_t from_param = 0, memetico::PrintType print_type = memetico::PrintExcel, bool do_summary = true) override;
+
+        size_t  get_depth()                         { return depth;  };
+        size_t  get_terms()                         { return terms;  };
+        size_t  get_params_per_term()               { return params_per_term; };
+        size_t  get_param_count()                   { return params_per_term*terms; };
+        bool    get_global_active(size_t iv)        { return global_active[iv]; };
+        T*      get_objs(size_t term)               { return objs[term]; };
+
+        vector<size_t>  get_active_positions();
+        double          get_param(size_t pos);
+        bool            get_active(size_t pos);
+        void            set_param(size_t active_param, double val);
+        void            set_objs(size_t pos, T* obj)    { objs[pos] = obj; };
+
+        void    set_global_active(size_t iv, bool val);
+
+        template<class F>
+        friend ostream& operator<<(ostream& os, const ContinuedFraction<F>& c);
+
 
 };
 

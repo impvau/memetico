@@ -19,6 +19,9 @@
 #include <memetico/agent.h>
 #include <memetico/local_search.h>
 #include <memetico/objective.h>
+#include <forms/simple.h>
+#include <forms/cont_frac.h>
+#include <forms/cont_frac_ad.h>
 // Std
 #include <cstdlib>
 
@@ -59,36 +62,52 @@ FILE* std_out;
 FILE* std_err;
 
 // Integer or Double models
-typedef double DataType;
-typedef ContinuedFraction<DataType> ModelType;
+typedef Regression<double> DataType;
+typedef ContinuedFractionAdaptiveDepth<DataType> ModelType;
 
 bool            memetico::do_debug = false;
+
+PrintType       memetico::FORMAT = memetico::PrintExcel;
+
+// Custom
+size_t          memetico::POCKET_DEPTH = 1;
 
 /**
  */
 void load_args(int argc, char * argv[]) {
    
+    stringstream args_out;
+    args_out << "==================" << endl;
+    args_out << "Arguments" << endl;
+    args_out << "==================" << endl;
+    args_out << "Command: " << argv[0] << endl;
+    args_out << "\"args\": [" << endl;
+
     // Check argument exists
     auto arg_exists = [](char** begin, char** end, string short_option, string long_option) {
         return find(begin, end, short_option) != end || find(begin, end, long_option) != end;
     };
 
     // Get value after argument
-    auto arg_value = [](char** begin, char** end, string short_option, string long_option) {
+    auto arg_value = [&](char** begin, char** end, string short_option, string long_option) {
         
+        string ret;
+
         // Check for short string e.g. "-h" rather than "-help"
         char ** itr = find(begin, end, short_option);
         if (itr != end && ++itr != end)
-            return string(*itr);
+            ret = string(*itr);
         
         // Check for long string e.g.  "-help"
         itr = find(begin, end, long_option);
         if (itr != end && ++itr != end)
-            return string(*itr);
+            ret = string(*itr);
 
-        return string("");
+        // Build debug for VSC launch.json
+        args_out << "    \"" << short_option << "\", \"" << ret << "\"" << endl;
+
+        return ret;
     };
-
     
     // Temporary string
     string arg_string;
@@ -131,8 +150,6 @@ void load_args(int argc, char * argv[]) {
     if(arg_string != "")    memetico::TEST_FILE = arg_string;
     else                    memetico::TEST_FILE = memetico::TRAIN_FILE;
     
-
-
     // Mutation Rate
     arg_string = arg_value(argv, argv+argc, "-mr", "--mutate-rate");
     if(arg_string != "")    memetico::MUTATE_RATE = stod(arg_string);
@@ -157,11 +174,8 @@ void load_args(int argc, char * argv[]) {
     arg_string = arg_value(argv, argv+argc, "-ls", "--local-search");
     if( arg_string == "cnm" || arg_string == "")    Agent<ModelType>::LOCAL_SEARCH = local_search::custom_nelder_mead_redo<ModelType>;
     if( arg_string == "cnms" )                      Agent<ModelType>::LOCAL_SEARCH = local_search::custom_nelder_mead_alg4<ModelType>;  
-
-        //arg_string == "")       Agent<ModelType>::LOCAL_SEARCH = local_search::custom_nelder_mead_redo<ModelType>;
         //arg_string == "")       Agent<ModelType>::LOCAL_SEARCH = local_search::custom_nelder_mead<ModelType>;
         
-    
     // Objective function
     arg_string = arg_value(argv, argv+argc, "-o", "--objective");
     Agent<ModelType>::OBJECTIVE_NAME = arg_string;
@@ -171,12 +185,10 @@ void load_args(int argc, char * argv[]) {
     //if( Agent<ModelType>::OBJECTIVE_NAME == "cw" )    Agent<ModelType>::OBJECTIVE = objective::mse<ModelType>;
     //if( Agent<ModelType>::OBJECTIVE_NAME == "aic" )   Agent<ModelType>::OBJECTIVE = objective::mse<ModelType>;
     
-
     // CFR Specific
     // Depth
     arg_string = arg_value(argv, argv+argc, "-f", "--fracdepth");
     if(arg_string != "")    ContinuedFraction<DataType>::DEPTH = stoi(arg_string);
-    
     
     // Help
     if(arg_exists(argv, argv+argc, "-h", "--help")) {
@@ -248,6 +260,11 @@ void load_args(int argc, char * argv[]) {
 
             exit(EXIT_SUCCESS);
     }
+
+    // Output arguments in VSCode launch.json format
+    args_out << "]" << endl;
+    cout << args_out.str();
+
 }
 
 /**

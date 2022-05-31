@@ -58,7 +58,7 @@ class RandInt {
          */
         int operator()(int min, int max) {
             if(min > max) {
-                throw runtime_error( "Invalid Range min:"+to_string(min)+" b:"+to_string(max) );
+                throw runtime_error( "Invalid Range min:"+to_string(min)+" max:"+to_string(max) );
             }
             return uniform_int_distribution<> (min, max) (gen);
         }

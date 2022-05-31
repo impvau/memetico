@@ -651,16 +651,11 @@ void ContinuedFraction<T>::recombine(Model<T>* model1, Model<T>* model2) {
 
     int method = memetico::RANDINT(0,2);
 
-    ContinuedFraction<T>* m1 = static_cast<ContinuedFraction<T>*>(model1);
-    ContinuedFraction<T>* m2 = static_cast<ContinuedFraction<T>*>(model2);
+    for(size_t term = 0; term < terms; term++) {
 
-    // Minimum from m1/m2
-    size_t min_terms = min(m1->terms, m2->terms);
-
-    // Minimum of the above with the current object
-    min_terms = min(min_terms, terms);
-
-    for(size_t term = 0; term < min_terms; term++)
+        ContinuedFraction<T>* m1 = static_cast<ContinuedFraction<T>*>(model1);
+        ContinuedFraction<T>* m2 = static_cast<ContinuedFraction<T>*>(model2);
         objs[term]->recombine( m1->get_objs(term) , m2->get_objs(term), method);
-
+    }
+        
 }

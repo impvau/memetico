@@ -103,6 +103,9 @@ enum PrintType {
     PrintNumpy
 };
 
+/** PrintType */
+extern enum PrintType   FORMAT;
+
 string  ltrim(string str);
 string  rtrim(string s);
 string  trim(string s);
@@ -115,6 +118,11 @@ double  divide(double, double);
 double  add(double, double);
 double  exp(double);
 double  pow(double, double);
+
+// Custom Globals
+
+/* Current Pocket Depth for Adaptive fraction */
+extern size_t           POCKET_DEPTH;
 
 }
 

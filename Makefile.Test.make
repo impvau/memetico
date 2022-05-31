@@ -2,10 +2,10 @@
 ROOT_DIR:=$(shell pwd)
 
 CXX = g++
-CXXFLAGS = -std=c++17 -O2 -Wall -pedantic -g -fopenmp -I "/usr/include/eigen3" -I "/usr/include/nlohmann/" -I "$(ROOT_DIR)/"
+CXXFLAGS = -std=c++17 -O0 -Wall -pedantic -g -fopenmp -I "/usr/include/eigen3" -I "/usr/include/nlohmann/" -I "$(ROOT_DIR)/"
 LDFLAGS =  -lgomp
 
-LIST = tests/main tests/model.test
+LIST =  memetico/globals memetico/data memetico/data_set tests/main tests/element.test tests/term.test tests/model.test tests/regression.test tests/cont_frac.test
 SRC = $(addsuffix .cpp, $(LIST))
 OBJ = $(addprefix bin/, $(addsuffix .o, $(LIST)))
 

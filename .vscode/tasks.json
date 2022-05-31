@@ -7,7 +7,7 @@
             // Simple make
             //"command": "make",
             // Clean make, required when function structure in the headers is being modified or headers are using .tpp files
-            "command": "make clean; make",
+            "command": "make clean; make; rm -f out/*",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -19,7 +19,7 @@
             // Simple make
             //"command": "make",
             // Clean make, required when function structure in the headers is being modified or headers are using .tpp files
-            "command": "make -f test.make clean; make -f test.make",
+            "command": "make -f Makefile.Test.make clean; make -f  Makefile.Test.make",
             "group": {
                 "kind": "build",
                 "isDefault": true

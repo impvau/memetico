@@ -259,18 +259,23 @@ Data::Data(string train_file, string test_file) {
  * @param   precision   resolution of real numerical output
  *                      Defaults to memetico::PREC
  * 
+ * @bug make into an output operator
+ * 
  * @return          void
  */
 void Data::show(ostream& out, size_t precision) {
 
-    cout << "Train Data" << endl;
-    cout << "-----------" << endl;
-
+    cout << endl;
+    cout << "==================" << endl;
+    cout << "Training Data" << endl;
+    cout << "==================" << endl;
     train->show(out,precision);
 
     if(has_test) {
-        cout << "Test Data" << endl;
-        cout << "-----------" << endl;
+        cout << endl << endl;
+        cout << "==================" << endl;
+        cout << "Testing Data" << endl;
+        cout << "==================" << endl;
         test->show(out,precision);
     }
 

@@ -11,10 +11,12 @@
 #define FORMS_REGRESSION_H
 
 using namespace std;
+using namespace memetico;
 
 // Local
 #include <memetico/globals.h>
 #include <memetico/data.h>
+#include <forms/term.h>
 #include <forms/model.h>
 
 // Std Lib
@@ -26,36 +28,54 @@ using namespace std;
 #include <iostream>
 
 /**
- * @brief The Regression class extends Model for symbolic regression representation
- * 
- * The class implements a simple linear regression model \f$cx+c_0\f$
+ * @brief A Model for Regression problems
+ * A simple linear Model in the form \f$cx+c_0\f$
  * Where
  * - \f$x\f$ is the set of independent variables \f$x = \{x_1, x_2,...,x_n\} \f$
  * - \f$x\f$ is the set of coefficients for each independent varaible \f$c = \{c_1, c_2,...,c_n\} \f$ 
  * - \f$c_0\f$ is the constant 
- * 
- * This class can be extended to representations such as 'Continued Fraction', 'Power Law', 'Engel Expansion' etc.
- * 
  */
 template<class T>
 class Regression : public Model<T> {
-       
+    
+    protected:
+
+        
+
     public:
 
-        // See Implementation for function details
+        Term<T>* term;
 
-        double  evaluate(double* values, size_t from_param = 0) override;      
+        // Construction 
+        Regression(size_t size = 0) : Model<T>() { term = new Term<T>(size); };
 
-        bool    is_constant(size_t param_no);          
+        // Setters
+        void    set_active(size_t pos, bool val)    { term->get_elem(pos)->set_active(val); };
+        void    set_param(size_t pos, T val)        { term->get_elem(pos)->set_value(val); };
+        
+        // Getters
+        bool    get_active(size_t pos)  { return term->get_elem(pos)->get_active(); };
+        double  get_param(size_t pos)   { return term->get_elem(pos)->get_value(); };
+        size_t  get_count()             { return term->get_count(); };
 
-        //void    mutate(Model<T>* pocket) override;     
+        // Basic Operators
+        template<class F>
+        friend ostream& operator<<(ostream& os, const Regression<F>& r);
 
-        //void    recombine(Model<T>* model1, Model<T>* model2, int min, int max) override;    
+        // Basic Functions
+        Regression<T>* clone();
 
-        void    show(ostream& out = cout, size_t precision = memetico::PREC, size_t from_param = 0, memetico::PrintType print_type = memetico::PrintExcel) override;    
+        // Class Functions
+        void    mutate(Model<T>* m = nullptr) override;     
+        void    recombine(Model<T>* model1, Model<T>* model2, int method_override = -1) override;
+        double  evaluate(double* values) override;      
+        void    randomise(int min, int max);
 
-        void    show_min(ostream& out = cout, size_t precision = memetico::PREC, size_t from_param = 0, memetico::PrintType print_type = memetico::PrintExcel, bool do_summary = true) override;
+        size_t  used();
 
+        // To remove 
+        //void    show(ostream& out = cout, size_t precision = memetico::PREC, size_t from_param = 0, memetico::PrintType print_type = memetico::PrintExcel) override;    
+        //void    show_min(ostream& out = cout, size_t precision = memetico::PREC, size_t from_param = 0, memetico::PrintType print_type = memetico::PrintExcel, bool do_summary = true) override;       
 
 };
 

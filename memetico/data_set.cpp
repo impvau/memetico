@@ -87,7 +87,7 @@ void DataSet::show(ostream& out, size_t precision) {
     size_t temp_precision = out.precision();
     out.precision(precision);
 
-    size_t pad = precision+5;
+    size_t pad = precision+8;
     
     for(size_t i = 0; i < count; i++) {
 
@@ -105,7 +105,7 @@ void DataSet::show(ostream& out, size_t precision) {
                 out << setw(pad) << "weight";
 
             out << endl;
-            out << "----------------------------" << endl;
+            
         }
 
         out << setw(8) << i+1;
