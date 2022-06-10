@@ -2,7 +2,7 @@
 ROOT_DIR:=$(shell pwd)
 
 CXX = g++
-CXXFLAGS = -std=c++17 -O3 -Wall -pedantic -g -fopenmp -I "/usr/include/eigen3" -I "/usr/include/nlohmann/" -I "$(ROOT_DIR)/"
+CXXFLAGS = -std=c++17 -O0 -Wall -pedantic -g -fopenmp -I "/usr/include/eigen3" -I "/usr/include/nlohmann/" -I "$(ROOT_DIR)/"
 LDFLAGS =  -lgomp
 
 
@@ -19,6 +19,6 @@ main: $(OBJ)
 	$(CXX) $^ $(LDFLAGS) -o bin/main
 
 clean:
-	rm -f bin/memetico/* bin/forms/* bin/tests/* bin/*
+	rm -f bin/memetico/* bin/models/* bin/tests/* bin/*
 
 .PHONY : all clean
