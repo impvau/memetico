@@ -12,7 +12,7 @@
 #define MEMETICO_OBJECTIVE_H
 
 #include <memetico/data.h>
-#include <forms/model.h>
+#include <memetico/model_base/model.h>
 
 namespace objective {
 
