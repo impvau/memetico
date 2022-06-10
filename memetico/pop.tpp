@@ -1,18 +1,8 @@
 
-/**
- * @file
- * @author Andrew Ciezak <andy@ium.solutions>
- * @author Mohammad Haque <Mohammad.Haque@newcastle.edu.au>
- * @author Haoyuan Sun <hsun2@caltech.edu>
- * @version 1.0
- * @brief Implementation of the Population class
+/** @file
+ * @brief See pop.h
 */
 
-/**
- * Construct Population with a tree of memetico::POP_DEPTH and degree memetico::POP_DEGREE
- * 
- * @return  Population
- */
 template <class U>
 Population<U>::Population(DataSet* train_data) {
 
@@ -37,22 +27,6 @@ Population<U>::Population(DataSet* train_data) {
 
 }
 
-/**
- * Construct Population
- *
- * @return  Population
- */
-template <class U>
-Population<U>::~Population() {
-    delete root_agent;
-}
-
-/**
- * Run evoliations for memetico::GENERATIONS
- *
- * @return  void
- * @bug Current we re-initialise the pocket of the root, but this is extremely agreesive, different approach here?
- */
 template <class U>
 void Population<U>::run() {
 
@@ -65,7 +39,7 @@ void Population<U>::run() {
 
     // Setup helper vars
     size_t stale = 0;           // Number of stale generations
-    double best_fitness = root_agent->members[Agent<U>::POCKET]->get_fitness();         // Best fitness known
+    double best_fitness = root_agent->get_pocket()->get_fitness();         // Best fitness known
 
     // Loop for generations
     for( memetico::GEN = 0; memetico::GEN < memetico::GENERATIONS; memetico::GEN++ ) {
@@ -80,41 +54,36 @@ void Population<U>::run() {
             local_search();
         
         // Increment stale when the solution has not improved
-        if( root_agent->members[Agent<U>::POCKET]->get_fitness() >= best_fitness )
+        if( root_agent->get_pocket()->get_fitness() >= best_fitness )
             stale++;
         else {    
             stale = 0;
-            best_fitness = root_agent->members[Agent<U>::POCKET]->get_fitness();
-            POCKET_DEPTH = root_agent->members[Agent<U>::POCKET]->get_depth();
-            memetico::master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",RootUpdated";
-            memetico::master_log << ",\""; root_agent->members[Agent<U>::POCKET]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintExcel, false); memetico::master_log << "\"," << root_agent->members[Agent<U>::POCKET]->get_fitness() << "," << root_agent->members[Agent<U>::POCKET]->get_error();
-            memetico::master_log << endl;
+            best_fitness = root_agent->get_pocket()->get_fitness();
+            POCKET_DEPTH = root_agent->get_pocket()->get_depth();
+            master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",RootUpdated";
+            master_log << ",\"" << *root_agent->get_pocket() << "\"," << root_agent->get_pocket()->get_fitness() << "," << root_agent->get_pocket()->get_error();
+            master_log << endl;
         }
             
         // Reset root pocket on stale
-        if( stale > memetico::STALE_RESET ) {
+        if( stale > STALE_RESET ) {
             cout << "\tResetting stale root " << endl;
             root_agent->renew();
             root_agent->evaluate(data);
             stale = 0;
+            
             // Note only a single bubble, so if it is a terrible solution, it moves down to depth 1 straight away
             // but still mixes with all the other agents of the population
             bubble();
         }
 
         auto generation_end = chrono::high_resolution_clock::now();
-        chrono::duration<double, std::milli> generation_ms = generation_end-generation_start;
-        cout << setw(5) << memetico::GEN << setw(10) << best_fitness << setw(10) << " duration: " << setw(10) << generation_ms.count() << "ms root_depth: " << memetico::POCKET_DEPTH << " frac:" << *root_agent->members[Agent<U>::POCKET] << endl;
+        chrono::duration<double, milli> generation_ms = generation_end-generation_start;
+        cout << setw(5) << GEN << setw(10) << best_fitness << setw(10) << " duration: " << setw(10) << generation_ms.count() << "ms root_depth: " << memetico::POCKET_DEPTH << " frac:" << *root_agent->get_pocket() << endl;
         
-        memetico::master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",PopBest,";
-        memetico::master_log << ",\""; root_agent->members[Agent<U>::POCKET]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintExcel, false); memetico::master_log << "\"," << root_agent->members[Agent<U>::POCKET]->get_fitness() << "," << root_agent->members[Agent<U>::POCKET]->get_error();
-        memetico::master_log << endl;
-
-        //root_agent->show_errors(cout, memetico::PREC, data);
-
-        //root_agent->log << "Root Agent at generation " << memetico::GEN << endl;
-        //root_agent->members[Agent<U>::POCKET]->show(root_agent->log, memetico::PREC, true);
-
+        master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << GEN << ",PopBest,";
+        master_log << ",\"" << *root_agent->get_pocket() << "\"," << root_agent->get_pocket()->get_fitness() << "," << root_agent->get_pocket()->get_error();
+        master_log << endl;
 
     }
 
@@ -122,25 +91,12 @@ void Population<U>::run() {
     auto end_time = chrono::system_clock::now();
     memetico::RUN_TIME = chrono::duration_cast<chrono::milliseconds>(end_time-start_time).count();
 
-    root_agent->members[Agent<U>::POCKET]->show_min(cout,memetico::PREC, 0, memetico::PrintExcel);
-    root_agent->members[Agent<U>::POCKET]->show_min(cout,memetico::PREC, 0, memetico::PrintLatex);
-    root_agent->members[Agent<U>::POCKET]->show_min(cout,memetico::PREC, 0, memetico::PrintNumpy);
-
+    // Output best solution and execution time
+    cout << *root_agent->get_pocket() << endl;
     cout << endl << endl;
     cout << "Finished after " << memetico::RUN_TIME << " milliseconds" << endl;
     
 }
-
-/**
- * Evolve agent recusively by
- * - Undertakie mutation
- * - Undertake recombination for non-leaf nodes (using the agent just mutated) 
- * - Repeat for each agent in the population
- * 
- * @param agent agent to undertake the evolution process on
- *                  Defaults to root_agent
- * @return  void
- */
 
 template <class U>
 void Population<U>::evolve(Agent<U>* agent) {
@@ -148,37 +104,26 @@ void Population<U>::evolve(Agent<U>* agent) {
     // Default to root if no argument
     if( agent == nullptr )        agent = root_agent;
 
-    agent->evaluate(data);
-
-    //agent->log_small << "Evolving generation " << memetico::GEN << endl;
-    //agent->log_small << "\t  Pocket: "; agent->members[Agent<U>::POCKET]->show_min(agent->log_small, memetico::PREC, 0, memetico::PrintExcel, false);//agent->log_small << " Fitness: " << agent->members[Agent<U>::POCKET]->get_fitness() << " Error: " << agent->members[Agent<U>::POCKET]->get_error() << endl;
-    //agent->log_small << "\t Current: "; agent->members[Agent<U>::CURRENT]->show_min(agent->log_small, memetico::PREC, 0, memetico::PrintExcel, false);//agent->log_small << " Fitness: " << agent->members[Agent<U>::CURRENT]->get_fitness() << " Error: " <<  agent->members[Agent<U>::CURRENT]->get_error() << endl;
-    
+    // Repeat the process for the children
+    if( !agent->is_leaf() ) {
+        for(size_t i = 0; i < Agent<U>::DEGREE; i++)
+            evolve(agent->get_children()[i]);
+    }
 
     // Mutate based on chance
-    if( memetico::RANDREAL() < memetico::MUTATE_RATE ) {
+    if( RANDREAL() < MUTATE_RATE ) {
 
-        //cout << "Mutating Current of Agent " << agent->number << endl;
-        //agent->stat_mutate++;
-        
-        // Master Log Mutate
-        //memetico::master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",AgentCurrentMutate," << agent->number;
-        //memetico::master_log << ",\""; agent->members[Agent<U>::CURRENT]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintNumpy, false); memetico::master_log << "\"," << agent->members[Agent<U>::CURRENT]->get_fitness() << "," << agent->members[Agent<U>::CURRENT]->get_error();
-
-        agent->members[Agent<U>::CURRENT]->mutate(agent->members[Agent<U>::POCKET]);
+        agent->get_current()->mutate(agent->get_pocket());
         agent->evaluate(data);
 
         // Add record when mutation causes the best solution to be beaten
-        if(agent->members[Agent<U>::CURRENT]->get_fitness() < root_agent->members[Agent<U>::POCKET]->get_fitness()) {
-            memetico::master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",NewBest," << agent->number << ",Mutation";
-            memetico::master_log << ",\""; agent->members[Agent<U>::CURRENT]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintExcel, false); memetico::master_log << "\"," << agent->members[Agent<U>::POCKET]->get_fitness() << "," << agent->members[Agent<U>::POCKET]->get_error();
-            memetico::master_log << ",\""; root_agent->members[Agent<U>::POCKET]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintExcel, false); memetico::master_log << "\"," << root_agent->members[Agent<U>::POCKET]->get_fitness() << "," << root_agent->members[Agent<U>::POCKET]->get_error();
-            memetico::master_log << endl;
+        if(agent->get_current()->get_fitness() < root_agent->get_pocket()->get_fitness()) {
+            master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",NewBest," << agent->get_number() << ",Mutation";
+            master_log << ",\"" << *agent->get_current() << "\"," << agent->get_current()->get_fitness() << "," << agent->get_current()->get_error();
+            master_log << ",\"" << *root_agent->get_pocket() << "\"," << root_agent->get_pocket()->get_fitness() << "," << root_agent->get_pocket()->get_error();
+            master_log << endl;
         }
         
-        //memetico::master_log << ",\""; agent->members[Agent<U>::CURRENT]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintNumpy, false); memetico::master_log << "\"," << agent->members[Agent<U>::CURRENT]->get_fitness() << "," << agent->members[Agent<U>::CURRENT]->get_error();
-        //memetico::master_log << endl;
-
         bubble();
     }
         
@@ -187,87 +132,68 @@ void Population<U>::evolve(Agent<U>* agent) {
         return;
     
     // Update parent current by recombing parent pocket and the last child current
-    //cout << " leader " << agent->number << " and children[" << Agent<U>::DEGREE-1 << "]" << endl;
-
-    //memetico::master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",AgentCurrentRecombine," << agent->number;
-    //memetico::master_log << ",\""; agent->members[Agent<U>::CURRENT]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintExcel, false); memetico::master_log << "\"," << agent->members[Agent<U>::CURRENT]->get_fitness() << "," << agent->members[Agent<U>::CURRENT]->get_error();
-
-    //agent->stat_recombine++;
-   //agent->log_small << "Recombine Agent " << agent->number << " Pocket with Agent " << agent->children[Agent<U>::DEGREE-1]->number << " Current ";
-    agent->members[Agent<U>::CURRENT]->recombine(
-        agent->members[Agent<U>::POCKET], 
-        agent->children[Agent<U>::DEGREE-1]->members[Agent<U>::CURRENT]
+    agent->get_current()->recombine(
+        agent->get_pocket(), 
+        agent->get_children()[Agent<U>::DEGREE-1]->get_current()
     );
+
+    // Evaluate agent
     agent->evaluate(data);
 
-    // Add record when mutation causes the best solution to be beaten
-    if(agent->members[Agent<U>::CURRENT]->get_fitness() < root_agent->members[Agent<U>::POCKET]->get_fitness()) {
-        memetico::master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",NewBest," << agent->number << ",Recombine";
-        memetico::master_log << ",\""; agent->members[Agent<U>::CURRENT]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintExcel, false); memetico::master_log << "\"," << agent->members[Agent<U>::POCKET]->get_fitness() << "," << agent->members[Agent<U>::POCKET]->get_error();
-        memetico::master_log << ",\""; root_agent->members[Agent<U>::POCKET]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintExcel, false); memetico::master_log << "\"," << root_agent->members[Agent<U>::POCKET]->get_fitness() << "," << root_agent->members[Agent<U>::POCKET]->get_error();
-        memetico::master_log << endl;
+    // Add record when recombination causes the best solution to be beaten
+    if(agent->get_current()->get_fitness() < root_agent->get_pocket()->get_fitness()) {
+        master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << GEN << ",NewBest," << agent->get_number() << ",Recombine";
+        master_log << ",\"" << *agent->get_current() << "\"," << agent->get_current()->get_fitness() << "," << agent->get_current()->get_error();
+        master_log << ",\"" << *root_agent->get_pocket() << "\"," << root_agent->get_pocket()->get_fitness() << "," << root_agent->get_pocket()->get_error();
+        master_log << endl;
     }
 
-    //memetico::master_log << ",\""; agent->members[Agent<U>::CURRENT]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintExcel, false); memetico::master_log << "\"," << agent->members[Agent<U>::CURRENT]->get_fitness() << "," << agent->members[Agent<U>::CURRENT]->get_error();
-    //memetico::master_log << endl;
-    agent->exchange();
+    if( agent->exchange() )
+        bubble();
 
-    // Update the child current
-
-    //memetico::master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",AgentCurrentRecombine," << agent->children[Agent<U>::DEGREE-1]->number;
-    //memetico::master_log << ",\""; agent->children[Agent<U>::DEGREE-1]->members[Agent<U>::CURRENT]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintExcel, false); memetico::master_log << "\"," << agent->children[Agent<U>::DEGREE-1]->members[Agent<U>::CURRENT]->get_fitness() << "," << agent->children[Agent<U>::DEGREE-1]->members[Agent<U>::CURRENT]->get_error();
-
-    //agent->children[Agent<U>::DEGREE-1]->stat_recombine++;
-   //agent->log_small << "Recombine Agent " << agent->children[Agent<U>::DEGREE-1]->number << " Pocket with Agent " << agent->number << " Current ";
-    agent->children[Agent<U>::DEGREE-1]->members[Agent<U>::CURRENT]->recombine(
-        agent->children[Agent<U>::DEGREE-1]->members[Agent<U>::POCKET], 
-        agent->members[Agent<U>::CURRENT]
+    // Recombine and update the last childs current solution which depends on the parent
+    agent->get_children()[Agent<U>::DEGREE-1]->get_current()->recombine(
+        agent->get_children()[Agent<U>::DEGREE-1]->get_pocket(), 
+        agent->get_current()
     );
-    //cout << "Recombining Agent " << agent->children[Agent<U>::DEGREE-1]->number << endl;
-    agent->children[Agent<U>::DEGREE-1]->evaluate(data);
-    //memetico::master_log << ",\""; agent->children[Agent<U>::DEGREE-1]->members[Agent<U>::CURRENT]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintExcel, false); memetico::master_log << "\"," << agent->children[Agent<U>::DEGREE-1]->members[Agent<U>::CURRENT]->get_fitness() << "," << agent->children[Agent<U>::DEGREE-1]->members[Agent<U>::CURRENT]->get_error();
-    //memetico::master_log << endl;
-    agent->children[Agent<U>::DEGREE-1]->exchange();
+    agent->get_children()[Agent<U>::DEGREE-1]->evaluate(data);
+    agent->get_children()[Agent<U>::DEGREE-1]->exchange();
 
-    // Update the children currents by recombing the childs pocket with the leaders current
-    for(size_t i = 0; i < Agent<U>::DEGREE-1; i++) {
+    // Reverse the exchange, last child and parent
+    agent->get_current()->recombine(
+        agent->get_pocket(), 
+        agent->get_children()[Agent<U>::DEGREE-1]->get_current()
+    );
+    agent->get_children()[Agent<U>::DEGREE-1]->evaluate(data);
+    agent->get_children()[Agent<U>::DEGREE-1]->exchange();
 
-        //memetico::master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",AgentCurrentRecombine," << agent->children[i]->number;
-        //memetico::master_log << ",\""; agent->children[i]->members[Agent<U>::CURRENT]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintExcel, false); memetico::master_log << "\"," << agent->children[i]->members[Agent<U>::CURRENT]->get_fitness() << "," << agent->children[i]->members[Agent<U>::CURRENT]->get_error();
+    // For the other children
+    //for(size_t i = 0; i < Agent<U>::DEGREE-1; i++) {
+    for(int i = Agent<U>::DEGREE-2; i >= 0; i--) {
 
-        // Update parent current by recombing parent pocket and the last child 
-        //agent->children[i]->stat_recombine++;
-        //agent->log_small << "Recombine Agent " << agent->children[i]->number << " Pocket with Agent " <<  agent->children[i+1]->number << " Current ";
-        agent->children[i]->members[Agent<U>::CURRENT]->recombine(
-            agent->children[i]->members[Agent<U>::POCKET], 
-            agent->children[i+1]->members[Agent<U>::CURRENT]);
-        agent->children[i]->evaluate(data);
-
-        //memetico::master_log << ",\""; agent->children[i]->members[Agent<U>::CURRENT]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintExcel, false); memetico::master_log << "\"," << agent->children[i]->members[Agent<U>::CURRENT]->get_fitness() << "," << agent->children[i]->members[Agent<U>::CURRENT]->get_error();
-        //memetico::master_log << endl;
-
-        agent->children[i]->exchange();
+        // Perform the similar recombination process
+        agent->get_children()[i]->get_current()->recombine(
+            agent->get_children()[i]->get_pocket(), 
+            agent->get_children()[i+1]->get_current()
+        );
+        
+        agent->get_children()[i]->evaluate(data);
+        
+        // Add record when recombination causes the best solution to be beaten
+        if(agent->get_children()[i]->get_current()->get_fitness() < root_agent->get_pocket()->get_fitness()) {
+            master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << GEN << ",NewBest," << agent->get_children()[i]->get_number() << ",Recombine";
+            master_log << ",\"" << *agent->get_children()[i]->get_current() << "\"," << agent->get_children()[i]->get_current()->get_fitness() << "," << agent->get_children()[i]->get_current()->get_error();
+            master_log << ",\"" << *root_agent->get_pocket() << "\"," << root_agent->get_pocket()->get_fitness() << "," << root_agent->get_pocket()->get_error();
+            master_log << endl;
+        }
+        
+        if( agent->get_children()[i]->exchange() )
+            bubble();
 
     }
-    
-
-    // Repeat the process for the children
-    for(size_t i = 0; i < Agent<U>::DEGREE; i++)
-        evolve(agent->children[i]);
-
-    // Clear Agent LS stats
-    //agent->stat_local_search_current_nm_iters = 0;
-    //agent->stat_local_search_current_nm_time = 0;
-    //agent->stat_local_search_pocket_nm_iters = 0;
-    //agent->stat_local_search_pocket_nm_time = 0;
 
 }
 
-/**
- * Run local search onthe population from agent through all children
- *
- * @return  void
- */
 template <class U>
 void Population<U>::local_search(Agent<U>* agent) {
     
@@ -275,118 +201,79 @@ void Population<U>::local_search(Agent<U>* agent) {
     if( agent == nullptr )
         agent = root_agent;
 
+    // Perform local search on children
     if( !agent->is_leaf() ) {
-        for(size_t i = 0; i < Agent<U>::DEGREE; i++ ) {
-            local_search(agent->children[i]);
-        }   
+        for(size_t i = 0; i < Agent<U>::DEGREE; i++ )
+            local_search(agent->get_children()[i]);
     }
 
-    U* temp_current = agent->members[Agent<U>::CURRENT]->clone();
-    U* temp_pocket = agent->members[Agent<U>::POCKET]->clone();
+    // Create copies of the pocket and current solutions
+    U* temp_current = agent->get_current()->clone();
+    U* temp_pocket = agent->get_pocket()->clone();
+    double fitness = numeric_limits<double>::max();
 
-    // Local Search current always
-    for(size_t j = 0; j < memetico::LOCAL_SEARCH_RUNS; j++ ) {
+    // For the number of local search iterations configured
+    for(size_t j = 0; j < LOCAL_SEARCH_RUNS; j++ ) {
 
-        // Take selection of data
+        // Selected a uniform at random local search, or select all
         vector<size_t> selected_idx;
-        if( memetico::LOCAL_SEARCH_DATA_PCT < 1 )
-            selected_idx = data->subset(memetico::LOCAL_SEARCH_DATA_PCT);
+        if( LOCAL_SEARCH_DATA_PCT < 1 )
+            selected_idx = data->subset(LOCAL_SEARCH_DATA_PCT);
         else 
-            selected_idx = vector<size_t>();
-
-        double fitness = Agent<U>::LOCAL_SEARCH(temp_current, data, selected_idx);
-        //agent->stat_local_search_current++;
-        //agent->stat_local_search_current_nm_iters += local_search::nm_iters;
-        //agent->stat_local_search_current_nm_time += local_search::nm_duration;
-
-        // Master Log of construction
-        //memetico::master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",AgentCurrentLocalSearch," << agent->number;
-        //memetico::master_log << ",\""; agent->members[Agent<U>::CURRENT]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintExcel, false); memetico::master_log << "\"," << agent->members[Agent<U>::CURRENT]->get_fitness() << "," << agent->members[Agent<U>::CURRENT]->get_error();
-        //memetico::master_log << ",\""; temp_current->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintExcel, false); memetico::master_log << "\"," << temp_current->get_fitness() << "," << temp_current->get_error();
-        //memetico::master_log << endl;
-
-        //agent->log_small << "LocalSearch Agent " << agent->number << " Current Time: " << local_search::nm_duration << " NMIters: " << local_search::nm_iters << " Fitness: " << agent->members[Agent<U>::CURRENT]->get_fitness() << " NewFitness: " << fitness << " ModelObj: " << temp_current->get_fitness() << endl;
-        if(fitness < agent->members[Agent<U>::CURRENT]->get_fitness()) {
-            
-            //agent->log_small << "LocalSearch Updating Agent " << agent->number << " Current "; temp_current->show_min(agent->log_small, memetico::PREC, 0, memetico::PrintExcel, false);//agent->log_small << endl;
-
-            agent->members[Agent<U>::CURRENT] = temp_current->clone();
-            //agent->stat_local_search_current_improve++;
-            agent->evaluate(data);
-        }
-    
+            selected_idx = vector<size_t>(); 
+        
+        // Perform local search
+        fitness = Agent<U>::LOCAL_SEARCH(temp_current, data, selected_idx);
+        
     }
+
+    
+    if(fitness < agent->get_current()->get_fitness())
+        agent->set_current(temp_current);
 
     // Add record when mutation causes the best solution to be beaten
-    if(agent->members[Agent<U>::CURRENT]->get_fitness() < root_agent->members[Agent<U>::POCKET]->get_fitness()) {
-        memetico::master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",NewBest," << agent->number << ",LocalSearch1";
-        memetico::master_log << ",\""; agent->members[Agent<U>::CURRENT]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintExcel, false); memetico::master_log << "\"," << agent->members[Agent<U>::CURRENT]->get_fitness() << "," << agent->members[Agent<U>::CURRENT]->get_error();
-        memetico::master_log << ",\""; root_agent->members[Agent<U>::POCKET]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintExcel, false); memetico::master_log << "\"," << root_agent->members[Agent<U>::POCKET]->get_fitness() << "," << root_agent->members[Agent<U>::POCKET]->get_error();
-        memetico::master_log << endl;
+    if(agent->get_current()->get_fitness() < root_agent->get_pocket()->get_fitness()) {
+        master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << GEN << ",NewBest," << agent->get_number() << ",LocalSearch1";
+        master_log << ",\"" << *agent->get_current() << "\"," << agent->get_current()->get_fitness() << "," << agent->get_current()->get_error();
+        master_log << ",\"" << *root_agent->get_pocket() << "\"," << root_agent->get_pocket()->get_fitness() << "," << root_agent->get_pocket()->get_error();
+        master_log << endl;
     }
 
     // Local Search Pocket for a chance to avoid replacement
-    if( agent->members[Agent<U>::POCKET]->get_fitness() > agent->members[Agent<U>::CURRENT]->get_fitness() ) {
+    if( agent->get_pocket()->get_fitness() > agent->get_current()->get_fitness() ) {
 
-        //agent->log_small << "LocalSearch Agent " << agent->number << " Current > Pocket, Giving Pocket a Chance to compete. Current: " << agent->members[Agent<U>::CURRENT]->get_fitness() << " Pocket: " << agent->members[Agent<U>::POCKET]->get_fitness() << endl;
-        
+        // For the number of local search iterations configured
         for(size_t j = 0; j < memetico::LOCAL_SEARCH_RUNS; j++ ) {
 
-            // Take selection of data
+            // Selected a uniform at random local search, or select all
             vector<size_t> selected_idx;
             if( memetico::LOCAL_SEARCH_DATA_PCT < 1 )
-                selected_idx = data->subset(memetico::LOCAL_SEARCH_DATA_PCT);
+                selected_idx = data->subset(LOCAL_SEARCH_DATA_PCT);
             else 
                 selected_idx = vector<size_t>();
 
-            double fitness = Agent<U>::LOCAL_SEARCH(temp_pocket, data, selected_idx);
-
-            //agent->stat_local_search_pocket++;
-            //agent->stat_local_search_pocket_nm_iters += local_search::nm_iters;
-            //agent->stat_local_search_pocket_nm_time += local_search::nm_duration;
-
-            //agent->log_small << "LocalSearch Agent " << agent->number << " Pocket Time: " << local_search::nm_duration << " NMIters: " << local_search::nm_iters << " Fitness: " << agent->members[Agent<U>::POCKET]->get_fitness() << " NewFitness: " << fitness << " ModelObj: " << temp_pocket->get_fitness() << endl;
-
-            // Master Log of construction
-            //memetico::master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",AgentPocketLocalSearch," << agent->number;
-            //memetico::master_log << ",\""; agent->members[Agent<U>::POCKET]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintExcel, false); memetico::master_log << "\"," << agent->members[Agent<U>::POCKET]->get_fitness() << "," << agent->members[Agent<U>::POCKET]->get_error();
-            //memetico::master_log << ",\""; temp_pocket->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintExcel, false); memetico::master_log << "\"," << temp_pocket->get_fitness() << "," << temp_pocket->get_error();
-            //memetico::master_log << endl;
-
-            if(fitness < agent->members[Agent<U>::POCKET]->get_fitness()) {
-                
-                //agent->log_small << "LocalSearch Updating Agent " << agent->number << " Pocket "; temp_pocket->show_min(agent->log_small, memetico::PREC, 0, memetico::PrintExcel, false);//agent->log_small << endl;
-
-                agent->members[Agent<U>::POCKET] = temp_pocket->clone();;
-                //agent->stat_local_search_pocket_improve++;
-                agent->evaluate(data);
-            }
+            // Perform local search
+            fitness = Agent<U>::LOCAL_SEARCH(temp_pocket, data, selected_idx);
+            
         }
+
+        if(fitness < agent->get_pocket()->get_fitness())    
+            agent->set_pocket(temp_pocket);
     }
 
     // Add record when mutation causes the best solution to be beaten
-    if(agent->members[Agent<U>::POCKET]->get_fitness() < root_agent->members[Agent<U>::POCKET]->get_fitness()) {
-        memetico::master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",NewBest," << agent->number << ",LocalSearch2";
-        memetico::master_log << ",\""; agent->members[Agent<U>::POCKET]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintExcel, false); memetico::master_log << "\"," << agent->members[Agent<U>::POCKET]->get_fitness() << "," << agent->members[Agent<U>::POCKET]->get_error();
-        memetico::master_log << ",\""; root_agent->members[Agent<U>::POCKET]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintExcel, false); memetico::master_log << "\"," << root_agent->members[Agent<U>::POCKET]->get_fitness() << "," << root_agent->members[Agent<U>::POCKET]->get_error();
-        memetico::master_log << endl;
+    if(agent->get_pocket()->get_fitness() < root_agent->get_pocket()->get_fitness()) {
+        master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << GEN << ",NewBest," << agent->get_number() << ",LocalSearch2";
+        master_log << ",\"" << *agent->get_pocket() << "\"," << agent->get_pocket()->get_fitness() << "," << agent->get_pocket()->get_error();
+        master_log << ",\"" << *root_agent->get_pocket() << "\"," << root_agent->get_pocket()->get_fitness() << "," << root_agent->get_pocket()->get_error();
+        master_log << endl;
     }
 
-    agent->exchange();
-    bubble();
+    if( agent->exchange() )
+        bubble();
+
 }
 
-/**
- * Bubble fitter children pocket solutions up the population
- *
- * @return  void
- * @bug two solutions on depth 2 may increase and be better than the pocket. The best will be bubbled to the root
- *      and the previous root pocket will be placed on depth 1. In this event, it is not bubbled with the children
- *      of depth 2 which may bethe second solution that is fitter. This leads to an (unlikely) scenario where the 
- *      previous pocket on depth 1 is less fit than an agent on depth 2. This is corrected in the next iteration,
- *      but if utilising deeper trees this could lead to larger issues. This has been observed with seed 2073724172
- *      and code as of 210921
- */
 template <class U>
 void Population<U>::bubble(Agent<U>* agent, size_t child_number) {
     
@@ -396,36 +283,30 @@ void Population<U>::bubble(Agent<U>* agent, size_t child_number) {
         // Move down left leg until the child is found
         agent = root_agent;
         while(!agent->is_leaf())
-            agent = agent->children[0];
+            agent = agent->get_children()[0];
 
         // Go back to the parent. From here we can buble
-        agent = agent->parent;
+        agent = agent->get_parent();
 
     }
 
+    // If a leaf node, exit
     if(agent->is_leaf())
         return;
 
-    //cout << "Bubbling " << agent->number << endl;
     agent->bubble();
 
-    if( agent->parent == nullptr )
+    if( agent->get_parent() == nullptr )
         return;
 
     // If we have processed all siblings for this level
     if( child_number+1 == Agent<U>::DEGREE )
-        bubble(agent->parent, 0);
+        bubble(agent->get_parent(), 0);
     else
-        bubble(agent->parent->children[child_number+1], child_number+1);
+        bubble(agent->get_parent()->get_children()[child_number+1], child_number+1);
     
 }
 
-/**
- * Evaluate the entire Population
- *
- * @return  void
- * 
- */
 template <class U>
 void Population<U>::evaluate(Agent<U>* agent) {
     
@@ -441,27 +322,6 @@ void Population<U>::evaluate(Agent<U>* agent) {
 
     // Evaluate all children
     for( size_t i = 0; i < Agent<U>::DEGREE; i++ )
-        evaluate(agent->children[i]);
+        evaluate(agent->get_children()[i]);
     
-}
-
-template <class U>
-void Population<U>::generational_summary(Agent<U>* agent) {
-
-    // Start from the root agent
-    if( agent == nullptr )
-        agent = root_agent;
-    
-    // Evaluate the current agent
-    //memetico::master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",PopulationBestFitnessPocket," << agent->number;
-    //memetico::master_log << ",\""; agent->members[Agent<U>::POCKET]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintNumpy, false); memetico::master_log << "\"," << agent->members[Agent<U>::POCKET]->get_fitness() << "," << agent->members[Agent<U>::POCKET]->get_error();
-    //memetico::master_log << endl;
-
-    if(agent->is_leaf())
-        return;
-
-    // Evaluate all children
-    for( size_t i = 0; i < Agent<U>::DEGREE; i++ )
-        generational_summary(agent->children[i]);
-
 }
