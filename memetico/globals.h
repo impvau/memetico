@@ -94,6 +94,7 @@ extern bool             do_debug;
 /** Master log */
 extern ofstream         master_log;
 
+
 /**
  * @brief format to output in print functions like show(), show_min() 
  */
@@ -123,6 +124,18 @@ double  pow(double, double);
 
 /* Current Pocket Depth for Adaptive fraction */
 extern size_t           POCKET_DEPTH;
+
+extern int              DYNAMIC_DEPTH;
+
+/**
+ * @brief Types of Dynamic Depth approaches
+ */
+enum DynamicDepthType {
+    DynamicNone,
+    DynamicAdaptive,
+    DynamicRandom,
+    DynamicAdaptiveMutation
+};
 
 }
 

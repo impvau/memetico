@@ -8,6 +8,7 @@
  * @brief Entry point and harness for the memetic algorithm
  * 
  * @bug Need to add .devcontainer and .vscode configurations files to the list of files 
+ * @bug Need to change all clone() functions to copy constructors
  * 
  */
 
@@ -19,9 +20,9 @@
 #include <memetico/agent.h>
 #include <memetico/local_search.h>
 #include <memetico/objective.h>
-#include <forms/simple.h>
-#include <forms/cont_frac.h>
-#include <forms/cont_frac_ad.h>
+#include <memetico/models/regression.h>
+#include <memetico/models/cont_frac.h>
+#include <memetico/models/cont_frac_dd.h>
 // Std
 #include <cstdlib>
 
@@ -63,7 +64,8 @@ FILE* std_err;
 
 // Integer or Double models
 typedef Regression<double> DataType;
-typedef ContinuedFractionAdaptiveDepth<DataType> ModelType;
+//typedef ContinuedFraction<DataType> ModelType;
+typedef ContinuedFractionDynamicDepth<DataType> ModelType;
 
 bool            memetico::do_debug = false;
 
@@ -71,6 +73,8 @@ PrintType       memetico::FORMAT = memetico::PrintExcel;
 
 // Custom
 size_t          memetico::POCKET_DEPTH = 1;
+int             memetico::DYNAMIC_DEPTH = DynamicNone;
+
 
 /**
  */
@@ -190,6 +194,10 @@ void load_args(int argc, char * argv[]) {
     arg_string = arg_value(argv, argv+argc, "-f", "--fracdepth");
     if(arg_string != "")    ContinuedFraction<DataType>::DEPTH = stoi(arg_string);
     
+    // Dynamic Depth
+    arg_string = arg_value(argv, argv+argc, "-dd", "--dynamic-depth");
+    if(arg_string != "")    memetico::DYNAMIC_DEPTH = stoi(arg_string);
+
     // Help
     if(arg_exists(argv, argv+argc, "-h", "--help")) {
         
@@ -220,6 +228,8 @@ void load_args(int argc, char * argv[]) {
                                                             Fitness = Error*Factor
                                                         Defaults to 0.35
 
+                        -dd --dynamic-depth             Method of dynamic depth; none (0), adaptive (1), random (2) or adaptive mutation (3)
+                                                        Defaults to 0
 
                         -f --fracdepth <integer>        Depth of continued fraction
                                                         Defaults to 4
