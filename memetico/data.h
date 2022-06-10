@@ -26,18 +26,6 @@
  */
 class Data {
     
-    private:
-
-        bool valid_suffix(string file, string suffix);
-
-        void read_meta_data(string file, bool is_test);
-
-        void read_samples(string file, bool is_test);
-
-        size_t dy_col;
-
-        size_t weight_col;
-
     public:
 
         Data(string train_file, string test_file);
@@ -75,6 +63,18 @@ class Data {
         static vector<string>   IVS;
 
         void        show(ostream& out = cout, size_t precision = memetico::PREC);
+
+    private:
+
+        bool valid_suffix(string file, string suffix);
+
+        void read_meta_data(string file, bool is_test);
+
+        void read_samples(string file, bool is_test);
+
+        size_t dy_col;
+
+        size_t weight_col;
 
 };
 
