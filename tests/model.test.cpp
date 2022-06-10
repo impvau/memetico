@@ -3,7 +3,7 @@
 
 #include <memetico/globals.h>
 #include <memetico/data.h>
-#include <forms/model.h>
+#include <memetico/model_base/model.h>
 
 #include <string>
 #include <sstream>

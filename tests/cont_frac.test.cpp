@@ -1,8 +1,8 @@
 #include "doctest.h"
 
 #include <memetico/globals.h>
-#include <forms/cont_frac.h>
-#include <forms/regression.h>
+#include <memetico/models/cont_frac.h>
+#include <memetico/models/regression.h>
 
 #include <string>
 #include <sstream>

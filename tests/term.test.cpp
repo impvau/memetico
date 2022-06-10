@@ -1,6 +1,6 @@
 #include "doctest.h"
 #include <memetico/globals.h>
-#include <forms/term.h>
+#include <memetico/model_base/term.h>
 #include <typeinfo>
 
 TEST_CASE("Term<double>, get_elem, get_count(), set_elem(), ==") {
