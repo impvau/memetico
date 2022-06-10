@@ -76,7 +76,7 @@ double objective::mse(U* model, DataSet* train, vector<size_t>& selected ) {
         //cout << memetico::PENALTY << endl;
 
         model->set_error( error_sum / train->count );
-        model->set_penalty( 1+model->params_used()*memetico::PENALTY );
+        model->set_penalty( 1+model->get_count_active()*memetico::PENALTY );
         model->set_fitness( memetico::multiply(model->get_error(),model->get_penalty()) );
         //cout << " mse: " << model->get_error() << endl;
 
@@ -160,7 +160,7 @@ double objective::nmse(U* model, DataSet* train, vector<size_t>& selected ) {
             variance = variance_sum/(train->count-1);
 
             model->set_error(mse/variance);
-            model->set_penalty(1+model->params_used()*memetico::PENALTY);
+            model->set_penalty(1+model->get_count_active()*memetico::PENALTY);
             model->set_fitness(memetico::multiply(model->get_error(),model->get_penalty()));
 
         } else {
@@ -196,7 +196,7 @@ double objective::nmse(U* model, DataSet* train, vector<size_t>& selected ) {
             variance = variance_sum/(train->count-1);
 
             model->set_error(mse/variance);
-            model->set_penalty(1+model->params_used()*memetico::PENALTY);
+            model->set_penalty(1+model->get_count_active()*memetico::PENALTY);
             model->set_fitness(memetico::multiply(model->get_error(),model->get_penalty()));
 
         }
