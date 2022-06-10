@@ -279,15 +279,15 @@ double local_search::custom_nelder_mead_alg4(U* model, DataSet* data, vector<siz
     using coord = vector<double>;
 
     // Determine the number of parameters to optimise
-    size_t params = 0;
-    vector<size_t> positions;
-    for(size_t i = 0; i < model->get_count(); i++) {
+    vector<size_t> positions = model->get_active_positions();
+    size_t params = positions.size();
+    /*for(size_t i = 0; i < model->get_count(); i++) {
         
         if (model->get_active(i))  {
             params++;
             positions.push_back(i);
         }
-    }
+    }*/
         
     // Simplex object with fitness value and the associated values for each dimension
     // greater is the sorting mechanism 
@@ -567,14 +567,15 @@ double local_search::custom_nelder_mead_redo(U* model, DataSet* data, vector<siz
         
     }
 
-    //cout << "End Best LS:" << (--simplex.end())->first << endl;
+    // Function on the full dataset if we were using partial in local search
+    // otherwise we are using the performance of the limited optimisation
+    if( selected.size() != 0 ) {
+        selected = vector<size_t>();
+        coord& vb = (--simplex.end())->second;
+        local_search::model_evaluate(vb, positions, model, data, selected);      
+    }
 
-    //double ret_fit_full = e.eval_fit_full(buf);
-    selected = vector<size_t>();
-    coord& vb = (--simplex.end())->second;
-    double ret_fit_full = local_search::model_evaluate(vb, positions, model, data, selected);      
-
-    return ret_fit_full;
+    return model->get_fitness();
 }
 
 
