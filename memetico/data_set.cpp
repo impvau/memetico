@@ -42,10 +42,8 @@ DataSet::DataSet(size_t count_samples, size_t count_variables, bool has_dy, bool
  */
 DataSet::~DataSet() {
 
-    cout << "~DataSet" << endl;
-    
     if(y != nullptr)        free(y);
-    if(number != nullptr)   free(y);
+    if(number != nullptr)   free(number);
     if(dy != nullptr)       free(dy);
     if(weight != nullptr)   free(weight);   
 
