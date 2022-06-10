@@ -20,14 +20,6 @@
  */
 class DataSet {
 
-    private: 
-
-        /** Count of independent variables the same as Data::IVS.size() but replicated here privately */
-        size_t      ivs;
-
-        /** List of independent variable names the same as Data::IVS but replicated here privately */
-        vector<string> names;
-
     public:
 
         /** Count of samples the same as Data::COUNT, Data::COUNT_TEST or Data::COUNT_TRAIN but replicated here privately */
@@ -59,7 +51,14 @@ class DataSet {
         void show(ostream& out = cout, size_t precision = memetico::PREC);
 
         void csv(ostream& out = cout, size_t precision = memetico::PREC);
-        
+    
+    private: 
+
+        /** Count of independent variables the same as Data::IVS.size() but replicated here privately */
+        size_t      ivs;
+
+        /** List of independent variable names the same as Data::IVS but replicated here privately */
+        vector<string> names;     
 };
 
 #endif
