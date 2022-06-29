@@ -163,7 +163,7 @@ class ContinuedFraction : public MemeticModel<T> {
 
             // Only if globally on
             if( get_global_active(param) )  return objs[term]->get_param(param);
-            else                        return 0;
+            else                            return 0;
         };
 
         /** @brief getter for active flag based on 1-D position */
@@ -175,7 +175,7 @@ class ContinuedFraction : public MemeticModel<T> {
 
             // Only if globally on
             if( get_global_active(param) )  return objs[term]->get_active(param);
-            else                        return false;
+            else                            return false;
         };
 
         /** @brief get the number of active parameters */
@@ -216,23 +216,27 @@ class ContinuedFraction : public MemeticModel<T> {
 
         /** @brief setter for fraction depth */
         void    set_depth(size_t new_depth) { 
+              
+            //cout << "set_depth new_depth:" << new_depth << " old_depth:" << depth << endl;
+            //cout << "old_frac: " << *this << endl;
 
-            cout << "set_depth new_depth:" << new_depth << " old_depth:" << depth << endl;
             // Setup the new terms and term objects
             size_t  new_frac_terms = 2*new_depth+1;
             T**     new_objs = new T*[new_frac_terms];
-            for(size_t i = 0; i < new_frac_terms; i++)
+            for(size_t i = 0; i < min(frac_terms, new_frac_terms); i++)
                 new_objs[i] = objs[i]->clone();
 
             // If we have increased size, i.e. frac_terms < new_frac_terms, then randomise the values of the new terms
-            for(size_t i = frac_terms-1; i < new_frac_terms; i++)
-                new_objs[i]->randomise(ContinuedFraction<T>::RAND_LOWER, ContinuedFraction<T>::RAND_UPPER);
-
+            for(size_t i = min(frac_terms, new_frac_terms); i < new_frac_terms; i++)
+                new_objs[i] = new T(params_per_term);
+            
             // Delete old object array and assign the new objects, depth and number of terms
             delete objs;
             objs = new_objs;
             depth = new_depth;
-            frac_terms = new_frac_terms;           
+            frac_terms = new_frac_terms;
+
+            //cout << "new_frac: " << *this << endl;
 
         };
         

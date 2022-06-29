@@ -16,11 +16,8 @@ ContinuedFraction<T>::ContinuedFraction(size_t frac_depth) : MemeticModel<T>() {
     params_per_term = Data::IVS.size()+1;
 
     objs = new T*[frac_terms];
-    for(size_t i = 0; i < frac_terms; i++) {
-        
+    for(size_t i = 0; i < frac_terms; i++)
         objs[i] = new T(params_per_term);
-
-    }
 
     // Additional Allocation
     global_active = new bool [params_per_term];
@@ -41,7 +38,7 @@ ContinuedFraction<T>* ContinuedFraction<T>::clone() {
     for(size_t i = 0; i < get_frac_terms(); i++) {
         delete o->objs[i];
         o->objs[i] = objs[i]->clone();
-        o->set_global_active(i, get_global_active(i));
+        o->global_active[i] = get_global_active(i);
     }
 
     o->set_penalty(this->get_penalty());
@@ -151,7 +148,6 @@ void ContinuedFraction<T>::mutate(MemeticModel<T>* model) {
         
     }
 
-    /*
     // Make sure we have a fraction
     size_t global_on = 0;
     for(size_t i = 0; i < params_per_term; i++) {
@@ -160,7 +156,6 @@ void ContinuedFraction<T>::mutate(MemeticModel<T>* model) {
     }
     if( global_on == 0 )
         randomise(ContinuedFraction<T>::RAND_LOWER, ContinuedFraction<T>::RAND_UPPER);
-    */
    
     return;
 }
