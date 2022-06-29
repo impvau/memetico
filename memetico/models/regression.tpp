@@ -18,34 +18,47 @@ ostream& operator<<(ostream& os, Regression<T>& r) {
     // For all parameters
     for(size_t i = 0; i < r.get_count(); i++) {
 
-        // If active
-        if( r.get_active(i) ) {
+        // If active and non-zero
+        if( r.get_active(i) && r.get_param(i) != 0) {
 
-            // If not the first parameter, we have existing text, and the next number is not a negative, append a "+"
-            if( i != (size_t)0 && has_written && r.get_param(i) > 0)
+            // Determine if to print the sign
+            // - Negative is always printed with the value, but we dont print the value for -1, so we must print the sign
+            // - Positive is never printed with the value (we must), but we dont want to print the + when no terms exist on the left
+            // - Constant is alway shown
+
+            // Write plus when a variable has been written and larger than non-zero
+            if( has_written && r.get_param(i) > 0)
                 os << "+";
 
-            // Indicate we have written
-            has_written = true;
-            
-            // Print the parameter, silence appearance of '1' or -1 unless constant
-            if( abs(r.get_param(i)) != 1 || i == r.get_count()-1)
-                os << r.get_param(i);
+            // Write negative when not a constant and the value is -1
+            // Otherwise print sign is managed by the parameter printout
+            if( i != r.get_count()-1 && r.get_param(i) == -1)
+                os << "-";
 
-            // If coeff is not 1/-1 and not the constant, add *
-            if( abs(r.get_param(i)) != 1 && i != r.get_count()-1)
-                os << "*";
+            // Write the coefficient when it is a non-zero constant, or non-one |coefficient|
+            if( i == r.get_count()-1 || abs(r.get_param(i)) != 1 ) {
+
+                os << r.get_param(i);
+                // If not a constant, add the multiplier
+                if( i != r.get_count()-1 )
+                    os << "*";
+            }
             
-            // If not a constant, multiply by the IV
+            // Write the variable name
             if(i != r.get_count()-1) {
 
                 if( memetico::FORMAT == PrintLatex || memetico::FORMAT == PrintNumpy)
                     os << Data::IVS[i];
                 
-                if( memetico::FORMAT == PrintExcel ) 
+                if( memetico::FORMAT == PrintExcel ) {
                     os << memetico::excel_name(i+2);
+                    //cout << memetico::excel_name(i+2) << endl;
+                }
 
             }
+
+            // Indicate we have written a varaible
+            has_written = true;
             
         }
     }
