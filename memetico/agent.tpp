@@ -57,7 +57,7 @@ Agent<U>::Agent(size_t agent_depth, size_t parent_number, size_t degree_number) 
     members[Agent<U>::CURRENT] = new U();
 
     evaluate(Agent<U>::TRAIN);
-    
+
     // Master Log of construction
     //memetico::master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",AgentConstruct," << number;
     //memetico::master_log << ",\""; members[Agent<U>::POCKET]->show_min(memetico::master_log, memetico::PREC, 0, memetico::PrintNumpy, false); memetico::master_log << "\"," << members[Agent<U>::POCKET]->->get_fitness() << "," << members[Agent<U>::POCKET]->get_error();
@@ -196,6 +196,10 @@ void Agent<U>::show_errors(ostream& out, size_t precision, DataSet* data) {
 template <class U>
 void Agent<U>::show_solution(ostream& out, size_t precision, DataSet* train, DataSet* test) {
 
+    // Make sure its without penalty
+    double temp_penalty = memetico::PENALTY;
+    memetico::PENALTY = 0;
+
     vector<size_t> selection = vector<size_t>();
 
     //out << "Seed, Duration, Model Excel, Model Numpy, Model Latex, Objective, t.Error, t.Penalty, t.Fitness, T.Error, T.Penalty, T.Fitness, t.MSE, t.NMSE, T.MSE, T.NMSE" << endl;
@@ -215,5 +219,7 @@ void Agent<U>::show_solution(ostream& out, size_t precision, DataSet* train, Dat
     out << "," << objective::nmse(members[Agent<U>::POCKET], train, selection);
     if( test != nullptr )       out << "," << objective::nmse(members[Agent<U>::POCKET], test, selection);
     else                        out << ",";
+
+    memetico::PENALTY = temp_penalty;
 
 }
