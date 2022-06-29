@@ -79,7 +79,7 @@ void Population<U>::run() {
 
         auto generation_end = chrono::high_resolution_clock::now();
         chrono::duration<double, milli> generation_ms = generation_end-generation_start;
-        cout << setw(5) << GEN << setw(10) << best_fitness << setw(10) << " duration: " << setw(10) << generation_ms.count() << "ms root_depth: " << memetico::POCKET_DEPTH << " frac:" << *root_agent->get_pocket() << endl;
+        cout << setw(5) << GEN << setw(10) << best_fitness <<  " (" << setw(10) << root_agent->get_pocket()->get_error() << ") " << setw(10) << " duration: " << setw(10) << generation_ms.count() << "ms root_depth: " << memetico::POCKET_DEPTH << " frac:" << *root_agent->get_pocket() << endl;
         
         master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << GEN << ",PopBest,";
         master_log << ",\"" << *root_agent->get_pocket() << "\"," << root_agent->get_pocket()->get_fitness() << "," << root_agent->get_pocket()->get_error();
