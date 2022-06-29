@@ -47,8 +47,12 @@ class ContinuedFractionDynamicDepth : public ContinuedFraction<T> {
                 // If we performed a hard mutation
                 if( this->get_fitness() < 1.2 * model->get_fitness() || this->get_fitness() > 2* model->get_fitness() ) {
 
+                    size_t d = determine_depth();
+
+                    cout << "AdaptiveMutate depth: " << this->get_depth() << " new_depth: " << d << endl;
+
                     // Then also perform a depth shift
-                    this->set_depth(determine_depth());
+                    this->set_depth(d);
 
                 }
             }
@@ -73,9 +77,9 @@ class ContinuedFractionDynamicDepth : public ContinuedFraction<T> {
 
             // If random depth
             } else if (memetico::DYNAMIC_DEPTH == DynamicRandom)
-                rand = memetico::RANDINT(0, ContinuedFraction<T>::DEPTH-1);
+                rand = memetico::RANDINT(0, ContinuedFraction<T>::DEPTH);
             
-            cout << "Creating Fraction Depth: " << rand << " Global_Depth: " << memetico::POCKET_DEPTH;
+            cout << "Creating Fraction Depth: " << rand << " Global_Depth: " << memetico::POCKET_DEPTH << endl;
 
             return size_t(rand);
         };
