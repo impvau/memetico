@@ -75,7 +75,6 @@ PrintType       memetico::FORMAT = memetico::PrintExcel;
 size_t          memetico::POCKET_DEPTH = 1;
 int             memetico::DYNAMIC_DEPTH = DynamicNone;
 
-
 /**
  */
 void load_args(int argc, char * argv[]) {
@@ -108,7 +107,7 @@ void load_args(int argc, char * argv[]) {
             ret = string(*itr);
 
         // Build debug for VSC launch.json
-        args_out << "    \"" << short_option << "\", \"" << ret << "\"" << endl;
+        args_out << "    \"" << short_option << "\", \"" << ret << "\"," << endl;
 
         return ret;
     };
@@ -272,7 +271,7 @@ void load_args(int argc, char * argv[]) {
     }
 
     // Output arguments in VSCode launch.json format
-    args_out << "]" << endl;
+    args_out << "]," << endl;
     cout << args_out.str();
 
 }
