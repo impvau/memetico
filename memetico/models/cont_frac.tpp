@@ -23,6 +23,7 @@ ContinuedFraction<T>::ContinuedFraction(size_t frac_depth) : MemeticModel<T>() {
     global_active = new bool [params_per_term];
     
     randomise();
+    sanitise();
 
 }
 
@@ -67,6 +68,26 @@ void ContinuedFraction<T>::randomise(int min, int max) {
     for(size_t term = 0; term < get_frac_terms(); term++)
         objs[term]->randomise(min, max);
     
+}
+
+template <class T>
+void ContinuedFraction<T>::sanitise() {
+
+    // Check all terms
+    for(size_t term = 0; term < get_frac_terms(); term++) {
+
+        // if no terms are active on the fraction, at least set the constant on
+        if( objs[term]->get_count_active() == 0 ) {
+            
+            //cout << *objs[term] << " Cnt: " << objs[term]->get_count_active() << " Val: " << objs[term]->get_param(params_per_term-1) << endl;
+            objs[term]->set_active(params_per_term-1, true);
+
+            if( objs[term]->get_param(params_per_term-1) == 0 )
+                objs[term]->set_param(params_per_term-1,1);
+
+            //cout << *objs[term] << " Cnt: " << objs[term]->get_count_active() << " Val: " << objs[term]->get_param(params_per_term-1) << endl;
+        }
+    }
 }
 
 template <class T>
@@ -137,8 +158,10 @@ void ContinuedFraction<T>::mutate(MemeticModel<T>* model) {
         vector<size_t> potential_params = get_active_positions();
         
         // Ensure there are params to change
-        if(potential_params.size() == 0)
+        if(potential_params.size() == 0) {
+            sanitise();
             return;
+        }
 
         // Select a random parameter
         size_t param_pos = memetico::RANDINT(0, potential_params.size()-1);
@@ -157,6 +180,7 @@ void ContinuedFraction<T>::mutate(MemeticModel<T>* model) {
     if( global_on == 0 )
         randomise(ContinuedFraction<T>::RAND_LOWER, ContinuedFraction<T>::RAND_UPPER);
    
+    sanitise();
     return;
 }
 
@@ -218,5 +242,7 @@ void ContinuedFraction<T>::recombine(MemeticModel<T>* model1, MemeticModel<T>* m
 
     for(size_t term = 0; term < min_terms; term++)
         objs[term]->recombine( m1->get_objs(term) , m2->get_objs(term), method);
+
+    sanitise();
 
 }

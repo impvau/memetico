@@ -105,7 +105,10 @@ double memetico::multiply(double a, double b) {
  */
 double memetico::divide(double a, double b) {
     
-    if( b == 0)
+    if(a == 0 && b == 0)
+        return 0;
+
+    if(b == 0)
         throw invalid_argument("Divide by 0");
 
     // If the denominator is tiny we can overflow, so I think we need this..

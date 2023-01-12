@@ -255,7 +255,12 @@ class ContinuedFraction : public MemeticModel<T> {
          */
         void    randomise(int min = ContinuedFraction<T>::RAND_LOWER, int max = ContinuedFraction<T>::RAND_UPPER);
 
-
+        /**
+         * @brief 
+         * @param 
+         */
+        void    sanitise();
+        
     private:
 
         /** Global active flag that applies for the independent varaible down all depths and overrides any setting in the active array */
