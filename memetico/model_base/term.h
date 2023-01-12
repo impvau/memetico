@@ -74,8 +74,11 @@ class Term {
         /** @brief get the number of active elements */
         size_t          get_count_active() { 
             size_t ret = 0;
-            for(size_t i = 0; i < get_count(); i++)
-                ret += 1;
+            for(size_t i = 0; i < get_count(); i++) {
+                if( get_elem(i)->get_active() ) {
+                    ret += 1;
+                }
+            }
             return ret;
         };
 
