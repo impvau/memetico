@@ -42,21 +42,12 @@ class ContinuedFractionDynamicDepth : public ContinuedFraction<T> {
             ContinuedFraction<T>::mutate(model);
 
             // If we are using the adaptive mutate approach
-            if( memetico::DYNAMIC_DEPTH == DynamicAdaptiveMutation ) {
+            if( memetico::DYNAMIC_DEPTH_TYPE == DynamicAdaptiveMutation ) {
 
-                // If we performed a hard mutation
-                if( this->get_fitness() < 1.2 * model->get_fitness() || this->get_fitness() > 2* model->get_fitness() ) {
-
-                    size_t d = determine_depth();
-
-                    cout << "AdaptiveMutate depth: " << this->get_depth() << " new_depth: " << d << endl;
-
-                    // Then also perform a depth shift
-                    this->set_depth(d);
-
-                }
+                size_t d = determine_depth();
+                cout << "AdaptiveMutate depth: " << this->get_depth() << " new_depth: " << d << endl;
+                this->set_depth(d);
             }
-
         };
 
 
@@ -68,7 +59,7 @@ class ContinuedFractionDynamicDepth : public ContinuedFraction<T> {
             int rand = (int)ContinuedFraction<T>::DEPTH;
 
             // If adaptive approach or adaptive mutatution approach
-            if(memetico::DYNAMIC_DEPTH == DynamicAdaptive || memetico::DYNAMIC_DEPTH == DynamicAdaptiveMutation) {
+            if(memetico::DYNAMIC_DEPTH_TYPE == DynamicAdaptive || memetico::DYNAMIC_DEPTH_TYPE == DynamicAdaptiveMutation) {
 
                 rand = memetico::RANDINT(memetico::POCKET_DEPTH-1, memetico::POCKET_DEPTH+1);
                 
@@ -76,7 +67,7 @@ class ContinuedFractionDynamicDepth : public ContinuedFraction<T> {
                 if(rand < 0 )   rand = 0;
 
             // If random depth
-            } else if (memetico::DYNAMIC_DEPTH == DynamicRandom)
+            } else if (memetico::DYNAMIC_DEPTH_TYPE == DynamicRandom)
                 rand = memetico::RANDINT(0, ContinuedFraction<T>::DEPTH);
             
             cout << "Creating Fraction Depth: " << rand << " Global_Depth: " << memetico::POCKET_DEPTH << endl;
