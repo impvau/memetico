@@ -40,5 +40,7 @@ docs/*
 
 **/pytools
 
+**.zip
+
 # Memory profiling
 callgrind*
