@@ -57,7 +57,7 @@ void ContinuedFraction<T>::randomise(int min, int max) {
     for( size_t param = 0; param < params_per_term; param++ ) {
         
         // Randomly turn the IV on/off, always set the constant on
-        if( memetico::RANDREAL() < 0.5 || params_per_term-1 == param )
+        if( memetico::RANDREAL() < 2/3|| params_per_term-1 == param )
             set_global_active(param, true);
         else                               
             set_global_active(param, false);
