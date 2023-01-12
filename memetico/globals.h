@@ -18,6 +18,24 @@
 #include <regex>
 
 /**
+ * @brief Capture similarity data between two solutions and provide < operator
+ * such that a vector<Similar> can be sorted
+ */
+struct Similar
+{
+    size_t i, id, iv, j, jd, jv;
+    double dist;
+    Similar(size_t ipos, size_t idepth, size_t iivs, 
+            size_t jpos, size_t jdepth, size_t jivs, double dist_val) : 
+                i(ipos), id(idepth), iv(iivs), 
+                j(jpos), jd(jdepth),  jv(jivs), dist(dist_val) {};
+    bool operator < (const Similar& s2) const
+    {
+        return (dist < s2.dist);
+    }
+};
+
+/**
  * @file
  * @author Haoyuan Sun <hsun2@caltech.edu>
  * @author Mohammad Haque <Mohammad.Haque@newcastle.edu.au>
@@ -125,7 +143,7 @@ double  pow(double, double);
 /* Current Pocket Depth for Adaptive fraction */
 extern size_t           POCKET_DEPTH;
 
-extern int              DYNAMIC_DEPTH;
+
 
 /**
  * @brief Types of Dynamic Depth approaches
@@ -136,6 +154,21 @@ enum DynamicDepthType {
     DynamicRandom,
     DynamicAdaptiveMutation
 };
+
+extern enum DynamicDepthType   DYNAMIC_DEPTH_TYPE;
+
+/**
+ * @brief Types of Diversity Method
+ */
+enum DiversityType {
+    DiversityNone,
+    DiversityEvery,
+    DiversityStale,
+    DiversityStaleExtended
+};
+
+extern enum DiversityType       DIVERSITY_TYPE;
+extern size_t                   DIVERSITY_COUNT;
 
 }
 
