@@ -72,9 +72,10 @@ bool            memetico::do_debug = false;
 PrintType       memetico::FORMAT = memetico::PrintExcel;
 
 // Custom
-size_t          memetico::POCKET_DEPTH = 1;
-int             memetico::DYNAMIC_DEPTH = DynamicNone;
-
+size_t              memetico::POCKET_DEPTH = 1;
+DynamicDepthType    memetico::DYNAMIC_DEPTH_TYPE = DynamicNone;
+DiversityType       memetico::DIVERSITY_TYPE = DiversityNone;
+size_t              memetico::DIVERSITY_COUNT = 3;
 /**
  */
 void load_args(int argc, char * argv[]) {
@@ -193,10 +194,29 @@ void load_args(int argc, char * argv[]) {
     arg_string = arg_value(argv, argv+argc, "-f", "--fracdepth");
     if(arg_string != "")    ContinuedFraction<DataType>::DEPTH = stoi(arg_string);
     
-    // Dynamic Depth
+    // Dynamic Depth Type
     arg_string = arg_value(argv, argv+argc, "-dd", "--dynamic-depth");
-    if(arg_string != "")    memetico::DYNAMIC_DEPTH = stoi(arg_string);
+    if(arg_string == "none" || arg_string == "")    memetico::DYNAMIC_DEPTH_TYPE = DynamicNone;
+    if(arg_string == "adp")                         memetico::DYNAMIC_DEPTH_TYPE = DynamicAdaptive;
+    if(arg_string == "adp-mu")                      memetico::DYNAMIC_DEPTH_TYPE = DynamicAdaptiveMutation;
+    if(arg_string == "rnd")                         memetico::DYNAMIC_DEPTH_TYPE = DynamicRandom;
 
+    // Diversity Type
+    arg_string = arg_value(argv, argv+argc, "-dm", "--diversity-method");
+    if(arg_string == "none" || arg_string == "")    memetico::DIVERSITY_TYPE = DiversityNone;
+    if(arg_string == "every")                       memetico::DIVERSITY_TYPE = DiversityEvery;
+    if(arg_string == "stale")                       memetico::DIVERSITY_TYPE = DiversityStale;
+    if(arg_string == "stale-ext")                   memetico::DIVERSITY_TYPE = DiversityStaleExtended;
+
+    // Diversity Count
+    arg_string = arg_value(argv, argv+argc, "-dc", "--diversity-count");
+    if(arg_string != "")        memetico::DIVERSITY_COUNT = stoi(arg_string);
+    
+    // Stale Count
+    arg_string = arg_value(argv, argv+argc, "-st", "--stale");
+    if(arg_string != "")        memetico::STALE_RESET = stoi(arg_string);
+    
+    
     // Help
     if(arg_exists(argv, argv+argc, "-h", "--help")) {
         
@@ -227,8 +247,21 @@ void load_args(int argc, char * argv[]) {
                                                             Fitness = Error*Factor
                                                         Defaults to 0.35
 
-                        -dd --dynamic-depth             Method of dynamic depth; none (0), adaptive (1), random (2) or adaptive mutation (3)
-                                                        Defaults to 0
+                        -dc --diversity-count           Number of solutions to replace in 'stale' and 'every' --diversity-method's
+
+                        -dd --dynamic-depth             Method of dynamic depth
+                                                            none: hardset depth for the solution, -f
+                                                            adp: randomise new solutions with pocket depth +- 1
+                                                            adp-mu: as per adp, but during mutation re-randomise depth +- 1
+                                                            rnd: randomise new solutions uniform at random between 0 and -f inclusive
+                                                            
+                        -dm --diversity-method          Method to replace similar solutions each generation
+                                                        Compares all pocket and current solutions based on differences in MSE scores
+                                                        Process performs a full local search after renewing
+                                                            none (default): no replacement method
+                                                            every: Every generation replace the --diversity-count most similar solutions
+                                                            stale: Replace --diversity-count most similar solutions on every --stale 
+                                                            stale-ext: As per stale but every two consecutive --stale's, 50% of the solutions are replaced                                                        Defaults to 0
 
                         -f --fracdepth <integer>        Depth of continued fraction
                                                         Defaults to 4
@@ -258,6 +291,9 @@ void load_args(int argc, char * argv[]) {
                         -s --seed <integer>             Reproduction seed
                                                         Defaults to random integer between 1, numerical_limit<int>::max()
 
+                        -st --stale                     Stale count that triggers renew of the roots current solution
+
+                        
 
                         -T --Test <filepath>            Test data file
                                                         Defaults to training filepath from -t
