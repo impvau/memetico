@@ -40,6 +40,7 @@ void Population<U>::run() {
     // Setup helper vars
     size_t stale = 0;           // Number of stale generations
     double best_fitness = root_agent->get_pocket()->get_fitness();         // Best fitness known
+    U* best_soln = root_agent->get_pocket()->clone();
 
     // Loop for generations
     for( memetico::GEN = 0; memetico::GEN < memetico::GENERATIONS; memetico::GEN++ ) {
@@ -59,9 +60,10 @@ void Population<U>::run() {
         else {    
             stale = 0;
             best_fitness = root_agent->get_pocket()->get_fitness();
-            POCKET_DEPTH = root_agent->get_pocket()->get_depth();
+            best_soln = root_agent->get_pocket()->clone();
+            POCKET_DEPTH = best_soln->get_depth();
             master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",RootUpdated";
-            master_log << ",\"" << *root_agent->get_pocket() << "\"," << root_agent->get_pocket()->get_fitness() << "," << root_agent->get_pocket()->get_error();
+            master_log << ",\"" << *best_soln << "\"," << best_soln->get_fitness() << "," << best_soln->get_error();
             master_log << endl;
         }
             
@@ -79,20 +81,22 @@ void Population<U>::run() {
 
         auto generation_end = chrono::high_resolution_clock::now();
         chrono::duration<double, milli> generation_ms = generation_end-generation_start;
-        cout << setw(5) << GEN << setw(10) << best_fitness <<  " (" << setw(10) << root_agent->get_pocket()->get_error() << ") " << setw(10) << " duration: " << setw(10) << generation_ms.count() << "ms root_depth: " << memetico::POCKET_DEPTH << " frac:" << *root_agent->get_pocket() << endl;
+        cout << setw(5) << GEN << setw(10) << best_fitness <<  " (" << setw(10) << best_soln->get_error() << ") " << setw(10) << " duration: " << setw(10) << generation_ms.count() << "ms root_depth: " << memetico::POCKET_DEPTH << " frac:" << *best_soln << endl;
         
         master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << GEN << ",PopBest,";
-        master_log << ",\"" << *root_agent->get_pocket() << "\"," << root_agent->get_pocket()->get_fitness() << "," << root_agent->get_pocket()->get_error();
+        master_log << ",\"" << *best_soln << "\"," << best_soln->get_fitness() << "," << best_soln->get_error();
         master_log << endl;
 
     }
+
+    root_agent->set_pocket(best_soln);
 
     // End timer
     auto end_time = chrono::system_clock::now();
     memetico::RUN_TIME = chrono::duration_cast<chrono::milliseconds>(end_time-start_time).count();
 
     // Output best solution and execution time
-    cout << *root_agent->get_pocket() << endl;
+    cout << *best_soln << endl;
     cout << endl << endl;
     cout << "Finished after " << memetico::RUN_TIME << " milliseconds" << endl;
     
