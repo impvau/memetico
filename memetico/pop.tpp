@@ -37,10 +37,9 @@ void Population<U>::run() {
     // Start timer
     auto start_time = chrono::system_clock::now();
 
-    // Setup helper vars
-    size_t stale = 0;           // Number of stale generations
-    double best_fitness = root_agent->get_pocket()->get_fitness();         // Best fitness known
-    U* best_soln = root_agent->get_pocket()->clone();
+    // Initialise population variables
+    stale_count = 0, stale_times = 0;           
+    best_soln = root_agent->get_pocket()->clone();
 
     // Loop for generations
     for( memetico::GEN = 0; memetico::GEN < memetico::GENERATIONS; memetico::GEN++ ) {
@@ -54,34 +53,12 @@ void Population<U>::run() {
         if( memetico::GEN % memetico::LOCAL_SEARCH_INTERVAL == 0 )
             local_search();
         
-        // Increment stale when the solution has not improved
-        if( root_agent->get_pocket()->get_fitness() >= best_fitness )
-            stale++;
-        else {    
-            stale = 0;
-            best_fitness = root_agent->get_pocket()->get_fitness();
-            best_soln = root_agent->get_pocket()->clone();
-            POCKET_DEPTH = best_soln->get_depth();
-            master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",RootUpdated";
-            master_log << ",\"" << *best_soln << "\"," << best_soln->get_fitness() << "," << best_soln->get_error();
-            master_log << endl;
-        }
-            
-        // Reset root pocket on stale
-        if( stale > STALE_RESET ) {
-            cout << "\tResetting stale root " << endl;
-            root_agent->renew();
-            root_agent->evaluate(data);
-            stale = 0;
-            
-            // Note only a single bubble, so if it is a terrible solution, it moves down to depth 1 straight away
-            // but still mixes with all the other agents of the population
-            bubble();
-        }
+        // Run stale checks
+        stale();
 
         auto generation_end = chrono::high_resolution_clock::now();
         chrono::duration<double, milli> generation_ms = generation_end-generation_start;
-        cout << setw(5) << GEN << setw(10) << best_fitness <<  " (" << setw(10) << best_soln->get_error() << ") " << setw(10) << " duration: " << setw(10) << generation_ms.count() << "ms root_depth: " << memetico::POCKET_DEPTH << " frac:" << *best_soln << endl;
+        cout << setw(5) << GEN << setw(10) << best_soln->get_fitness() <<  " (" << setw(10) << best_soln->get_error() << ") " << setw(10) << " duration: " << setw(10) << generation_ms.count() << "ms root_depth: " << memetico::POCKET_DEPTH << " frac:" << *best_soln << endl;
         
         master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << GEN << ",PopBest,";
         master_log << ",\"" << *best_soln << "\"," << best_soln->get_fitness() << "," << best_soln->get_error();
@@ -328,4 +305,188 @@ void Population<U>::evaluate(Agent<U>* agent) {
     for( size_t i = 0; i < Agent<U>::DEGREE; i++ )
         evaluate(agent->get_children()[i]);
     
+}
+
+template <class U>
+void Population<U>::stale() {
+
+    // Increment stale when the solution has not improved
+    if( root_agent->get_pocket()->get_fitness() >= best_soln->get_fitness() )
+        stale_count++;
+    else {
+        stale_count = 0;
+        stale_times = 0;
+        best_soln = root_agent->get_pocket()->clone();
+        POCKET_DEPTH = best_soln->get_depth();
+        master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",RootUpdated";
+        master_log << ",\"" << *best_soln << "\"," << best_soln->get_fitness() << "," << best_soln->get_error();
+        master_log << endl;
+    }
+
+    cout << DIVERSITY_COUNT << endl;
+
+    if (DIVERSITY_TYPE == DiversityEvery) {
+        distinct(DIVERSITY_COUNT);
+        bubble();
+    }
+
+    // Reset root pocket on stale
+    if( stale_count > STALE_RESET ) {
+
+        // Standard diversity action
+        if(DIVERSITY_TYPE == DiversityNone) {
+
+            // Reset the roots current
+            cout << "\tResetting stale root " << endl;
+            root_agent->renew();
+            root_agent->evaluate(data);
+
+        } else if (DIVERSITY_TYPE == DiversityStale)
+            distinct(DIVERSITY_COUNT);
+
+        else if (DIVERSITY_TYPE == DiversityStaleExtended) {
+            
+            // When stale twice, time to boom!
+            if(stale_times == 2)    distinct(13);
+            else                    distinct(DIVERSITY_COUNT);
+        }
+    
+        bubble();
+        stale_count = 0;
+        stale_times++;
+    }
+    
+}
+
+template <class U>
+vector<U*> Population<U>::to_soln_list() {
+    vector<U*> ret;
+
+    // Hardcode for 13 agents pockets
+    ret.push_back(root_agent->get_pocket());
+    ret.push_back(root_agent->get_children()[0]->get_pocket());
+    ret.push_back(root_agent->get_children()[1]->get_pocket());
+    ret.push_back(root_agent->get_children()[2]->get_pocket());
+    ret.push_back(root_agent->get_children()[0]->get_children()[0]->get_pocket());
+    ret.push_back(root_agent->get_children()[0]->get_children()[1]->get_pocket());
+    ret.push_back(root_agent->get_children()[0]->get_children()[2]->get_pocket());
+    ret.push_back(root_agent->get_children()[1]->get_children()[0]->get_pocket());
+    ret.push_back(root_agent->get_children()[1]->get_children()[1]->get_pocket());
+    ret.push_back(root_agent->get_children()[1]->get_children()[2]->get_pocket());
+    ret.push_back(root_agent->get_children()[2]->get_children()[0]->get_pocket());
+    ret.push_back(root_agent->get_children()[2]->get_children()[1]->get_pocket());
+    ret.push_back(root_agent->get_children()[2]->get_children()[2]->get_pocket());
+
+    // Hardcode for 13 agents currents
+    ret.push_back(root_agent->get_current());
+    ret.push_back(root_agent->get_children()[0]->get_current());
+    ret.push_back(root_agent->get_children()[1]->get_current());
+    ret.push_back(root_agent->get_children()[2]->get_current());
+    ret.push_back(root_agent->get_children()[0]->get_children()[0]->get_current());
+    ret.push_back(root_agent->get_children()[0]->get_children()[1]->get_current());
+    ret.push_back(root_agent->get_children()[0]->get_children()[2]->get_current());
+    ret.push_back(root_agent->get_children()[1]->get_children()[0]->get_current());
+    ret.push_back(root_agent->get_children()[1]->get_children()[1]->get_current());
+    ret.push_back(root_agent->get_children()[1]->get_children()[2]->get_current());
+    ret.push_back(root_agent->get_children()[2]->get_children()[0]->get_current());
+    ret.push_back(root_agent->get_children()[2]->get_children()[1]->get_current());
+    ret.push_back(root_agent->get_children()[2]->get_children()[2]->get_current());
+
+    return ret;
+}
+
+template <class U>
+void Population<U>::distinct(size_t count) {
+
+    // List of all solutions to compare (pockets and currents)
+    vector<U*> agents = to_soln_list();
+
+    // Vector of results
+    vector<Similar> vec;
+
+    // Determine the distance for every pair of solutions 
+    for(size_t i = 0; i < agents.size(); i++) {
+        for(size_t j = i+1; j < agents.size(); j++) {
+            double dist = objective::compare(agents.at(i), agents.at(j), data);
+            vec.push_back(
+                Similar(i, agents.at(i)->get_depth(), agents.at(i)->get_count_active(),
+                        j, agents.at(j)->get_depth(), agents.at(j)->get_count_active(),
+                        dist)
+            );
+
+        }
+    }
+
+    // Sort list by ascending similarity
+    sort(vec.begin(), vec.end());
+
+    // For all solutions
+    for(size_t i = 0; i < vec.size(); i++) {
+        
+        // For the first count most similar solutions
+        if( i <= count) {
+
+            size_t pos;
+
+            // If equal depth
+            if( vec.at(i).id == vec.at(i).jd ) {
+
+                // If equal number of parameters, select uniform at random
+                if( vec.at(i).iv == vec.at(i).jv ) {
+                    if( memetico::RANDREAL() < 0.5 )    pos = vec.at(i).j;
+                    else                                pos = vec.at(i).i;
+                }
+                // If less in i, use j
+                else if (vec.at(i).iv < vec.at(i).jv) {
+                    pos = vec.at(i).j;
+                }
+                // If less in j, use i
+                else {
+                    pos = vec.at(i).i;    
+                }
+
+            // If not of equal depth, replace the larger depth in i or j
+            } else if ( vec.at(i).id < vec.at(i).jd ) {
+                pos = vec.at(i).j;
+            } else {
+                pos = vec.at(i).i;
+            }
+            U* rand_sol = new U();
+
+            // Perform full local search on the new result
+            vector<size_t> selected_idx;
+            selected_idx = vector<size_t>();
+            Agent<U>::LOCAL_SEARCH(rand_sol, data, selected_idx);
+
+            // Replace the underlying soln
+            if( pos == 0 )    root_agent->set_pocket(rand_sol);
+            if( pos == 1 )    root_agent->get_children()[0]->set_pocket(rand_sol);
+            if( pos == 2 )    root_agent->get_children()[1]->set_pocket(rand_sol);
+            if( pos == 3 )    root_agent->get_children()[2]->set_pocket(rand_sol);
+            if( pos == 4 )    root_agent->get_children()[0]->get_children()[0]->set_pocket(rand_sol);
+            if( pos == 5 )    root_agent->get_children()[0]->get_children()[1]->set_pocket(rand_sol);
+            if( pos == 6 )    root_agent->get_children()[0]->get_children()[2]->set_pocket(rand_sol);
+            if( pos == 7 )    root_agent->get_children()[1]->get_children()[0]->set_pocket(rand_sol);
+            if( pos == 8 )    root_agent->get_children()[1]->get_children()[1]->set_pocket(rand_sol);
+            if( pos == 9 )    root_agent->get_children()[1]->get_children()[2]->set_pocket(rand_sol);
+            if( pos == 10 )   root_agent->get_children()[2]->get_children()[0]->set_pocket(rand_sol);
+            if( pos == 11 )   root_agent->get_children()[2]->get_children()[1]->set_pocket(rand_sol);
+            if( pos == 12 )   root_agent->get_children()[2]->get_children()[2]->set_pocket(rand_sol);
+            
+            if( pos == 13 )    root_agent->set_current(rand_sol);
+            if( pos == 14 )    root_agent->get_children()[0]->set_current(rand_sol);
+            if( pos == 15 )    root_agent->get_children()[1]->set_current(rand_sol);
+            if( pos == 16 )    root_agent->get_children()[2]->set_current(rand_sol);
+            if( pos == 17 )    root_agent->get_children()[0]->get_children()[0]->set_current(rand_sol);
+            if( pos == 18 )    root_agent->get_children()[0]->get_children()[1]->set_current(rand_sol);
+            if( pos == 19 )    root_agent->get_children()[0]->get_children()[2]->set_current(rand_sol);
+            if( pos == 20 )    root_agent->get_children()[1]->get_children()[0]->set_current(rand_sol);
+            if( pos == 21 )    root_agent->get_children()[1]->get_children()[1]->set_current(rand_sol);
+            if( pos == 22 )    root_agent->get_children()[1]->get_children()[2]->set_current(rand_sol);
+            if( pos == 23 )    root_agent->get_children()[2]->get_children()[0]->set_current(rand_sol);
+            if( pos == 24 )    root_agent->get_children()[2]->get_children()[1]->set_current(rand_sol);
+            if( pos == 25 )    root_agent->get_children()[2]->get_children()[2]->set_current(rand_sol);
+
+        }
+    }    
 }
