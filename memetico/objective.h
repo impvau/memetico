@@ -24,6 +24,9 @@ double mse(U* model, DataSet* train, vector<size_t>& selected = vector<size_t>()
 template <class U>
 double nmse(U* model, DataSet* train, vector<size_t>& selected = vector<size_t>());
 
+template <class U>
+double compare(U* m1, U* m2, DataSet* train);
+
 }
 
 #include <memetico/objective.tpp>

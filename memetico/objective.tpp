@@ -212,3 +212,39 @@ double objective::nmse(U* model, DataSet* train, vector<size_t>& selected ) {
     return model->get_fitness();
 
 }
+
+template <class U>
+double objective::compare(U* m1, U* m2, DataSet* train) {
+
+    double error_dist = 0;
+    double err1, err2;
+
+    try {
+
+        for(size_t i = 0; i < train->count; i++) {
+
+            double m1_frac_val = m1->evaluate(train->variables[i]);
+            double m2_frac_val = m2->evaluate(train->variables[i]);
+            
+            // Determine residual and square
+            err1 = memetico::add(m1_frac_val, -train->y[i]);
+            err2 = memetico::add(m2_frac_val, -train->y[i]);
+            
+            // Square error
+            err1 = memetico::multiply(err1, err1);
+            err2 = memetico::multiply(err2, err2);
+            
+            // Sum of squared error
+            error_dist = memetico::add(error_dist, fabs(err1-err2));
+            
+        }
+      
+    } catch (exception& e) {
+
+        cout << "compare math error " << endl;
+        return numeric_limits<double>::max();
+    
+    }
+        
+    return error_dist;
+}
