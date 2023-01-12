@@ -52,6 +52,15 @@ class Population {
         /** Agent node at the root of the population */
         Agent<U>*       root_agent;
 
+        /** Best known solution */
+        U*              best_soln;
+
+        /** Number of generations currently stale between 0 and memetico::STALE */
+        size_t          stale_count;
+
+        /** Number of consecutive times stale_count has reached memetico::STALE */
+        size_t          stale_times;
+
         /**
          * @brief Construct Population with a tree of memetico::POP_DEPTH and degree memetico::POP_DEGREE
          * - Create a tree of \f$ \frac{o^{d+1}-1}{o-1} \f$ Agents where o is the n-ary order, POP_DEGREE and d is the zero-based depth of the tree, POP_DEPTH
@@ -135,6 +144,31 @@ class Population {
         
         /** @brief evaluate the entire Population */
         void evaluate(Agent<U>* agent = nullptr);
+
+        /** Return a list of 13 pockets, then 13 currents in a vector*/
+        vector<U*> to_soln_list();
+
+        /** 
+         * Check and perform actions when the best solution has not changed for memetico::STALE generations
+         * @return indication that soln was stale
+         * @bug we calculate 50% of population as hard coded 13 agents, whish is only true for ternary 3-depth tree
+        */
+        void stale();
+
+        /**
+         * Update the count number of most similar solutions
+         * - determine distance between all pocket and current solutions via objective::compare()
+         * - sort based on similarity
+         * - for count number of solitions
+         * -- replace the solution with the largest depth
+         * -- if equal depth, replace the solution with the largest number of active params
+         * -- if equal depth and equal params, replace uniform at random
+         * 
+         * @param count 
+         * @bug hard-coded for a ternary population of depth 3
+         * @return 
+         */
+        void distinct(size_t count = 5);
 
 };
 
