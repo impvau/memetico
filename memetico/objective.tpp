@@ -20,16 +20,12 @@
 template <class U>
 double objective::mse(U* model, DataSet* train, vector<size_t>& selected ) {
 
-    //auto t1 = chrono::high_resolution_clock::now();
-    //model->show(cout, 18);
-
     try {
 
         double error_sum = 0;
         double error;
     
         if( selected.size() == 0) {
-
             
             for(size_t i = 0; i < train->count; i++) {
 
@@ -71,30 +67,19 @@ double objective::mse(U* model, DataSet* train, vector<size_t>& selected ) {
             }
         }
         
-
-        //model->show_min();
-        //cout << memetico::PENALTY << endl;
-
         model->set_error( error_sum / train->count );
         model->set_penalty( 1+model->get_count_active()*memetico::PENALTY );
         model->set_fitness( memetico::multiply(model->get_error(),model->get_penalty()) );
-        //cout << " mse: " << model->get_error() << endl;
 
     } catch (exception& e) {
 
         model->set_error(numeric_limits<double>::max());
         model->set_penalty(numeric_limits<double>::max());
         model->set_fitness(numeric_limits<double>::max());
-        //cout << " exception!: " << e.what() << " error: " << model->get_error() << " fitness: " << model->fitness << endl;
 
     }
 
-    //auto t2 = chrono::high_resolution_clock::now();
-    //chrono::duration<double, std::milli> ms_double = t2 - t1;
-    //std::cout << " mse: " << ms_double.count() << "ms" << endl;
-
     return model->get_fitness();
-    
 }
 
 /**
