@@ -45,12 +45,6 @@ Agent<U>::Agent(size_t agent_depth, size_t parent_number, size_t degree_number) 
 
     }
 
-    //
-    //log = ofstream(memetico::LOG_DIR+to_string(memetico::SEED)+".Agent."+to_string(number)+".csv");
-    //log_small = ofstream(memetico::LOG_DIR+to_string(memetico::SEED)+".Agent."+to_string(number)+".min.csv");
-    //if( !log.is_open() or !log_small.is_open())
-    //    throw runtime_error("Unable to open agent " +to_string(number)+ " log" );
-
     // Create members of derived model type U
     members = new U*[2];
     members[Agent<U>::POCKET] = new U();
@@ -126,6 +120,8 @@ void Agent<U>::bubble() {
     // Check all children
     for(size_t i = 0; i < Agent::DEGREE; i++) {
 
+        children[i]->evaluate(Agent::TRAIN);
+
         // If best child so far, save
         if(children[i]->members[Agent::POCKET]->get_fitness() < best_fitness) {
             best_child = i;
@@ -133,6 +129,8 @@ void Agent<U>::bubble() {
         }   
     }
 
+    evaluate(Agent::TRAIN);
+    
     // Change if best child beats parent
     if( best_fitness < members[Agent::POCKET]->get_fitness() ) {
 
