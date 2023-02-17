@@ -64,6 +64,17 @@ void Population<U>::run() {
         master_log << ",\"" << *best_soln << "\"," << best_soln->get_fitness() << "," << best_soln->get_error();
         master_log << endl;
 
+        cout << best_soln->get_fitness() << endl;
+        vector<size_t> selected_idx = vector<size_t>();
+        Agent<U>::OBJECTIVE(best_soln, data, selected_idx);
+        cout << best_soln->get_fitness() << endl;
+
+        auto end_time = chrono::system_clock::now();
+        if( MAX_TIME*1000 < chrono::duration_cast<chrono::milliseconds>(end_time-start_time).count() ) {
+            cout << "Maximum time (" << MAX_TIME << " s) reached on gen " << GEN << ". Exiting after " << chrono::duration_cast<chrono::milliseconds>(end_time-start_time).count() << " ms" << endl;
+            break;
+        }
+
     }
 
     root_agent->set_pocket(best_soln);
@@ -95,16 +106,18 @@ void Population<U>::evolve(Agent<U>* agent) {
     if( RANDREAL() < MUTATE_RATE ) {
 
         agent->get_current()->mutate(agent->get_pocket());
+        
+        vector<size_t> selected_idx = vector<size_t>();
+        Agent<U>::LOCAL_SEARCH(agent->get_current(), data, selected_idx);
         agent->evaluate(data);
 
         // Add record when mutation causes the best solution to be beaten
-        if(agent->get_current()->get_fitness() < root_agent->get_pocket()->get_fitness()) {
-            master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",NewBest," << agent->get_number() << ",Mutation";
-            master_log << ",\"" << *agent->get_current() << "\"," << agent->get_current()->get_fitness() << "," << agent->get_current()->get_error();
-            master_log << ",\"" << *root_agent->get_pocket() << "\"," << root_agent->get_pocket()->get_fitness() << "," << root_agent->get_pocket()->get_error();
-            master_log << endl;
-        }
-        
+        //if(agent->get_current()->get_fitness() < root_agent->get_pocket()->get_fitness()) {
+        //    master_log << duration_cast< milliseconds >(system_clock::now().time_since_epoch()).count() << "," << memetico::GEN << ",NewBest," << agent->get_number() << ",Mutation";
+        //    master_log << ",\"" << *agent->get_current() << "\"," << agent->get_current()->get_fitness() << "," << agent->get_current()->get_error();
+        //    master_log << ",\"" << *root_agent->get_pocket() << "\"," << root_agent->get_pocket()->get_fitness() << "," << root_agent->get_pocket()->get_error();
+        //    master_log << endl;
+        //}
         bubble();
     }
         
@@ -118,8 +131,13 @@ void Population<U>::evolve(Agent<U>* agent) {
         agent->get_children()[Agent<U>::DEGREE-1]->get_current()
     );
 
-    // Evaluate agent
+    // Perform full local search on the new result
+    vector<size_t> selected_idx = vector<size_t>();
+    Agent<U>::LOCAL_SEARCH( agent->get_current(), data, selected_idx);
     agent->evaluate(data);
+
+    //if( agent->exchange() )
+    //    bubble();
 
     // Add record when recombination causes the best solution to be beaten
     if(agent->get_current()->get_fitness() < root_agent->get_pocket()->get_fitness()) {
@@ -128,9 +146,6 @@ void Population<U>::evolve(Agent<U>* agent) {
         master_log << ",\"" << *root_agent->get_pocket() << "\"," << root_agent->get_pocket()->get_fitness() << "," << root_agent->get_pocket()->get_error();
         master_log << endl;
     }
-
-    if( agent->exchange() )
-        bubble();
 
     // Recombine and update the last childs current solution which depends on the parent
     agent->get_children()[Agent<U>::DEGREE-1]->get_current()->recombine(
@@ -347,8 +362,12 @@ void Population<U>::stale() {
         else if (DIVERSITY_TYPE == DiversityStaleExtended) {
             
             // When stale twice, time to boom!
-            if(stale_times == 2)    distinct(13);
-            else                    distinct(DIVERSITY_COUNT);
+            if(stale_times == 2) {
+                distinct(13);
+                stale_times = 0;
+            }
+            else                    
+                distinct(DIVERSITY_COUNT);
         }
     
         bubble();
@@ -454,8 +473,7 @@ void Population<U>::distinct(size_t count) {
             U* rand_sol = new U();
 
             // Perform full local search on the new result
-            vector<size_t> selected_idx;
-            selected_idx = vector<size_t>();
+            vector<size_t> selected_idx = vector<size_t>();
             Agent<U>::LOCAL_SEARCH(rand_sol, data, selected_idx);
 
             // Replace the underlying soln

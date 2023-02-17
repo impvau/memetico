@@ -28,7 +28,7 @@
 
 using namespace std;
 
-// Default Logic Globals
+// Logic Globals
 uint_fast32_t   memetico::SEED = 42;
 size_t          memetico::GENERATIONS = 200;
 double          memetico::MUTATE_RATE = 0.2;
@@ -41,7 +41,16 @@ size_t          memetico::NELDER_MEAD_MOVES = 250;
 double          memetico::LOCAL_SEARCH_DATA_PCT = 1;
 double          memetico::PENALTY = 0.35;
 size_t          memetico::GEN = 0;
+long int        memetico::MAX_TIME = 10*60;
 
+
+typedef Regression<double> DataType;
+typedef ContinuedFractionDynamicDepth<DataType> ModelType;
+
+size_t              memetico::POCKET_DEPTH = 1;
+DynamicDepthType    memetico::DYNAMIC_DEPTH_TYPE = DynamicNone;
+DiversityType       memetico::DIVERSITY_TYPE = DiversityNone;
+size_t              memetico::DIVERSITY_COUNT = 3;
 
 // File Globals
 string          memetico::TRAIN_FILE = "sinx.csv";
@@ -50,74 +59,51 @@ string          memetico::LOG_DIR = "out/";
 ofstream        memetico::master_log;
 
 
-// Technical/Formatting Globals
+// Technical Globals
 size_t          memetico::PREC = 18;
 bool            memetico::DEBUG = false;
 size_t          memetico::RUN_TIME = 0;
+bool            memetico::do_debug = false;
+PrintType       memetico::FORMAT = memetico::PrintExcel;
 
 // Global Heplers
 RandReal        memetico::RANDREAL;
 RandInt         memetico::RANDINT;
 
-FILE* std_out;
-FILE* std_err;
+// Local Helpers
+FILE*           std_out;
+FILE*           std_err;
+stringstream    args_out;
 
-// Integer or Double models
-typedef Regression<double> DataType;
-//typedef ContinuedFraction<DataType> ModelType;
-typedef ContinuedFractionDynamicDepth<DataType> ModelType;
+bool arg_exists(char** begin, char** end, string short_option, string long_option) {
+    return find(begin, end, short_option) != end || find(begin, end, long_option) != end;
+}
 
-bool            memetico::do_debug = false;
-
-PrintType       memetico::FORMAT = memetico::PrintExcel;
-
-// Custom
-size_t              memetico::POCKET_DEPTH = 1;
-DynamicDepthType    memetico::DYNAMIC_DEPTH_TYPE = DynamicNone;
-DiversityType       memetico::DIVERSITY_TYPE = DiversityNone;
-size_t              memetico::DIVERSITY_COUNT = 3;
-/**
- */
-void load_args(int argc, char * argv[]) {
-   
-    stringstream args_out;
-    args_out << "==================" << endl;
-    args_out << "Arguments" << endl;
-    args_out << "==================" << endl;
-    args_out << "Command: " << argv[0] << endl;
-    args_out << "\"args\": [" << endl;
-
-    // Check argument exists
-    auto arg_exists = [](char** begin, char** end, string short_option, string long_option) {
-        return find(begin, end, short_option) != end || find(begin, end, long_option) != end;
-    };
-
-    // Get value after argument
-    auto arg_value = [&](char** begin, char** end, string short_option, string long_option) {
+string arg_value(char** begin, char** end, string short_option, string long_option) {
         
-        string ret;
+    string ret;
 
-        // Check for short string e.g. "-h" rather than "-help"
-        char ** itr = find(begin, end, short_option);
-        if (itr != end && ++itr != end)
-            ret = string(*itr);
-        
-        // Check for long string e.g.  "-help"
-        itr = find(begin, end, long_option);
-        if (itr != end && ++itr != end)
-            ret = string(*itr);
-
-        // Build debug for VSC launch.json
-        args_out << "    \"" << short_option << "\", \"" << ret << "\"," << endl;
-
-        return ret;
-    };
+    // Check for short string e.g. "-h" rather than "-help"
+    char ** itr = find(begin, end, short_option);
+    if (itr != end && ++itr != end)
+        ret = string(*itr);
     
-    // Temporary string
-    string arg_string;
-    
+    // Check for long string e.g.  "-help"
+    itr = find(begin, end, long_option);
+    if (itr != end && ++itr != end)
+        ret = string(*itr);
+
+    // Build debug for VSC launch.json
+    args_out << "    \"" << short_option << "\", \"" << ret << "\"," << endl;
+
+    return ret;
+
+}
+
+void arg_seed(int argc, char * argv[]) {
+
     // Seed
-    arg_string = arg_value(argv, argv+argc, "-s", "--seed");
+    string arg_string = arg_value(argv, argv+argc, "-s", "--seed");
     if(arg_string != "")
         memetico::SEED = stol(arg_string);
     else  {
@@ -126,9 +112,14 @@ void load_args(int argc, char * argv[]) {
     }
     memetico::RANDINT = RandInt(memetico::SEED);
     memetico::RANDREAL = RandReal(memetico::SEED);
-    
+
+
+}
+
+void arg_log(int argc, char * argv[]) {
+
     // Log Directory
-    arg_string = arg_value(argv, argv+argc, string("-lt"), string("--log-to"));
+    string arg_string = arg_value(argv, argv+argc, string("-lt"), string("--log-to"));
     if(arg_string != "") {
         memetico::LOG_DIR = arg_string;
         if( memetico::LOG_DIR.back() != '/' )
@@ -139,85 +130,43 @@ void load_args(int argc, char * argv[]) {
         std_err = freopen( (memetico::LOG_DIR + to_string(memetico::SEED) + ".Err.log").c_str(), "a", stderr);
 
     }
-    // Master log
-    memetico::master_log = ofstream(memetico::LOG_DIR+to_string(memetico::SEED)+".Master.log");
-    
-    // Redirect Std Out and Std In
-    cout << "Random Seed: " << memetico::SEED << endl;
-    
-    // Train
-    arg_string = arg_value(argv, argv+argc, string("-t"), string("--train"));
-    if(arg_string != "")    memetico::TRAIN_FILE = arg_string;
+}
 
-    // Test
-    arg_string = arg_value(argv, argv+argc, "-T", "--Test");
-    if(arg_string != "")    memetico::TEST_FILE = arg_string;
-    else                    memetico::TEST_FILE = memetico::TRAIN_FILE;
-    
-    // Mutation Rate
-    arg_string = arg_value(argv, argv+argc, "-mr", "--mutate-rate");
-    if(arg_string != "")    memetico::MUTATE_RATE = stod(arg_string);
-    
-    // Penalty
-    arg_string = arg_value(argv, argv+argc, "-d", "--delta");
-    if(arg_string != "")    memetico::PENALTY = stod(arg_string);
-
-    // Generations
-    arg_string = arg_value(argv, argv+argc, "-g", "--gens");
-    if(arg_string != "")    memetico::GENERATIONS = stoi(arg_string);
-
-    // Must we split dataset
-    arg_string = arg_value(argv, argv+argc, "-sd", "--split-data");
-    if(arg_string != "")    Data::SPLIT = stod(arg_string);
-
-    // Local Search Data
-    arg_string = arg_value(argv, argv+argc, "-ld", "--local-data");
-    if(arg_string != "")    memetico::LOCAL_SEARCH_DATA_PCT = stod(arg_string);
-    
+void arg_local_search(int argc, char * argv[]) {
     // Local Search function
-    arg_string = arg_value(argv, argv+argc, "-ls", "--local-search");
+    string arg_string = arg_value(argv, argv+argc, "-ls", "--local-search");
     if( arg_string == "cnm" || arg_string == "")    Agent<ModelType>::LOCAL_SEARCH = local_search::custom_nelder_mead_redo<ModelType>;
     if( arg_string == "cnms" )                      Agent<ModelType>::LOCAL_SEARCH = local_search::custom_nelder_mead_alg4<ModelType>;  
-        //arg_string == "")       Agent<ModelType>::LOCAL_SEARCH = local_search::custom_nelder_mead<ModelType>;
-        
+}
+
+void arg_objective(int argc, char * argv[]) {
     // Objective function
-    arg_string = arg_value(argv, argv+argc, "-o", "--objective");
+    string arg_string = arg_value(argv, argv+argc, "-o", "--objective");
     Agent<ModelType>::OBJECTIVE_NAME = arg_string;
     if( arg_string == "")                               Agent<ModelType>::OBJECTIVE_NAME = "mse";
     if( Agent<ModelType>::OBJECTIVE_NAME == "mse" )     Agent<ModelType>::OBJECTIVE = objective::mse<ModelType>;
-    //if( Agent<ModelType>::OBJECTIVE_NAME == "nmse" )  Agent<ModelType>::OBJECTIVE = objective::mse<ModelType>;
-    //if( Agent<ModelType>::OBJECTIVE_NAME == "cw" )    Agent<ModelType>::OBJECTIVE = objective::mse<ModelType>;
-    //if( Agent<ModelType>::OBJECTIVE_NAME == "aic" )   Agent<ModelType>::OBJECTIVE = objective::mse<ModelType>;
-    
-    // CFR Specific
-    // Depth
-    arg_string = arg_value(argv, argv+argc, "-f", "--fracdepth");
-    if(arg_string != "")    ContinuedFraction<DataType>::DEPTH = stoi(arg_string);
-    
+}
+
+void arg_dynamic_depth(int argc, char * argv[]) {
     // Dynamic Depth Type
-    arg_string = arg_value(argv, argv+argc, "-dd", "--dynamic-depth");
+    string arg_string = arg_value(argv, argv+argc, "-dd", "--dynamic-depth");
     if(arg_string == "none" || arg_string == "")    memetico::DYNAMIC_DEPTH_TYPE = DynamicNone;
     if(arg_string == "adp")                         memetico::DYNAMIC_DEPTH_TYPE = DynamicAdaptive;
     if(arg_string == "adp-mu")                      memetico::DYNAMIC_DEPTH_TYPE = DynamicAdaptiveMutation;
     if(arg_string == "rnd")                         memetico::DYNAMIC_DEPTH_TYPE = DynamicRandom;
+}
 
+void arg_diversity(int argc, char * argv[]) {
     // Diversity Type
-    arg_string = arg_value(argv, argv+argc, "-dm", "--diversity-method");
+    string arg_string = arg_value(argv, argv+argc, "-dm", "--diversity-method");
     if(arg_string == "none" || arg_string == "")    memetico::DIVERSITY_TYPE = DiversityNone;
     if(arg_string == "every")                       memetico::DIVERSITY_TYPE = DiversityEvery;
     if(arg_string == "stale")                       memetico::DIVERSITY_TYPE = DiversityStale;
     if(arg_string == "stale-ext")                   memetico::DIVERSITY_TYPE = DiversityStaleExtended;
+}
 
-    // Diversity Count
-    arg_string = arg_value(argv, argv+argc, "-dc", "--diversity-count");
-    if(arg_string != "")        memetico::DIVERSITY_COUNT = stoi(arg_string);
-    
-    // Stale Count
-    arg_string = arg_value(argv, argv+argc, "-st", "--stale");
-    if(arg_string != "")        memetico::STALE_RESET = stoi(arg_string);
-    
-    
-    // Help
+void arg_help(int argc, char * argv[]) {
+     
     if(arg_exists(argv, argv+argc, "-h", "--help")) {
         
         cout << 
@@ -288,6 +237,8 @@ void load_args(int argc, char * argv[]) {
                         -mr --mutate-rate               Percentage of solutions that undergo mutation each generation between 0 and 1
                                                         Defaults to 0.2
 
+                        -mt --max-time                  Number of seconds after which the best solution is returned
+
                         -s --seed <integer>             Reproduction seed
                                                         Defaults to random integer between 1, numerical_limit<int>::max()
 
@@ -302,10 +253,79 @@ void load_args(int argc, char * argv[]) {
                                                         
 
             )";
-
-            exit(EXIT_SUCCESS);
     }
+}
+    
+void load_args(int argc, char * argv[]) {
+   
+    args_out << "==================" << endl;
+    args_out << "Arguments" << endl;
+    args_out << "==================" << endl;
+    args_out << "Command: " << argv[0] << endl;
+    args_out << "\"args\": [" << endl;
+    
+    string arg_string;
 
+    arg_help(argc,argv);
+
+    // Train
+    arg_string = arg_value(argv, argv+argc, string("-t"), string("--train"));
+    if(arg_string != "")    memetico::TRAIN_FILE = arg_string;
+
+    // Test
+    arg_string = arg_value(argv, argv+argc, "-T", "--Test");
+    if(arg_string != "")    memetico::TEST_FILE = arg_string;
+    else                    memetico::TEST_FILE = memetico::TRAIN_FILE;
+    
+    // Mutation Rate
+    arg_string = arg_value(argv, argv+argc, "-mr", "--mutate-rate");
+    if(arg_string != "")    memetico::MUTATE_RATE = stod(arg_string);
+    
+    // Penalty
+    arg_string = arg_value(argv, argv+argc, "-d", "--delta");
+    if(arg_string != "")    memetico::PENALTY = stod(arg_string);
+
+    // Generations
+    arg_string = arg_value(argv, argv+argc, "-g", "--gens");
+    if(arg_string != "")    memetico::GENERATIONS = stoi(arg_string);
+
+    // Data split percentage
+    arg_string = arg_value(argv, argv+argc, "-sd", "--split-data");
+    if(arg_string != "")    Data::SPLIT = stod(arg_string);
+
+    // Local Search Data
+    arg_string = arg_value(argv, argv+argc, "-ld", "--local-data");
+    if(arg_string != "")    memetico::LOCAL_SEARCH_DATA_PCT = stod(arg_string);
+
+    // Stale Count
+    arg_string = arg_value(argv, argv+argc, "-st", "--stale");
+    if(arg_string != "")        memetico::STALE_RESET = stoi(arg_string);
+    
+    // Max time
+    arg_string = arg_value(argv, argv+argc, "-mt", "--max-time");
+    if(arg_string != "")        memetico::MAX_TIME = stoi(arg_string);
+
+    arg_seed(argc, argv);
+    arg_log(argc, argv);
+    arg_local_search(argc, argv);
+    arg_objective(argc, argv);
+    
+    // CFR Specific
+
+    // Depth
+    arg_string = arg_value(argv, argv+argc, "-f", "--fracdepth");
+    if(arg_string != "")    ContinuedFraction<DataType>::DEPTH = stoi(arg_string);
+    
+    // Diversity Count
+    arg_string = arg_value(argv, argv+argc, "-dc", "--diversity-count");
+    if(arg_string != "")        memetico::DIVERSITY_COUNT = stoi(arg_string);
+
+    arg_dynamic_depth(argc,argv);
+    arg_diversity(argc,argv);
+
+    // Master log
+    memetico::master_log = ofstream(memetico::LOG_DIR+to_string(memetico::SEED)+".Master.log");
+       
     // Output arguments in VSCode launch.json format
     args_out << "]," << endl;
     cout << args_out.str();
@@ -359,10 +379,33 @@ int main(int argc, char *argv[]) {
     if(store->has_test)
         p.root_agent->show_errors(cout, memetico::PREC, store->test);
 
+    // Write Run.log
     cout << " Writing " << memetico::LOG_DIR+to_string(memetico::SEED)+".Run.log" << endl;
     ofstream log(memetico::LOG_DIR+to_string(memetico::SEED)+".Run.log");
-    if (log.is_open())
+    if (log.is_open()) {
+        log << setprecision(memetico::PREC);
         p.root_agent->show_solution(log, memetico::PREC, store->train, store->test);
+    }
+
+    // Write Training results
+    ofstream train_log(memetico::LOG_DIR+to_string(memetico::SEED)+".TrainResults.csv");
+    if (train_log.is_open()) {
+
+        train_log << setprecision(memetico::PREC) << "y" << endl;
+        for(size_t i = 0; i < store->TRAIN_COUNT; i++)
+            train_log << p.root_agent->get_pocket()->evaluate(store->train->variables[i]) << endl;
+
+    }
+
+    // Write Testing results
+    ofstream test_log(memetico::LOG_DIR+to_string(memetico::SEED)+".TestResults.csv");
+    if (test_log.is_open()) {
+
+        test_log << setprecision(memetico::PREC) << "y" << endl;
+        for(size_t i = 0; i < store->TEST_COUNT; i++)
+            test_log << p.root_agent->get_pocket()->evaluate(store->test->variables[i]) << endl;
+
+    }
 
     return EXIT_SUCCESS;
 }

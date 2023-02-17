@@ -135,7 +135,10 @@ class Agent {
          * @brief Swap pocket and current if the current solution is better than the pocket 
          * @bug move the log code to another function
          */
-        bool        exchange() {
+        bool        exchange(bool doEval = true) {
+
+            if( doEval ) 
+                evaluate(Agent::TRAIN);
 
             if( members[Agent<U>::POCKET]->get_fitness() > members[Agent<U>::CURRENT]->get_fitness()) {
 
@@ -171,7 +174,6 @@ class Agent {
         void        renew() {
             delete members[Agent::CURRENT];
             members[Agent::CURRENT] = new U();
-            evaluate(Agent::TRAIN);
             exchange();
         };
 
@@ -179,9 +181,10 @@ class Agent {
          * @brief Evaluate Agent current solution and pocket solution based on just_current
          * @param train training DataSet
          */
-        void        evaluate(DataSet* train) {
+        void        evaluate(DataSet* train, bool doPocket = true) {
             vector<size_t> selected = vector<size_t>();
-            Agent<U>::OBJECTIVE(members[Agent<U>::POCKET], train, selected);        
+            if( doPocket )
+                Agent<U>::OBJECTIVE(members[Agent<U>::POCKET], train, selected);
             Agent<U>::OBJECTIVE(members[Agent<U>::CURRENT], train, selected);
         }
 

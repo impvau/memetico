@@ -284,7 +284,7 @@ template<class T>
 int ContinuedFraction<T>::RAND_LOWER = 1;
 
 template<class T>
-int ContinuedFraction<T>::RAND_UPPER = 3;
+int ContinuedFraction<T>::RAND_UPPER = 30;
 
 template<class T>
 size_t ContinuedFraction<T>::DEPTH = 4;
