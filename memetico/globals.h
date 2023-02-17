@@ -107,6 +107,9 @@ extern bool             DEBUG;
 /** Global Current Generation */
 extern size_t           GEN;
 
+/** Maximum number of seconds the program can run for */
+extern long int         MAX_TIME;
+
 extern bool             do_debug;
 
 /** Master log */
