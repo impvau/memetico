@@ -29,46 +29,47 @@
 using namespace std;
 
 // Logic Globals
-uint_fast32_t   memetico::SEED = 42;
-size_t          memetico::GENERATIONS = 200;
-double          memetico::MUTATE_RATE = 0.2;
-size_t          memetico::LOCAL_SEARCH_INTERVAL = 1;
-size_t          memetico::STALE_RESET = 5;
-bool            memetico::INT_ONLY = false;
-size_t          memetico::LOCAL_SEARCH_RUNS = 4;
-size_t          memetico::NELDER_MEAD_STALE = 10;
-size_t          memetico::NELDER_MEAD_MOVES = 250;
-double          memetico::LOCAL_SEARCH_DATA_PCT = 1;
-double          memetico::PENALTY = 0.35;
-size_t          memetico::GEN = 0;
-long int        memetico::MAX_TIME = 10*60;
+bool            meme::GPU = false;
+uint_fast32_t   meme::SEED = 42;
+size_t          meme::GENERATIONS = 200;
+double          meme::MUTATE_RATE = 0.2;
+size_t          meme::LOCAL_SEARCH_INTERVAL = 1;
+size_t          meme::STALE_RESET = 5;
+bool            meme::INT_ONLY = false;
+size_t          meme::LOCAL_SEARCH_RUNS = 4;
+size_t          meme::NELDER_MEAD_STALE = 10;
+size_t          meme::NELDER_MEAD_MOVES = 250;
+double          meme::LOCAL_SEARCH_DATA_PCT = 1;
+double          meme::PENALTY = 0.35;
+size_t          meme::GEN = 0;
+long int        meme::MAX_TIME = 10*60;
 
 
 typedef Regression<double> DataType;
 typedef ContinuedFractionDynamicDepth<DataType> ModelType;
 
-size_t              memetico::POCKET_DEPTH = 1;
-DynamicDepthType    memetico::DYNAMIC_DEPTH_TYPE = DynamicNone;
-DiversityType       memetico::DIVERSITY_TYPE = DiversityNone;
-size_t              memetico::DIVERSITY_COUNT = 3;
+size_t              meme::POCKET_DEPTH = 1;
+DynamicDepthType    meme::DYNAMIC_DEPTH_TYPE = DynamicNone;
+DiversityType       meme::DIVERSITY_TYPE = DiversityNone;
+size_t              meme::DIVERSITY_COUNT = 3;
 
 // File Globals
-string          memetico::TRAIN_FILE = "sinx.csv";
-string          memetico::TEST_FILE = "sinx.csv";
-string          memetico::LOG_DIR = "out/";
-ofstream        memetico::master_log;
+string          meme::TRAIN_FILE = "sinx.csv";
+string          meme::TEST_FILE = "sinx.csv";
+string          meme::LOG_DIR = "out/";
+ofstream        meme::master_log;
 
 
 // Technical Globals
-size_t          memetico::PREC = 18;
-bool            memetico::DEBUG = false;
-size_t          memetico::RUN_TIME = 0;
-bool            memetico::do_debug = false;
-PrintType       memetico::FORMAT = memetico::PrintExcel;
+size_t          meme::PREC = 18;
+bool            meme::DEBUG = false;
+size_t          meme::RUN_TIME = 0;
+bool            meme::do_debug = false;
+PrintType       meme::FORMAT = meme::PrintExcel;
 
 // Global Heplers
-RandReal        memetico::RANDREAL;
-RandInt         memetico::RANDINT;
+RandReal        meme::RANDREAL;
+RandInt         meme::RANDINT;
 
 // Local Helpers
 FILE*           std_out;
@@ -105,13 +106,13 @@ void arg_seed(int argc, char * argv[]) {
     // Seed
     string arg_string = arg_value(argv, argv+argc, "-s", "--seed");
     if(arg_string != "")
-        memetico::SEED = stol(arg_string);
+        meme::SEED = stol(arg_string);
     else  {
         RandInt seed_init = RandInt();
-        memetico::SEED = seed_init(1, numeric_limits<int>::max());
+        meme::SEED = seed_init(1, numeric_limits<int>::max());
     }
-    memetico::RANDINT = RandInt(memetico::SEED);
-    memetico::RANDREAL = RandReal(memetico::SEED);
+    meme::RANDINT = RandInt(meme::SEED);
+    meme::RANDREAL = RandReal(meme::SEED);
 
 
 }
@@ -121,13 +122,13 @@ void arg_log(int argc, char * argv[]) {
     // Log Directory
     string arg_string = arg_value(argv, argv+argc, string("-lt"), string("--log-to"));
     if(arg_string != "") {
-        memetico::LOG_DIR = arg_string;
-        if( memetico::LOG_DIR.back() != '/' )
-            memetico::LOG_DIR += "/";
+        meme::LOG_DIR = arg_string;
+        if( meme::LOG_DIR.back() != '/' )
+            meme::LOG_DIR += "/";
 
         // Change STD out if the log dir is specified. If not, use normal stdout / stderr
-        std_out = freopen( (memetico::LOG_DIR + to_string(memetico::SEED) + ".Std.log").c_str(), "a", stdout);
-        std_err = freopen( (memetico::LOG_DIR + to_string(memetico::SEED) + ".Err.log").c_str(), "a", stderr);
+        std_out = freopen( (meme::LOG_DIR + to_string(meme::SEED) + ".Std.log").c_str(), "a", stdout);
+        std_err = freopen( (meme::LOG_DIR + to_string(meme::SEED) + ".Err.log").c_str(), "a", stderr);
 
     }
 }
@@ -150,19 +151,19 @@ void arg_objective(int argc, char * argv[]) {
 void arg_dynamic_depth(int argc, char * argv[]) {
     // Dynamic Depth Type
     string arg_string = arg_value(argv, argv+argc, "-dd", "--dynamic-depth");
-    if(arg_string == "none" || arg_string == "")    memetico::DYNAMIC_DEPTH_TYPE = DynamicNone;
-    if(arg_string == "adp")                         memetico::DYNAMIC_DEPTH_TYPE = DynamicAdaptive;
-    if(arg_string == "adp-mu")                      memetico::DYNAMIC_DEPTH_TYPE = DynamicAdaptiveMutation;
-    if(arg_string == "rnd")                         memetico::DYNAMIC_DEPTH_TYPE = DynamicRandom;
+    if(arg_string == "none" || arg_string == "")    meme::DYNAMIC_DEPTH_TYPE = DynamicNone;
+    if(arg_string == "adp")                         meme::DYNAMIC_DEPTH_TYPE = DynamicAdaptive;
+    if(arg_string == "adp-mu")                      meme::DYNAMIC_DEPTH_TYPE = DynamicAdaptiveMutation;
+    if(arg_string == "rnd")                         meme::DYNAMIC_DEPTH_TYPE = DynamicRandom;
 }
 
 void arg_diversity(int argc, char * argv[]) {
     // Diversity Type
     string arg_string = arg_value(argv, argv+argc, "-dm", "--diversity-method");
-    if(arg_string == "none" || arg_string == "")    memetico::DIVERSITY_TYPE = DiversityNone;
-    if(arg_string == "every")                       memetico::DIVERSITY_TYPE = DiversityEvery;
-    if(arg_string == "stale")                       memetico::DIVERSITY_TYPE = DiversityStale;
-    if(arg_string == "stale-ext")                   memetico::DIVERSITY_TYPE = DiversityStaleExtended;
+    if(arg_string == "none" || arg_string == "")    meme::DIVERSITY_TYPE = DiversityNone;
+    if(arg_string == "every")                       meme::DIVERSITY_TYPE = DiversityEvery;
+    if(arg_string == "stale")                       meme::DIVERSITY_TYPE = DiversityStale;
+    if(arg_string == "stale-ext")                   meme::DIVERSITY_TYPE = DiversityStaleExtended;
 }
 
 void arg_help(int argc, char * argv[]) {
@@ -177,7 +178,7 @@ void arg_help(int argc, char * argv[]) {
 
                     USAGE:
 
-                        ./memetico-cpp/bin/main;
+                        ./meme-cpp/bin/main;
 
                     REQUIRED:
 
@@ -188,6 +189,8 @@ void arg_help(int argc, char * argv[]) {
 
 
                     OPTIONAL:
+
+                        -cu --cuda                      Execute with cuda GPU optimisation
 
                         -d --delta                      Penalty for the number of parameters within the solution (Real Number 0.0 <= d <= 1.0)
                                                         Expressed in the solution fitness. When no parameters are used Fitness = Error           
@@ -266,28 +269,33 @@ void load_args(int argc, char * argv[]) {
     
     string arg_string;
 
-    arg_help(argc,argv);
+    if( arg_exists(argv, argv+argc, string("-cu"), string("--cuda")) )
+        meme::GPU = true;
+
+    // Cuda 
+    arg_string = arg_value(argv, argv+argc, string("-t"), string("--train"));
+    if(arg_string != "")    meme::TRAIN_FILE = arg_string;
 
     // Train
     arg_string = arg_value(argv, argv+argc, string("-t"), string("--train"));
-    if(arg_string != "")    memetico::TRAIN_FILE = arg_string;
+    if(arg_string != "")    meme::TRAIN_FILE = arg_string;
 
     // Test
     arg_string = arg_value(argv, argv+argc, "-T", "--Test");
-    if(arg_string != "")    memetico::TEST_FILE = arg_string;
-    else                    memetico::TEST_FILE = memetico::TRAIN_FILE;
+    if(arg_string != "")    meme::TEST_FILE = arg_string;
+    else                    meme::TEST_FILE = meme::TRAIN_FILE;
     
     // Mutation Rate
     arg_string = arg_value(argv, argv+argc, "-mr", "--mutate-rate");
-    if(arg_string != "")    memetico::MUTATE_RATE = stod(arg_string);
+    if(arg_string != "")    meme::MUTATE_RATE = stod(arg_string);
     
     // Penalty
     arg_string = arg_value(argv, argv+argc, "-d", "--delta");
-    if(arg_string != "")    memetico::PENALTY = stod(arg_string);
+    if(arg_string != "")    meme::PENALTY = stod(arg_string);
 
     // Generations
     arg_string = arg_value(argv, argv+argc, "-g", "--gens");
-    if(arg_string != "")    memetico::GENERATIONS = stoi(arg_string);
+    if(arg_string != "")    meme::GENERATIONS = stoi(arg_string);
 
     // Data split percentage
     arg_string = arg_value(argv, argv+argc, "-sd", "--split-data");
@@ -295,15 +303,15 @@ void load_args(int argc, char * argv[]) {
 
     // Local Search Data
     arg_string = arg_value(argv, argv+argc, "-ld", "--local-data");
-    if(arg_string != "")    memetico::LOCAL_SEARCH_DATA_PCT = stod(arg_string);
+    if(arg_string != "")    meme::LOCAL_SEARCH_DATA_PCT = stod(arg_string);
 
     // Stale Count
     arg_string = arg_value(argv, argv+argc, "-st", "--stale");
-    if(arg_string != "")        memetico::STALE_RESET = stoi(arg_string);
+    if(arg_string != "")        meme::STALE_RESET = stoi(arg_string);
     
     // Max time
     arg_string = arg_value(argv, argv+argc, "-mt", "--max-time");
-    if(arg_string != "")        memetico::MAX_TIME = stoi(arg_string);
+    if(arg_string != "")        meme::MAX_TIME = stoi(arg_string);
 
     arg_seed(argc, argv);
     arg_log(argc, argv);
@@ -318,13 +326,13 @@ void load_args(int argc, char * argv[]) {
     
     // Diversity Count
     arg_string = arg_value(argv, argv+argc, "-dc", "--diversity-count");
-    if(arg_string != "")        memetico::DIVERSITY_COUNT = stoi(arg_string);
+    if(arg_string != "")        meme::DIVERSITY_COUNT = stoi(arg_string);
 
     arg_dynamic_depth(argc,argv);
     arg_diversity(argc,argv);
 
     // Master log
-    memetico::master_log = ofstream(memetico::LOG_DIR+to_string(memetico::SEED)+".Master.log");
+    meme::master_log = ofstream(meme::LOG_DIR+to_string(meme::SEED)+".Master.log");
        
     // Output arguments in VSCode launch.json format
     args_out << "]," << endl;
@@ -344,30 +352,32 @@ int main(int argc, char *argv[]) {
     // Parse arguments
     load_args(argc, argv);
 
+    cout << "Seed: " << meme::SEED << endl;
+
     // Parse data
     Data* store;
-    if( memetico::TRAIN_FILE == memetico::TEST_FILE )
-        store = new Data(memetico::TRAIN_FILE);
+    if( meme::TRAIN_FILE == meme::TEST_FILE )
+        store = new Data(meme::TRAIN_FILE);
     else 
-        store = new Data(memetico::TRAIN_FILE, memetico::TEST_FILE);
+        store = new Data(meme::TRAIN_FILE, meme::TEST_FILE);
 
     // Train Output
-    ofstream train_file(memetico::LOG_DIR+to_string(memetico::SEED)+".Train.csv");
+    ofstream train_file(meme::LOG_DIR+to_string(meme::SEED)+".Train.csv");
     if (train_file.is_open())
         store->train->csv(train_file);
     
     // Test Output
     if(store->has_test) {
-        ofstream test_file(memetico::LOG_DIR+to_string(memetico::SEED)+".Test.csv");
+        ofstream test_file(meme::LOG_DIR+to_string(meme::SEED)+".Test.csv");
         if (test_file.is_open())
             store->test->csv(test_file);
     }
     else {
-        ofstream test_file(memetico::LOG_DIR+to_string(memetico::SEED)+".Train.csv");
+        ofstream test_file(meme::LOG_DIR+to_string(meme::SEED)+".Train.csv");
         if (test_file.is_open())
             store->test->csv(test_file);
     } 
-
+    
     // Create Population
     Population<ModelType> p(store->train);
 
@@ -375,33 +385,33 @@ int main(int argc, char *argv[]) {
     p.run();
 
     // Display error metric scores
-    p.root_agent->show_errors(cout, memetico::PREC, store->train);
+    p.root_agent->show_errors(cout, meme::PREC, store->train);
     if(store->has_test)
-        p.root_agent->show_errors(cout, memetico::PREC, store->test);
+        p.root_agent->show_errors(cout, meme::PREC, store->test);
 
     // Write Run.log
-    cout << " Writing " << memetico::LOG_DIR+to_string(memetico::SEED)+".Run.log" << endl;
-    ofstream log(memetico::LOG_DIR+to_string(memetico::SEED)+".Run.log");
+    cout << " Writing " << meme::LOG_DIR+to_string(meme::SEED)+".Run.log" << endl;
+    ofstream log(meme::LOG_DIR+to_string(meme::SEED)+".Run.log");
     if (log.is_open()) {
-        log << setprecision(memetico::PREC);
-        p.root_agent->show_solution(log, memetico::PREC, store->train, store->test);
+        log << setprecision(meme::PREC);
+        p.root_agent->show_solution(log, meme::PREC, store->train, store->test);
     }
 
     // Write Training results
-    ofstream train_log(memetico::LOG_DIR+to_string(memetico::SEED)+".TrainResults.csv");
+    ofstream train_log(meme::LOG_DIR+to_string(meme::SEED)+".TrainResults.csv");
     if (train_log.is_open()) {
 
-        train_log << setprecision(memetico::PREC) << "y" << endl;
+        train_log << setprecision(meme::PREC) << "y" << endl;
         for(size_t i = 0; i < store->TRAIN_COUNT; i++)
             train_log << p.root_agent->get_pocket()->evaluate(store->train->variables[i]) << endl;
 
     }
 
     // Write Testing results
-    ofstream test_log(memetico::LOG_DIR+to_string(memetico::SEED)+".TestResults.csv");
+    ofstream test_log(meme::LOG_DIR+to_string(meme::SEED)+".TestResults.csv");
     if (test_log.is_open()) {
 
-        test_log << setprecision(memetico::PREC) << "y" << endl;
+        test_log << setprecision(meme::PREC) << "y" << endl;
         for(size_t i = 0; i < store->TEST_COUNT; i++)
             test_log << p.root_agent->get_pocket()->evaluate(store->test->variables[i]) << endl;
 
