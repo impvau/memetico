@@ -1,23 +1,33 @@
 
-ROOT_DIR:=$(shell pwd)
+# Makefile for application
+# - GPU compilation results in different slightly different MSE scores (more precise)
+# 	https://docs.nvidia.com/cuda/floating-point/index.html (slightly dated)
+# 	-fmad=false achieves parity in some circumstances, but particularly not with high depth fractions
 
-# Old flags for g++ compiling
-#CC = g++
-#CCFLAGS = -std=c++17 -O3 -g -fopenmp -I "/usr/include/eigen3" -I "/usr/include/nlohmann/" -I "$(ROOT_DIR)/"
+ROOT_DIR:=$(shell pwd)
 
 # Flags for compiling with NVCC
 CU = nvcc
-CUFLAGS = -std=c++17 -O0 -g -ccbin g++-10 -I "/usr/include/eigen3" -I "/usr/include/nlohmann/" -I "$(ROOT_DIR)/"
+#CUFLAGS = -std=c++17 -O0 -g -ccbin g++-10 -I "/usr/include/eigen3" -I "/usr/include/nlohmann/" -I "$(ROOT_DIR)/"
+CUFLAGS = -std=c++17 -O0 -g -I "/usr/include/eigen3" -I "/usr/include/nlohmann/" -I "$(ROOT_DIR)/"
 
 LDFLAGS =  -lgomp
 
 # List the .cpp files required for compiling to .o objects, note we exlcude the .tpp template files
-LIST = main memetico/globals memetico/data memetico/data_set
-
+LIST_HELPERS_CODE = 	memetico/helpers/rng
+LIST_MODEL_BASE_CODE = 	memetico/model_base/model
+LIST_MODELS_CODE = 		
+LIST_POP_CODE =			
+LIST_DATA_CODE =		memetico/data/data_set
+LIST_GPU_CODE =			memetico/gpu/cuda
+	
 # List the .cu cuda files. We can technically compile these files with NVCC and all others with g++ 
 # However there are no impacts in debugging or optimisation that work differently with NVCC and
 # when comparing -O3 optimisation it was 3 seconds faster on a 50second run
-CULIST = memetico/cuda
+CULIST =
+
+LIST_CODE = $(LIST_HELPERS_CODE) $(LIST_MODEL_BASE_CODE) $(LIST_MODELS_CODE) $(LIST_POP_CODE) $(LIST_DATA_CODE) $(LIST_GPU_CODE)
+LIST = main $(LIST_CODE)
 
 # Append suffix to files above
 SRC = $(addsuffix .cpp, $(LIST)) $(addsuffix .cu, $(CULIST)) 
@@ -42,4 +52,4 @@ main: $(OBJ)
 
 # Clean bin directories to ensure recompilation
 clean:
-	rm -f bin/memetico/* bin/models/* bin/tests/* bin/*
+	rm -f bin/memetico/* bin/memetico/helpers/* bin/memetico/models/* bin/memetico/model_base/* bin/memetico/population/* bin/memetico/data/* bin/gpu/data/* bin/*  
