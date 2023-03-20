@@ -221,12 +221,9 @@ void load_args(int argc, char * argv[]) {
     
     string arg_string;
 
+    // Cuda 
     if( arg_exists(argv, argv+argc, string("-cu"), string("--cuda")) )
         meme::GPU = true;
-
-    // Cuda 
-    arg_string = arg_value(argv, argv+argc, string("-t"), string("--train"));
-    if(arg_string != "")    meme::TRAIN_FILE = arg_string;
 
     // Train
     arg_string = arg_value(argv, argv+argc, string("-t"), string("--train"));
