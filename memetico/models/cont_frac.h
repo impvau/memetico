@@ -1,7 +1,7 @@
 
 /** @file
  * @author Haoyuan Sun <hsun2@caltech.edu>
- * @author Andrew Ciezak <andy@ium.solutions>
+ * @author Andrew Ciezak <andy@impv.au>
  * @author Mohammad Haque <Mohammad.Haque@newcastle.edu.au>
  * @version 1.0
  * @brief ContinuedFraction is MemeticModel where each fraction term is a Regression
@@ -12,12 +12,16 @@
 #define MEMETICO_MODELS_CONT_FRAC_H_
 
 // Local
-#include <memetico/globals.h>
+#include <memetico/helpers/safe_ops.h>
 #include <memetico/model_base/model_meme.h>
+#include <memetico/helpers/print.h>
+#include <memetico/models/regression.h>
 
 // Std
 #include <stdexcept>
 #include <typeinfo>
+#include <iostream>
+#include <math.h>
 
 /**
  * @brief The ContinuedFraction class extends the Regression class for a new Model representation
@@ -61,20 +65,9 @@ class ContinuedFraction : public MemeticModel<T> {
          */
         ContinuedFraction(size_t frac_depth = ContinuedFraction<T>::DEPTH);
         
-        /** @brief Deconstruct ContinuedFraction by deleting global_active array and all term objects */
-        ~ContinuedFraction() {
-            delete global_active;
-            for(size_t i = 0; i < frac_terms; i++)
-                delete objs[i];
-            delete objs;
-        }
-
-        /** 
-         * @brief clone a Regression
-         * @bug need to make this a copy constructor
-         */
-        ContinuedFraction<T>* clone() override;
-
+        /** Constrct fraction as copy of o */
+        ContinuedFraction(const ContinuedFraction<T> &o);
+        
         /** 
          * @brief Evaluate a ContinuedFraction given sample values
          * - Substitue \a values for the independent varaibles in the terms of the continued fraction
@@ -82,7 +75,7 @@ class ContinuedFraction : public MemeticModel<T> {
          * @param values an array of sample values to evaluate at (\f$c\f$) which is params_per_term in length
          * @return value of the continued fraction evaluated at \a values 
          */
-        double  evaluate(double* values);
+        virtual double  evaluate(vector<double>& values);
 
         /**  
          * @brief mutate \a this MemeticModel with consideration of the associated \a pocket solution
@@ -104,7 +97,7 @@ class ContinuedFraction : public MemeticModel<T> {
          * 
          * @param pocket the pocket solution associated with the current solution i.e. \a this
          */
-        void    mutate(MemeticModel<T>* pocket = nullptr) override;
+        void    mutate(MemeticModel<T>& pocket) override;
 
         /**  
          * @brief recombine \a this MemeticModel considering two other MemeticModels
@@ -116,133 +109,104 @@ class ContinuedFraction : public MemeticModel<T> {
          * @param m1 first MemeticModel
          * @param m2 second MemeticModel
          */
-        void    recombine(MemeticModel<T>* model1, MemeticModel<T>* model2);
+        void    recombine(MemeticModel<T>* model1, MemeticModel<T>* model2, int method_override = -1) override;
 
-        /** @brief getter for fraction depth */
-        size_t  get_depth()                         { return depth;  };
+        /** @brief Return fraction depth */
+        size_t  get_depth() const                   { return depth;  };
 
-        /** @brief getter for fraction terms */
-        size_t  get_frac_terms()                    { return frac_terms;  };
+        /** @brief Return number of terms 2*d+1 */
+        size_t  get_frac_terms() const              { return frac_terms;  };
 
-        /** @brief getter for paramters within each term of the fraction */
-        size_t  get_params_per_term()               { return params_per_term; };
+        /** @brief Return maximum number of varaibles/constants per term (some may be masked) */
+        size_t  get_params_per_term() const         { return params_per_term; };
 
-        /** @brief getter for total number of parameters */
-        size_t  get_param_count()                   { return params_per_term*frac_terms; };
+        /** @brief Return total maximum number of paramters over all fraction terms (some may be masked) */
+        size_t  get_param_count() const             { return params_per_term*frac_terms; };
 
-        /** @brief getter for global active flags */
-        bool    get_global_active(size_t iv)        { return global_active[iv]; };
+        /** @brief Return number of pararmters globally turned on */
+        bool    get_global_active(size_t iv) const  { return global_active[iv]; };
 
-        /** @brief getter for each term T active flags */
-        T*      get_objs(size_t term)               { return objs[term]; };
+        /** @brief Return term at specific position in the fraction t0, t1, t2.. etc. */
+        Regression<T>&      get_terms(size_t term)              { return terms[term]; };
 
-        /** 
-         * @brief get parameter positions for the active parameters over the entire fraction. 
-         * Here we map all parameters in T to a 1-D array 
+        virtual void get_node(TreeNode * n);
+
+        /** @brief Return vector of active varaible indices 
          * @bug We should use the specific size of each object T rather than that stored in the Cf.
          * Later, we may wish to have a dynamic number of parameters per fraction term.
          */
-        vector<size_t>  get_active_positions() {
-            // Accumulate the positions across all T objects
-            vector<size_t> ret;
-            for( size_t term = 0; term < get_frac_terms(); term++ ) {
-                for( size_t param = 0; param < params_per_term; param++ ) {
-                    if( objs[term]->get_active(param) )
-                        ret.push_back( term*get_params_per_term()+param );
-                }
-            }
-            return ret;
-        };
+        virtual vector<size_t>  get_active_positions();
 
-        /** @brief getter parameter based on 1-D position */
-        double  get_param(size_t pos) {
+        /** @brief Return value at index pos in the fraction*/
+        double  get_value(size_t pos) {
             size_t term = floor(pos/params_per_term);
             size_t param = pos % params_per_term;
 
-            //return objs[term]->get_param(param);
-
-            // Only if globally on
-            if( get_global_active(param) )  return objs[term]->get_param(param);
-            else                            return 0;
+            // Only globally or locally on
+            if( get_global_active(param) || terms[term].get_active(param) )  
+                return terms[term].get_value(param);
+            else                            
+                return 0;
         };
 
-        /** @brief getter for active flag based on 1-D position */
+        /** @brief Return active flat at index pos in the fraction */
         bool    get_active(size_t pos) {
             size_t term = floor(pos/params_per_term);
             size_t param = pos % params_per_term;
             
-            //return objs[term]->get_active(param);
-
-            // Only if globally on
-            if( get_global_active(param) )  return objs[term]->get_active(param);
-            else                            return false;
+             // Only globally or locally on
+            if( get_global_active(param) || terms[term].get_active(param) )  
+                return terms[term].get_active(param);
+            else                            
+                return false;
         };
 
-        /** @brief get the number of active parameters */
+        /** @brief Return number of active paramters across the entire fraction */
         size_t  get_count_active() { return get_active_positions().size(); };
 
-        /** @brief setter for value based on 1-D position */
-        void    set_param(size_t pos, double val) {
+        /** @brief Set value of paramter at fraction pos to val */
+        virtual void    set_value(size_t pos, T val) {
             size_t term = floor(pos/params_per_term);
             size_t param = pos % params_per_term;
-            objs[term]->set_param(param, val);
+            terms[term].set_value(param, val);
         };
 
-        /** @brief setter for fraction term given fraction term number \a pos */
-        void    set_objs(size_t pos, T* obj)    { objs[pos] = obj; };
+        /** @brief Set term at pos to obj */
+        void    set_terms(size_t pos, Regression<T>& obj)    { terms[pos] = obj; };
 
-        /** @brief setter for the active value based on 1-D position */
+        /** @brief Set local active flag of varaible at pos to val  */
         void    set_active(size_t pos, bool val) {
             size_t term = floor(pos/params_per_term);
             size_t param = pos % params_per_term;
-            objs[term]->set_active(param, val);
+            terms[term].set_active(param, val);
         };
 
-        /** @brief setter for global active flag for a given variable */
-        void    set_global_active(size_t iv, bool val) {
+        /** @brief Set global active flag for a specific data variable iv to val  */
+        void    set_global_active(size_t iv, bool val, bool align_fraction = true);
 
-            // Make sure iv is within the range of paramters
-            if(iv < params_per_term) {
-
-                // Update global flag
-                global_active[iv] = val;
-
-                // Update all term flags
-                for(size_t term = 0; term < get_frac_terms(); term++)
-                    objs[term]->set_active(iv, val);
-
-            }  
-        };
-
-        /** @brief setter for fraction depth */
-        void    set_depth(size_t new_depth) { 
-              
-            //cout << "set_depth new_depth:" << new_depth << " old_depth:" << depth << endl;
-            //cout << "old_frac: " << *this << endl;
-
-            // Setup the new terms and term objects
-            size_t  new_frac_terms = 2*new_depth+1;
-            T**     new_objs = new T*[new_frac_terms];
-            for(size_t i = 0; i < min(frac_terms, new_frac_terms); i++)
-                new_objs[i] = objs[i]->clone();
-
-            // If we have increased size, i.e. frac_terms < new_frac_terms, then randomise the values of the new terms
-            for(size_t i = min(frac_terms, new_frac_terms); i < new_frac_terms; i++)
-                new_objs[i] = new T(params_per_term);
-            
-            // Delete old object array and assign the new objects, depth and number of terms
-            delete objs;
-            objs = new_objs;
-            depth = new_depth;
-            frac_terms = new_frac_terms;
-
-            //cout << "new_frac: " << *this << endl;
-
-        };
+        /** @brief Set depth of the fraction and remove/add randomised terms */
+        void    set_depth(size_t new_depth);
         
-        /** @brief output operator for a ContinuedFraction */
+        virtual void print() { cout << *this << endl; };
+
+        /**
+         * @brief Output operator for ContinuedFraction<T>
+         * We ouput the fraction in the form 
+         *      g0(x)+
+         *          h0(x)/(g1(x)+
+         *              h1(x)/g2(x)+..
+         * 
+         * Where each gi(x), hi(x) is a Regression in the form
+         * 'coeff_val1*(var_name1)+coeff_val2*(var_name2)+...+coeff_valN*(var_nameN)+c'
+         * 
+         * @return os
+         *           
+         */        
         template<class F>
-        friend ostream& operator<<(ostream& os, const ContinuedFraction<F>& c);
+        friend ostream& operator<<(ostream& os, ContinuedFraction<F>& c);
+
+        /** @brief Comparison operator for ContinuedFraction<T> */
+        bool operator== (ContinuedFraction<T>& o);
 
         /**
          * @brief Randomise all paramters to a uniformally random value inclusively between min and max
@@ -264,7 +228,7 @@ class ContinuedFraction : public MemeticModel<T> {
     private:
 
         /** Global active flag that applies for the independent varaible down all depths and overrides any setting in the active array */
-        bool*   global_active;
+        vector<bool>   global_active;
 
         /** Zero-based depth of the fraction */
         size_t  depth;
@@ -275,7 +239,7 @@ class ContinuedFraction : public MemeticModel<T> {
         /** Number of parameters in each term. As this is a linear model we have Data::IVS.size()+1 where the +1 is the constant*/
         size_t  params_per_term;
 
-        T** objs;
+        vector<Regression<T>> terms;
 
 
 };
