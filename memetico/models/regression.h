@@ -1,6 +1,6 @@
 
 /** @file
- * @author Andrew Ciezak <andy@ium.solutions>
+ * @author Andrew Ciezak <andy@impv.au>
  * @version 1.0
  * @brief Regression is a MemeticModel that contains a single linear function 
  * @copyright (C) 2022 Prof. Pablo Moscato, License CC-BY
@@ -10,12 +10,13 @@
 #define MEMETICO_MODELS_REGRESSION_H_
 
 using namespace std;
-using namespace memetico;
 
 // Local
-#include <memetico/globals.h>
-#include <memetico/data.h>
-#include <memetico/model_base/term.h>
+#include <memetico/helpers/print.h>
+#include <memetico/helpers/excel.h>
+#include <memetico/helpers/rng.h>
+#include <memetico/helpers/safe_ops.h>
+#include <memetico/model_base/additive_term.h>
 #include <memetico/model_base/model_meme.h>
 
 // Std Lib
@@ -39,60 +40,60 @@ class Regression : public MemeticModel<T> {
     public:
 
         /** @brief Construct Regression with a Term of param_count size */
-        Regression(size_t param_count = 0) : MemeticModel<T>() { term = new Term<T>(param_count); };
+        Regression(size_t param_count = 0) : MemeticModel<T>() { term = AdditiveTerm<T>(param_count); };
 
-        /** 
-         * @brief setter for active flag at \a pos with value \a val
-         * @param pos position of paramter
-         * @param val value of active flag
-         */
-        void        set_active(size_t pos, bool val)    { term->get_elem(pos)->set_active(val); };
+        /** @brief Construct Regression with a Term of param_count size */
+        Regression(const Regression<T> &o) : MemeticModel<T>(o) { term = AdditiveTerm<T>(o.term); };        
+
+        /** @brief Set the active flag for the \a pos th element of the regression term to \a val */
+        void        set_active(size_t pos, bool val)    { term.set_active(pos, val); };
        
-        /** 
-         * @brief setter for value at \a pos with value \a val
-         * @param pos position of parameter
-         * @param val value of active flag
-         */
-        void        set_param(size_t pos, T val)        { term->get_elem(pos)->set_value(val); };
+        /** @brief Set value for the \a pos th element with value \a val */
+        void        set_value(size_t pos, T val)       { term.set_value(pos, val); };
         
-        /**  
-         * @brief getter for active flag at \a pos
-         * @param pos position of parameter
-         * @returns active flag at \a pos 
-         */
-        bool        get_active(size_t pos)              { return term->get_elem(pos)->get_active(); };
+        /** @brief Set term */
+        void        set_term(AdditiveTerm<T>& new_term) { term = new_term; };
+
+        /** @brief Return active flag at \a pos */
+        bool        get_active(size_t pos)              { return term.get_active(pos); };
         
-        /**  
-         * @brief getter for parameter value at \a pos
-         * @param pos position of parameter
-         * @returns value at pos
-         * @bug here we define the return as double. What if the parameter is an integer model
-         * or we are using something like a coordinate representation for a parameter? We may 
-         * need to extend here to a second template U but holding off for now.
-         */
-        double      get_param(size_t pos)               { return term->get_elem(pos)->get_value(); };
+        /** @brief Return value at \a pos th element */
+        double      get_value(size_t pos)               { return term.get_value(pos); };
 
-        /**  
-         * @brief getter for parameter count
-         * @returns number of parameters usable in the model
-         */
-        size_t      get_count()                         { return term->get_count(); };
+        /** @brief Return count of elements */
+        size_t      get_count()                         { return term.get_count(); };
         
-        /**  
-         * @brief getter for Term object
-         * @returns Term containing the Regression Elements
-         */
-        Term<T>*    get_term()                          { return term; };
+        /** @brief Return TreeNode for GPU processing */
+        virtual void get_node(TreeNode * n);
 
-        /** @brief output operator for a Regression */
-        template<class F>
-        friend ostream& operator<<(ostream& os, const Regression<F>& r);
+        /** @brief Return regression sole AdditiveTerm */
+        AdditiveTerm<T>&    get_term()                  { return term; };
 
-        /** 
-         * @brief clone a Regression
-         * @bug need to make this a copy constructor
+        /** @brief get the number of active parameters */
+        size_t              get_count_active()          { return term.get_count_active(); };
+
+        /** @brief get the number of active parameters */
+        vector<size_t>      get_active_positions()      { return term.get_active_positions(); };
+
+        void   coeff_node(TreeNode * n, float constant, int var_num);
+
+        /** @brief Comparison operator for Regression<T> */
+        bool operator== (Regression<T>& o) {
+
+            if( !(MemeticModel<T>::operator==(o)) )
+                return false;
+                
+            return term == o.term;
+        }
+
+        /**
+         * @brief Output operator for Regression<T>
+         * We output a Regression as 
+         * 'coeff_val1*(var_name1)+coeff_val2*(var_name2)+...+coeff_valN*(var_nameN)+c'
+         * @return os
          */
-        Regression<T>* clone();
+        template <class F>
+        friend ostream& operator<<(ostream& os, Regression<F>& r);
 
         /**  
          * @brief mutate \a this MemeticModel and optionally consider another model m.
@@ -100,7 +101,7 @@ class Regression : public MemeticModel<T> {
          * 
          * @param m another model to consider in the mutation
          */
-        void    mutate(MemeticModel<T>* m = nullptr) override;     
+        void    mutate(MemeticModel<T> & m) override;     
 
         /**  
          * @brief recombine \a this MemeticModel considering two other MemeticModels
@@ -124,7 +125,7 @@ class Regression : public MemeticModel<T> {
          * @param m2 second MemeticModel
          * @param method_override force the use of a specific recombination method
          */
-        void    recombine(MemeticModel<T>* model1, MemeticModel<T>* model2, int method_override = -1) override;
+        void    recombine(MemeticModel<T> * model1, MemeticModel<T> * model2, int method_override = -1) override;
 
         /** 
          * @brief Evaluate a Regressor given sample \a values
@@ -134,20 +135,9 @@ class Regression : public MemeticModel<T> {
          * @param values an array of sample values that are \f$N\f$ in length
          * @return result of the Regressors evaluation at \a values
          */
-        double  evaluate(double* values) override {
-            
-            // Add each parameter
-            double ret = 0;
-            for(size_t param = 0; param < get_count()-1; param++ ) {
-                if( get_active(param) )
-                    ret = add(ret, multiply( get_param(param), values[param]));
-            }
-            
-            // Add constant
-            if( get_active(get_count()-1) ) ret = add(ret, get_param(get_count()-1));
-            
-            return ret;
-        }     
+        virtual double  evaluate(vector<double> & values);  
+
+        virtual void print() {cout << "regres" << endl; };
 
         /** 
          * @brief Randomise all parameter values between +[min, max] or -[max, min] or a specific parameter when \a pos is positive
@@ -160,13 +150,10 @@ class Regression : public MemeticModel<T> {
          */
         void    randomise(int min, int max, int pos = -1);
 
-        /** @brief get the number of active parameters */
-        size_t  get_count_active() { return term->get_count_active(); };
-
     private:
     
         /** @brief the Regression term */
-        Term<T>* term;
+        AdditiveTerm<T> term;
 
 };
 
