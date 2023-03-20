@@ -4,7 +4,7 @@
  * @file
  * @author Haoyuan Sun <hsun2@caltech.edu>
  * @author Mohammad Haque <Mohammad.Haque@newcastle.edu.au>
- * @author Andrew Ciezak <andy@ium.solutions>
+ * @author Andrew Ciezak <andy@impv.au>
  * @version 1.0
  * @brief Header for global variables and functions
  * 
@@ -14,7 +14,7 @@
 #define MEMETICO_GLOBALS_H
 
 #include <chrono>
-#include <memetico/rng.h>
+#include <memetico/helpers/rng.h>
 #include <regex>
 
 /**
@@ -35,18 +35,22 @@ struct Similar
     }
 };
 
+
 /**
  * @file
  * @author Haoyuan Sun <hsun2@caltech.edu>
  * @author Mohammad Haque <Mohammad.Haque@newcastle.edu.au>
- * @author Andrew Ciezak <andy@ium.solutions>
+ * @author Andrew Ciezak <andy@impv.au>
  * @version 1.0
  * 
  * @brief Global variables for memetic algorithm
  * 
  */ 
-namespace memetico {
-    
+namespace meme {
+
+/** Flag to use GPU */
+extern bool             GPU;
+
 /** Program seed value for reproducibility */
 extern uint_fast32_t    SEED;
 
@@ -98,9 +102,6 @@ extern RandInt          RANDINT;
 /** Global real precision within the application */
 extern size_t           PREC; 
 
-/** Execution time of the algorithm from the last Population.run() in milliseconds */
-extern size_t           RUN_TIME;
-
 /** Global DEBUG flag for function tracing */
 extern bool             DEBUG;
 
@@ -110,36 +111,16 @@ extern size_t           GEN;
 /** Maximum number of seconds the program can run for */
 extern long int         MAX_TIME;
 
-extern bool             do_debug;
+/** Run time of program */
+extern long int         RUN_TIME;
+
+extern bool             DEBUG;
 
 /** Master log */
 extern ofstream         master_log;
 
-
-/**
- * @brief format to output in print functions like show(), show_min() 
- */
-enum PrintType {
-    PrintLatex,
-    PrintExcel,
-    PrintNumpy
-};
-
-/** PrintType */
-extern enum PrintType   FORMAT;
-
-string  ltrim(string str);
-string  rtrim(string s);
-string  trim(string s);
-bool    match_suffix(string file, string suffix);
-
-string  excel_name(size_t col = 2, size_t row = 2);
-
-double  multiply(double, double);
-double  divide(double, double);
-double  add(double, double);
-double  exp(double);
-double  pow(double, double);
+extern FILE*            STD_OUT;
+extern FILE*            STD_ERR;
 
 // Custom Globals
 
@@ -147,30 +128,6 @@ double  pow(double, double);
 extern size_t           POCKET_DEPTH;
 
 
-
-/**
- * @brief Types of Dynamic Depth approaches
- */
-enum DynamicDepthType {
-    DynamicNone,
-    DynamicAdaptive,
-    DynamicRandom,
-    DynamicAdaptiveMutation
-};
-
-extern enum DynamicDepthType   DYNAMIC_DEPTH_TYPE;
-
-/**
- * @brief Types of Diversity Method
- */
-enum DiversityType {
-    DiversityNone,
-    DiversityEvery,
-    DiversityStale,
-    DiversityStaleExtended
-};
-
-extern enum DiversityType       DIVERSITY_TYPE;
 extern size_t                   DIVERSITY_COUNT;
 
 }
