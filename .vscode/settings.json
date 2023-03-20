@@ -1,5 +1,7 @@
 {
     "files.associations": {
+        "*.rmd": "markdown",
+        "*.tpp": "cpp",
         "ostream": "cpp",
         "chrono": "cpp",
         "iomanip": "cpp",
@@ -69,8 +71,27 @@
         "cinttypes": "cpp",
         "typeindex": "cpp",
         "variant": "cpp",
-        "*.tpp": "cpp",
-        "csignal": "cpp"
+        "csignal": "cpp",
+        "ios": "cpp",
+        "ranges": "cpp",
+        "__split_buffer": "cpp",
+        "queue": "cpp",
+        "__node_handle": "cpp",
+        "filesystem": "cpp",
+        "__bit_reference": "cpp",
+        "__hash_table": "cpp",
+        "__tree": "cpp",
+        "numbers": "cpp",
+        "__functional_base": "cpp",
+        "__memory": "cpp",
+        "locale": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "stop_token": "cpp",
+        "semaphore": "cpp",
+        "__nullptr": "cpp",
+        "stack": "cpp",
+        "__functional_03": "cpp"
     },
     "testMate.cpp.test.executables": "filename.exe"
 }
