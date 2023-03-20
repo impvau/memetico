@@ -44,3 +44,5 @@ docs/*
 
 # Memory profiling
 callgrind*
+
+**/test_data.csv
