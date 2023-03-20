@@ -1,6 +1,6 @@
 
 /** @file
- * @author Andrew Ciezak <andy@ium.solutions>
+ * @author Andrew Ciezak <andy@impv.au>
  * @version 1.0
  * @brief MemeticModel represents a solution with mutation and recombination operators
  * @copyright (C) 2022 Prof. Pablo Moscato, License CC-BY
@@ -12,6 +12,7 @@
 using namespace std;
 
 #include <memetico/model_base/model.h>
+#include <memetico/helpers/rng.h>
 
 /**
  * @brief The MemeticModel class representing a solution that implements mutation and recombination 
@@ -21,6 +22,9 @@ class MemeticModel : public Model {
 
     public:
         
+        MemeticModel()  {};
+        MemeticModel(const MemeticModel<T>& m) : Model(m)   {};
+
         /** 
          * @brief setter for active flag at \a pos with value \a val
          * @param pos position of paramter
@@ -33,7 +37,7 @@ class MemeticModel : public Model {
          * @param pos position of parameter
          * @param val value of active flag
          */
-        virtual void    set_param(size_t pos, T val)        {};
+        virtual void    set_value(size_t pos, T val)        {};
 
         /**  
          * @brief getter for active flag at \a pos
@@ -43,12 +47,6 @@ class MemeticModel : public Model {
         virtual bool    get_active(size_t pos)              {return false;};
         
         /**  
-         * @brief get positions of all parameters that have the active flag set
-         * @returns vector of active positions
-         */
-        virtual vector<size_t>  get_active_positions(size_t pos)      {return vector<size_t>();};
-        
-        /**  
          * @brief getter for parameter value at \a pos
          * @param pos position of parameter
          * @returns value at pos
@@ -56,14 +54,26 @@ class MemeticModel : public Model {
          * or we are using something like a coordinate representation for a parameter? We may 
          * need to extend here to a second template U but holding off for now.
          */
-        virtual double  get_param(size_t pos)               {return 0;};
+        virtual double  get_value(size_t pos)               {return 0;};
 
+        /**  
+         * @brief determine the number of parameters used in the model
+         * @return number of parameters with an active flag
+         */
+        virtual size_t  get_count_active() { return 0; };
+
+        /**  
+         * @brief get positions of all parameters that have the active flag set
+         * @returns vector of active positions
+         */
+        virtual vector<size_t>  get_active_positions()      {return vector<size_t>();};
+        
         /**  
          * @brief mutate \a this MemeticModel and optionally consider another model m 
          * @param m another model to consider in the mutation
          * @bug we may want to overload the mutate function and remove the optional argument
          */
-        virtual void    mutate(MemeticModel<T>* m = nullptr) {};
+        virtual void    mutate(MemeticModel<T> & m) {};
         
         /**  
          * @brief recombine \a this MemeticModel considering two other MemeticModels
@@ -71,14 +81,25 @@ class MemeticModel : public Model {
          * @param m2 second MemeticModel to consider
          * @param method_override force the use of a specific recombination method
          */
-        virtual void    recombine(MemeticModel<T>* m1, MemeticModel<T>* m2, int method_override = -1) {};
+        virtual void    recombine(MemeticModel<T> * m1, MemeticModel<T> * m2, int method_override = -1) {};
         
-        /**  
-         * @brief determine the number of parameters used in the model
-         * @return number of parameters with an active flag
-         */
-        virtual size_t  get_count_active() { return 0; };
-        
+        virtual void    print()                             { cout << "model_meme" << endl;};
+
+        /** @brief Comparison operator for MemeticModel */
+        bool operator== (Model& o)      { return  Model::operator==(o); }
+
+        /** @brief Vector of independent varaible names from the data source */
+        static vector<string>   IVS;
+
+        /** @brief local search function to explore local minima and maxima */
+        static double   (*LOCAL_SEARCH)(MemeticModel<T>*, DataSet*, vector<size_t>&);
+
 };
+
+template <class T>
+vector<string>  MemeticModel<T>::IVS = {};
+
+template <class T>
+double (*MemeticModel<T>::LOCAL_SEARCH)(MemeticModel<T>*, DataSet*, vector<size_t>&) = nullptr;
 
 #endif

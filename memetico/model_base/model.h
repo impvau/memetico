@@ -1,6 +1,6 @@
 
 /** @file
- * @author Andrew Ciezak <andy@ium.solutions>
+ * @author Andrew Ciezak <andy@impv.au>
  * @version 1.0
  * @brief A Model representing a machine learning solution
  * @copyright (C) 2022 Prof. Pablo Moscato, License CC-BY
@@ -10,9 +10,14 @@
 #define MEMETICO_MODELS_MODEL_H_
 
 using namespace std;
+#include <vector>
+#include <limits>
+#include <string>
+#include <memetico/data/data_set.h>
+#include <memetico/gpu/tree_node.h>
+#include <memetico/helpers/print.h>
 
-#include <memetico/globals.h>
-#include <memetico/data.h>
+using namespace cusr;
 
 /**
  * @brief The Model class representing the lowest-level representation of a solution
@@ -36,9 +41,23 @@ class Model {
             fitness = numeric_limits<double>::max();
         }
 
-        /** */
-        virtual ~Model() {};                   
-        
+        /** @brief Copy Model o into this */
+        Model(const Model &o) {
+
+            // Copy fitness
+            penalty = o.penalty;
+            error = o.error;
+            fitness = o.fitness;
+    
+        }
+            
+        ~Model() {
+            if( node != nullptr ) {
+                delete node;
+                node = nullptr;
+            }
+        }
+
         /** @brief setter for penalty */
         void            set_penalty(double val)     { penalty = val; };
 
@@ -57,37 +76,52 @@ class Model {
         /** @brief getter for fitness */
         double          get_fitness()               { return fitness; };
         
-        /**
+        /** @brief getter for fitness */
+        double          get_count_active()          { return 0; };
+
+        /** @brief Return TreeNode for GPU evaluation */
+        virtual void    get_node(TreeNode * n)      {};
+
+        /** 
          * @brief evaluate the fiteness of the model
          * @param values 
          * @return model error
          * @bug technically should be type T for values? What if we have a TSP problem that
          * takes a graph? Is double appropriate for an error score in all cases?
          */
-        virtual double  evaluate(double* values) { return numeric_limits<double>::max(); }
+        virtual double  evaluate(vector<double> & values) { return numeric_limits<double>::max(); };
         
+        virtual void    print()                     {   cout << "model" << endl;};
+
         /** @brief output operator for a model */
-        friend ostream& operator<<(ostream& os, Model& m) {
-            os << "err: " << m.get_error() << " pen:" << m.get_penalty() << " fit:" << m.get_error();
-            return os;
+        friend ostream& operator<<(ostream& os, Model& m);
+
+        /** @brief Comparison operator for Model */
+        bool operator== (Model& o) {
+
+            if( penalty != o.penalty )
+                return false;
+
+            if( fitness != o.fitness )
+                return false;
+
+            if( error != o.error )
+                return false;
+
+            return true;
         }
+        
+        /** @brief name of the objective function */
+        static string   OBJECTIVE_NAME;
 
-        /** 
-         * @brief clone a model
-         * @bug need to make this a copy constructor
-         */
-        virtual Model* clone() {
-            
-            // Create new structure
-            Model* o = new Model();
+        /** @brief objective function to evaluate the solutions */
+        static double   (*OBJECTIVE)(Model*, DataSet*, vector<size_t>&);
 
-            // Copy fitness
-            o->penalty = penalty;
-            o->error = error;
-            o->fitness = fitness;
-    
-            return o;
-        }   
+        /** @brief Format to print all regressions as */
+        static PrintType        FORMAT;
+
+        /** @brief TreeNode representation for GPU processing */
+        TreeNode* node = nullptr;
 
     private:
 

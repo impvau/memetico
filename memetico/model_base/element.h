@@ -1,6 +1,6 @@
 
 /** @file
- * @author Andrew Ciezak <andy@ium.solutions>
+ * @author Andrew Ciezak <andy@impv.au>
  * @version 1.0
  * @brief An Element that occurs within a Term
  * @copyright (C) 2022 Prof. Pablo Moscato, License CC-BY
@@ -11,7 +11,7 @@
 
 using namespace std;
 
-#include <memetico/globals.h>
+#include <stdlib.h>
 
 /**
  * @brief A specific Element within within a Term of elements.
@@ -35,37 +35,46 @@ class Element {
          * @param element_value
          */
         Element(bool element_active = false, T element_value = 0) {
-            set_active(element_active);
-            set_value(element_value);
+            active = element_active;
+            value = element_value;
+        };
+
+        /** Copy constructor */
+        Element(const Element<T> &o) {
+            value = T(o.value);
+            active = o.active;
         };
 
         /** @brief get Element value */
-        T           get_value()     {return value;};
+        T           get_value()           {return value;};
 
         /** @brief get Element active flag */
-        bool        get_active()    {return active;};
+        bool        get_active()          {return active;};
 
         /** @brief set Element value */
-        void        set_value(T element_value)   {value = element_value;};
+        void        set_value(T element_value)          {value = element_value;};
         
         /** @brief set Element active_flag */
         void        set_active(bool element_active)     {active = element_active;};
 
         /** @brief comparison operator for Element */
-        bool operator== (const T& o) {
+        bool operator== (const Element<T>& o) {
             return (value == o.value && active == o.active);
         }
 
         /** @brief not equal comparison operator for Element */
-        bool operator!= (const T& o) {
-            return !(this == o);
+        bool operator!= (const Element<T>& o) {
+            return !(*this == o);
         }
 
-        /** 
-         * @brief clone function for Element
-         * @bug To change this to copy constructor
-         */
-        Element<T>* clone() {   return new Element<T>(this->get_active(), this->get_value()); };
+        /** @brief Output Element value when active */
+        friend ostream& operator<<(ostream& os, Element<T>& o) {
+            
+            if( o.get_active() )
+                os << o.get_value();
+
+            return os;
+        }
 
     private:
 
@@ -76,5 +85,7 @@ class Element {
         bool        active;
 
 };
+
+
 
 #endif
