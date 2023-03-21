@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
     train.csv(meme::LOG_DIR+to_string(meme::SEED)+".Train.csv");
     DataSet test = DataSet(meme::TEST_FILE, true);
     test.load();
-    train.csv(meme::LOG_DIR+to_string(meme::SEED)+".Test.csv");
+    test.csv(meme::LOG_DIR+to_string(meme::SEED)+".Test.csv");
 
     // Copy IVs to Model
     for(size_t i = 0; i < DataSet::IVS.size(); i++)
