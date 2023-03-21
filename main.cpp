@@ -79,6 +79,8 @@ FILE*           meme::STD_ERR;
  */
 int main(int argc, char *argv[]) {
 
+    cout << setprecision(18);
+
     // Parse arguments
     args::load_args(argc, argv);
 
