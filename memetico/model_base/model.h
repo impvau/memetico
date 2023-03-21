@@ -92,6 +92,7 @@ class Model {
         virtual double  evaluate(vector<double> & values) { return numeric_limits<double>::max(); };
         
         virtual void    print()                     {   cout << "model" << endl;};
+        virtual string  str()                       {   return "model";};
 
         /** @brief output operator for a model */
         friend ostream& operator<<(ostream& os, Model& m);

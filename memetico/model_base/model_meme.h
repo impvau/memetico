@@ -84,6 +84,7 @@ class MemeticModel : public Model {
         virtual void    recombine(MemeticModel<T> * m1, MemeticModel<T> * m2, int method_override = -1) {};
         
         virtual void    print()                             { cout << "model_meme" << endl;};
+        virtual string  str()                               { return "model_meme"; };
 
         /** @brief Comparison operator for MemeticModel */
         bool operator== (Model& o)      { return  Model::operator==(o); }

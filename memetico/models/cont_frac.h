@@ -21,6 +21,7 @@
 #include <stdexcept>
 #include <typeinfo>
 #include <iostream>
+#include <sstream>
 #include <math.h>
 
 /**
@@ -188,6 +189,12 @@ class ContinuedFraction : public MemeticModel<T> {
         void    set_depth(size_t new_depth);
         
         virtual void print() { cout << *this << endl; };
+        virtual string str  () {
+            stringstream ss;
+            ss.precision(18);
+            ss << *this;
+            return ss.str();
+        }
 
         /**
          * @brief Output operator for ContinuedFraction<T>
