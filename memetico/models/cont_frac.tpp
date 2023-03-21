@@ -166,6 +166,9 @@ void ContinuedFraction<T>::mutate(MemeticModel<T>& model) {
         
     }
 
+    this->set_fitness(numeric_limits<double>::max());
+    this->set_error(numeric_limits<double>::max());
+
     sanitise();
     return;
 }
@@ -266,6 +269,9 @@ void ContinuedFraction<T>::recombine(MemeticModel<T>* model1, MemeticModel<T>* m
         terms[term].recombine( &(m1->get_terms(term)), &(m2->get_terms(term)), method);
 
     sanitise();
+
+    this->set_fitness(numeric_limits<double>::max());
+    this->set_error(numeric_limits<double>::max());
 
 }
 
