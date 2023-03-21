@@ -95,7 +95,7 @@ void Population<U>::evolve(Agent<U>* agent) {
         agent->get_current().mutate(agent->get_pocket());
 
         // Perform search to refine mutated solution
-        local_search_single(agent, true, all);
+        local_search_single(agent, true, all);       
 
         // Exchange and bubble if mutation results in better solution
         if(agent->get_current().get_fitness() < agent->get_pocket().get_fitness() ) {
@@ -177,6 +177,7 @@ void Population<U>::local_search_agent(Agent<U>* agent) {
         U::LOCAL_SEARCH(&temp_current, data, selected_idx);
 
     }
+
     if( temp_current.get_fitness() < agent->get_current().get_fitness() )
         agent->set_current(temp_current);
     
@@ -193,10 +194,12 @@ void Population<U>::local_search_agent(Agent<U>* agent) {
             // Search and update copy if fitter
             U::LOCAL_SEARCH(&temp_pocket, data, selected_idx);
 
-        }            
+        }         
+
+        if( temp_pocket.get_fitness() < agent->get_pocket().get_fitness() )
+            agent->set_pocket(temp_pocket);
+   
     }
-    if( temp_pocket.get_fitness() < agent->get_pocket().get_fitness() )
-        agent->set_pocket(temp_pocket);
 
     // If current is better, exchange and bubble
     if( agent->get_current().get_fitness() < agent->get_pocket().get_fitness() ) {
@@ -222,7 +225,7 @@ void Population<U>::local_search_single(Agent<U> * agent, bool is_current, vecto
     // Run LS
     U::LOCAL_SEARCH(&copy, data, idx);
 
-    // Set best soln if 
+     // Set best soln if 
     if( idx.empty() && best_soln.get_fitness() < best_soln.get_fitness() )
         best_soln = U(copy);
 
