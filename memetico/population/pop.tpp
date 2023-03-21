@@ -59,7 +59,7 @@ void Population<U>::run() {
 
         auto generation_end = chrono::high_resolution_clock::now();
         chrono::duration<double, milli> generation_ms = generation_end-generation_start;
-        cout << setw(5) << GEN << setw(15) << best_soln.get_fitness() <<  " (" << setw(15) << best_soln.get_error() << ") " << setw(10) << " duration: " << setw(10) << generation_ms.count() << "ms root_depth: " << meme::POCKET_DEPTH << " frac: " << best_soln << endl;       
+        cout << setw(5) << GEN << " " << setw(15) << best_soln.get_fitness() <<  " (" << setw(15) << best_soln.get_error() << ") " << setw(10) << " duration: " << setw(10) << generation_ms.count() << "ms root_depth: " << meme::POCKET_DEPTH << " frac: " << best_soln << endl;       
 
         auto end_time = chrono::system_clock::now();
         if( MAX_TIME*1000 < chrono::duration_cast<chrono::milliseconds>(end_time-start_time).count() ) {
@@ -96,7 +96,7 @@ void Population<U>::evolve(Agent<U>* agent) {
 
         // Perform search to refine mutated solution
         local_search_single(agent, true, all);
-    
+
         // Exchange and bubble if mutation results in better solution
         if(agent->get_current().get_fitness() < agent->get_pocket().get_fitness() ) {
             agent->exchange();
@@ -165,7 +165,6 @@ void Population<U>::local_search_agent(Agent<U>* agent) {
     // Create copies of the pocket and current solutions
     U temp_current = U( agent->get_current() );
     U temp_pocket = U( agent->get_pocket() );
-    double fitness = numeric_limits<double>::max();
 
     // Run LS for the number of configured times on the current solution
     for(size_t j = 0; j < LOCAL_SEARCH_RUNS; j++ ) {
@@ -221,7 +220,6 @@ void Population<U>::local_search_single(Agent<U> * agent, bool is_current, vecto
     else                copy = U( agent->get_pocket() );
 
     // Run LS
-    double new_fitness;
     U::LOCAL_SEARCH(&copy, data, idx);
 
     // Set best soln if 
@@ -460,10 +458,26 @@ void Population<U>::distinct(size_t count) {
                 pos = vec.at(i).i;
             }
             U rand_sol = U();
+            //cout << rand_sol << endl;
+
+            stringstream ss2;
+            ss2.precision(18);
+            ss2 << rand_sol;
+            if( ss2.str() == "(-3.19691389174471308*B2+0.466763717786541521)+(0.228320842896281601*B2+4.9208225270192445)/((0.0835660804221394771*B2-0.17836911601305544)+(0.340626562730652505*B2+1.48447869626202)/((1.11408241473448544*B2-0.469726314516834886)+(0.572518685126581994*B2-0.458535712444574528)/((-0.30470940200161678*B2+0.271578742328880685))))" ) {
+                cout << "debug time" << endl;
+                //meme::DEBUG = true;
+            }
 
             // Perform full local search on the new result
-            vector<size_t> selected_idx = vector<size_t>();
-            U::LOCAL_SEARCH(&rand_sol, data, selected_idx);
+            vector<size_t> all;
+            U::LOCAL_SEARCH(&rand_sol, data, all);
+
+            stringstream ss;
+            ss.precision(18);
+            ss << rand_sol;
+            if( ss.str() == "(-3.19691389174471308*B2+0.466763717786541521)+(0.228320842896281601*B2+4.9208225270192445)/((0.0835660804221394771*B2-0.17836911601305544)+(0.340626562730652505*B2+1.48447869626202)/((1.11408241473448544*B2-0.469726314516834886)+(0.572518685126581994*B2-0.458535712444574528)/((-0.30470940200161678*B2+0.271578742328880685))))" ) {
+                cout << "debug time" << endl;
+            }
 
             // Replace the underlying soln
             if( pos == 0 )    root_agent->set_pocket(rand_sol);
