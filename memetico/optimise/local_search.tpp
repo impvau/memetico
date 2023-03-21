@@ -511,12 +511,9 @@ double local_search::custom_nelder_mead_redo(U* model, DataSet* data, vector<siz
 
     // Function on the full dataset if we were using partial in local search
     // otherwise we are using the performance of the limited optimisation
-    if( selected.size() != 0 ) {
-
-        selected = vector<size_t>();
-        coord& vb = (--simplex.end())->second;
-        local_search::model_evaluate(vb, positions, model, data, selected);      
-    }
+    selected = vector<size_t>();
+    coord& vb = (--simplex.end())->second;
+    local_search::model_evaluate(vb, positions, model, data, selected);      
 
     return model->get_fitness();
 }
