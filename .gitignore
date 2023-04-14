@@ -46,3 +46,5 @@ docs/*
 callgrind*
 
 **/test_data.csv
+
+out/*
