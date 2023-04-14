@@ -1,7 +1,7 @@
 
 /**
  * @file
- * @author Andrew Ciezak <andy@ium.solutions>
+ * @author Andrew Ciezak <andy@impv.au>
  * @version 1.0
  * @brief Implementation of the Stat class
  */
