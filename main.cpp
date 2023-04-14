@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
     DataSet train = DataSet(meme::TRAIN_FILE, meme::GPU);
     train.load();
     train.csv(meme::LOG_DIR+to_string(meme::SEED)+".Train.csv");
-    DataSet test = DataSet(meme::TEST_FILE, true);
+    DataSet test = DataSet(meme::TEST_FILE, meme::GPU);
     test.load();
     test.csv(meme::LOG_DIR+to_string(meme::SEED)+".Test.csv");
 
@@ -117,7 +117,7 @@ int main(int argc, char *argv[]) {
         vector<size_t> all;
         double train_score = ModelType::OBJECTIVE(&p.best_soln, &train, all);
         double test_score = ModelType::OBJECTIVE(&p.best_soln, &test, all);
-
+        
         // Log data
         log << "Seed,Train MSE,Test MSE,Dur,Model" << endl;
         log << meme::SEED;
