@@ -2,8 +2,7 @@
 /** @file
  * @author Andrew Ciezak <andy@impv.au>
  * @version 1.0
- * @brief An Element that occurs within a Term
- * @copyright (C) 2022 Prof. Pablo Moscato, License CC-BY
+ * @brief A class representing an Element in a Regression model, which may be active or inactive and has an associated value of type T.
  */
 
 #ifndef MEMETICO_MODELS_ELEMENT_H_
@@ -14,15 +13,11 @@ using namespace std;
 #include <stdlib.h>
 
 /**
- * @brief A specific Element within within a Term of elements.
- * 
- * An Element consists of a value of type T and an active/inactive flag.
- * 
- * Example usage is within the Regression class that extends the Model class.
- * The Regression class has a Term with many Elements from its form \f$ f(x)=c_1x_1+c_2x_2..+c_Nx_N \f$
- * Where each \f$c_ix_i\f$ is an Element that may be on or off
- * 
- * The template class is provided such that each Element could be some other form such as \f$ f(x)={x_1}^{c_1}+... \f$
+ * @brief A class representing an Element in a Regression model, which may be active or inactive and has an associated value of type T.
+ * The Regression class provides an example usage of the Element class, where it contains a vector of Element<T> objects.
+ * In the regression form of a model, each term is represented as an Element, where each Element is either active or inactive and has a value of type T.
+ * When we consider the form \f$ f(x)=c_1x_1+c_2x_2..+c_Nx_N \f$, has each term is considered as \f$c_ix_i\f$ and is modelled as an Element.
+ * The Element class provides methods to set and get the active status of the element, as well as its value. It also provides overloaded operators for comparison and arithmetic operations on Element objects.
  */
 template<class T>
 class Element {
@@ -39,40 +34,33 @@ class Element {
             value = element_value;
         };
 
-        /** Copy constructor */
+        /** @brief Copy constructor */
         Element(const Element<T> &o) {
             value = T(o.value);
             active = o.active;
         };
 
-        /** @brief get Element value */
-        T           get_value()           {return value;};
+        /** @brief Get Element value */
+        T       get_value()     {return value;};
 
-        /** @brief get Element active flag */
-        bool        get_active()          {return active;};
+        /** @brief Get Element active flag */
+        bool    get_active()    {return active;};
 
-        /** @brief set Element value */
-        void        set_value(T element_value)          {value = element_value;};
+        /** @brief Set Element value */
+        void    set_value(T element_value)      {value = element_value;};
         
-        /** @brief set Element active_flag */
-        void        set_active(bool element_active)     {active = element_active;};
+        /** @brief Set Element active_flag */
+        void    set_active(bool element_active) {active = element_active;};
 
-        /** @brief comparison operator for Element */
-        bool operator== (const Element<T>& o) {
-            return (value == o.value && active == o.active);
-        }
+        /** @brief Check value and active flag matches between this and o */
+        bool operator== (const Element<T>& o)   {return (value == o.value && active == o.active);};
 
-        /** @brief not equal comparison operator for Element */
-        bool operator!= (const Element<T>& o) {
-            return !(*this == o);
-        }
+        /** @brief Check !(this == o) */
+        bool operator!= (const Element<T>& o)   {return !(*this == o);};
 
-        /** @brief Output Element value when active */
-        friend ostream& operator<<(ostream& os, Element<T>& o) {
-            
-            if( o.get_active() )
-                os << o.get_value();
-
+        /** @brief Output value if active is true */
+        friend ostream& operator<<(ostream& os, Element<T>& o) {  
+            if( o.get_active() )    os << o.get_value();
             return os;
         }
 
@@ -85,7 +73,5 @@ class Element {
         bool        active;
 
 };
-
-
 
 #endif
