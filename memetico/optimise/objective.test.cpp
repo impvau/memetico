@@ -7,6 +7,9 @@
 #include <string>
 #include <ostream>
 
+typedef double DataType;
+typedef ContinuedFraction<Regression<DataType>,DataType> AgentModel;
+
 inline void init(string filename) {
 
     // Create sample data
@@ -55,12 +58,12 @@ inline void init(string filename) {
 
 }
 
-inline ContinuedFraction<double> small_frac() {
+inline AgentModel small_frac() {
 
     // f(x) = x1 - 20 
     size_t params = 2;
     size_t depth = 0;
-    ContinuedFraction<double> o  = ContinuedFraction<double>(depth);
+    AgentModel o  = AgentModel(depth);
     Regression<double> m1 = Regression<double>(params);
     o.set_global_active(0, true);
     o.set_global_active(1, true);
@@ -89,14 +92,14 @@ TEST_CASE("Objective: mse on CPU") {
     DataSet ds = DataSet(fn);
     ds.load();
 
-    ContinuedFraction<double> f1 = small_frac();
+    AgentModel f1 = small_frac();
 
-    ContinuedFraction<double>::IVS.clear();
+    AgentModel::IVS.clear();
     for(size_t i = 0; i < DataSet::IVS.size(); i++)
-        ContinuedFraction<double>::IVS.push_back(DataSet::IVS[i]);
+        AgentModel::IVS.push_back(DataSet::IVS[i]);
 
     vector<size_t> all;
-    double res = objective::mse<ContinuedFraction<double>>(&f1, &ds, all);
+    double res = objective::mse<DataType>(&f1, &ds, all);
     REQUIRE( (res-6845.240365625) < 0.0000001 );
 }
 
@@ -115,14 +118,14 @@ TEST_CASE("Objective: mse on GPU") {
     DataSet ds = DataSet(fn, true);
     ds.load();
 
-    ContinuedFraction<double> f1 = small_frac();
+    AgentModel f1 = small_frac();
 
-    ContinuedFraction<double>::IVS.clear();
+    AgentModel::IVS.clear();
     for(size_t i = 0; i < DataSet::IVS.size(); i++)
-        ContinuedFraction<double>::IVS.push_back(DataSet::IVS[i]);
+        AgentModel::IVS.push_back(DataSet::IVS[i]);
 
     vector<size_t> all;
-    double res = objective::mse<ContinuedFraction<double>>(&f1, &ds, all);
+    double res = objective::mse<AgentModel>(&f1, &ds, all);
     REQUIRE( (res-6845.240365625) < 0.0000001 );
     */
 }
