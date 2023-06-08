@@ -7,7 +7,7 @@
 #include <memetico/population/pop.h>
 #include <memetico/models/cont_frac_dd.h>
 
-double          meme::PENALTY = 1;
+double          meme::PENALTY = 0;
 size_t          meme::PREC = 18;
 size_t          meme::NELDER_MEAD_STALE = 10;
 size_t          meme::NELDER_MEAD_MOVES = 250;
@@ -22,3 +22,7 @@ long int        meme::MAX_TIME = 6000;
 long int        meme::RUN_TIME = 0;
 size_t          meme::DIVERSITY_COUNT = 5;
 size_t          meme::STALE_RESET = 10;
+size_t          meme::DEPTH = 4;
+
+RandReal        meme::RANDREAL;
+RandInt         meme::RANDINT;
