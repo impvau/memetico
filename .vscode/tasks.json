@@ -21,6 +21,7 @@
             //"command": "make",
             // Clean make, required when function structure in the headers is being modified or headers are using .tpp files
             "command": "clear; make -f Test.mak clean; make -f Test.mak",
+            //"command": "clear; make -f Test.mak",
             "group": {
                 "kind": "build",
                 "isDefault": true
