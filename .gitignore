@@ -48,3 +48,6 @@ callgrind*
 **/test_data.csv
 
 out/*
+
+# Misc
+.hash
