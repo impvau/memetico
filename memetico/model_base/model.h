@@ -75,9 +75,6 @@ class Model {
         /** @brief getter for fitness */
         double          get_fitness()               { return fitness; };
         
-        ///** @brief getter for fitness */
-        //double          get_count_active()          { return 0; };
-
         /** @brief Return TreeNode for GPU evaluation */
         virtual void    get_node(TreeNode * n)      {};
 
