@@ -1,10 +1,11 @@
 
 /**
  * @file
- * @author Rui Zhang <zhang_ray@stu.scu.edu.cn>
  * @author Andrew Ciezak <andy@impv.au>
  * @version 1.0
  * @brief Header for the DataSet class
+ * 
+ * Adapted from work by @author Rui Zhang <zhang_ray@stu.scu.edu.cn> from https://link.springer.com/chapter/10.1007/978-3-031-20862-1_38
 */
 
 #ifndef CUSR_TREE_NODE_H
