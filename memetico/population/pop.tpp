@@ -39,8 +39,8 @@ void Population<U>::run() {
     auto start_time = chrono::system_clock::now();
 
     // Initialise population variables
-    stale_count = 0, stale_times = 0;           
-    best_soln = U(root_agent->get_pocket());
+    stale_count = 0, stale_times = 0;      
+    set_best_soln(root_agent->get_pocket());     
 
     // Loop for generations
     for( meme::GEN = 0; meme::GEN < meme::GENERATIONS; meme::GEN++ ) {
@@ -109,6 +109,9 @@ void Population<U>::evolve(Agent<U>* agent) {
     if( agent->is_leaf() )
         return;
     
+    //cout << "------" << endl;
+    //root_agent->show(cout);
+
     // Update parent current by recombing parent pocket and the last child current
     agent->get_current().recombine(
         &agent->get_pocket(), 
@@ -174,7 +177,8 @@ void Population<U>::local_search_agent(Agent<U>* agent) {
         if( LOCAL_SEARCH_DATA_PCT < 1 )
             selected_idx = data->subset(LOCAL_SEARCH_DATA_PCT);
 
-        U::LOCAL_SEARCH(&temp_current, data, selected_idx);
+        temp_current.local_search(data,selected_idx);
+        //U::LOCAL_SEARCH(&temp_current, data, selected_idx);
 
     }
 
@@ -223,19 +227,23 @@ void Population<U>::local_search_single(Agent<U> * agent, bool is_current, vecto
     else                copy = U( agent->get_pocket() );
 
     // Run LS
-    U::LOCAL_SEARCH(&copy, data, idx);
+    copy.local_search(data, idx);
 
      // Set best soln if 
     if( idx.empty() && best_soln.get_fitness() < best_soln.get_fitness() )
-        best_soln = U(copy);
+        set_best_soln(copy);
 
     // Set current if fitness is better
-    if( is_current && copy.get_fitness() < agent->get_current().get_fitness() ) 
+    if( is_current && copy.get_fitness() < agent->get_current().get_fitness() ) {
+        //cout << "improved from local search current " << agent->get_current().get_fitness() << endl;
         agent->set_current(copy);
+    }
     
     // Set pocket if fitness is better
-    if( !is_current && copy.get_fitness() < agent->get_pocket().get_fitness() ) 
+    if( !is_current && copy.get_fitness() < agent->get_pocket().get_fitness() ) {
+        //cout << "improved from local search pocket " << agent->get_pocket().get_fitness() << endl;
         agent->set_pocket(copy);
+    }
 
 }
 
@@ -281,8 +289,9 @@ void Population<U>::evaluate(Agent<U>* agent) {
     
     // Evaluate the current agent
     vector<size_t> all;
-    U::OBJECTIVE(&agent->get_pocket(), data, all);
-    U::OBJECTIVE(&agent->get_current(), data, all);
+
+    agent->get_pocket().objective(data, all);
+    agent->get_current().objective(data,all);
 
     if(agent->is_leaf())
         return;
@@ -300,6 +309,12 @@ void Population<U>::exchange(Agent<U>* agent) {
     if( agent == nullptr )
         agent = root_agent;
     
+    // !!! So we shouldnt have to call objective here, however sometime the fitness is wrong
+    // when we go to exchange, thus we have to re-run again. This forces it to work, but
+    // there is somepoint where we change the fraction but do not evaluate the objective again
+    agent->get_current().objective(data);
+    agent->get_pocket().objective(data);
+
     // Only when current fitter than pocket, exchange
     if( agent->get_current().get_fitness() < agent->get_pocket().get_fitness() )
         agent->exchange();
@@ -322,7 +337,7 @@ void Population<U>::stale() {
     else {
         stale_count = 0;
         stale_times = 0;
-        best_soln = U( root_agent->get_pocket() );
+        set_best_soln(root_agent->get_pocket());
         POCKET_DEPTH = best_soln.get_depth();
     }
 
@@ -342,7 +357,7 @@ void Population<U>::stale() {
             cout << "\tResetting stale root " << endl;
             U replace = U();
             vector<size_t> all;
-            U::OBJECTIVE(&replace, data, all);
+            replace.objective(data,all);
             root_agent->set_current(replace);
             
         } else if (DIVERSITY_TYPE == DiversityStale)
@@ -464,7 +479,8 @@ void Population<U>::distinct(size_t count) {
 
             // Perform full local search on the new result
             vector<size_t> all;
-            U::LOCAL_SEARCH(&rand_sol, data, all);
+            rand_sol.local_search(data, all);
+            //U::LOCAL_SEARCH(&rand_sol, data, all);
 
             // Replace the underlying soln
             if( pos == 0 )    root_agent->set_pocket(rand_sol);
