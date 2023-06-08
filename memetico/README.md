@@ -4,7 +4,7 @@ An implementation of a C++ memetic algorithm under the direction of its inceptor
 
 Prof. Moscato collaborated with Haoyuan Sun in 2018 to introduce <a href="https://ieeexplore.ieee.org/abstract/document/8789889" target="_blank">a memetico algorithm for symbolic regression that utilised a continued fractions representation </a> known as Continued Fractions Regression (CFR). This was later adapted by Mohammad Haque and later Andrew Ciezak.
 
-This repository is a major re-developement to achieve a generalised memetic framework utilisatble by CFR but can be extended to problem classes outside of regression and any solution representation (e.g. graph, distance matrix, etc.)
+This repository is a major re-developement and has aspects based on this original work. It's aim achieve a generalised memetic framework utilisatble by CFR but can be extended to problem classes outside of regression and any solution representation (e.g. graph, distance matrix, etc.) in the aim of greater maintainability and extendability.
 
 # Regression Usage
 
