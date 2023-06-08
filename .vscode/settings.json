@@ -91,7 +91,8 @@
         "semaphore": "cpp",
         "__nullptr": "cpp",
         "stack": "cpp",
-        "__functional_03": "cpp"
+        "__functional_03": "cpp",
+        "__string": "cpp"
     },
     "testMate.cpp.test.executables": "filename.exe"
 }
