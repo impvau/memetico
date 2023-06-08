@@ -47,7 +47,7 @@ void Regression<T>::get_node(TreeNode * n) {
         size_t j = term_active_variables.back();
 
         // if constant
-        if( term_active_variables.back() == term.get_count()-1 ) {
+        if( term_active_variables.back() == get_count()-1 ) {
             temp_node->right = new TreeNode();
             temp_node->right->node.node_type = NodeType::CONST;
             temp_node->right->node.constant = get_value(j);
@@ -63,7 +63,7 @@ void Regression<T>::get_node(TreeNode * n) {
         size_t j = term_active_variables.back();
 
         // if constant
-        if( term_active_variables.back() == term.get_count()-1 ) {
+        if( term_active_variables.back() == get_count()-1 ) {
             n->node.node_type = NodeType::CONST;
             n->node.constant = get_value(j);
         // Else if coeff
@@ -186,8 +186,8 @@ double Regression<T>::evaluate(vector<double> & values) {
     return ret;
 }
 
-template <class T>
-ostream& operator<<(ostream& os, Regression<T>& r)
+template <class F>
+ostream& operator<<(ostream& os, Regression<F>& r)
 {
             
     bool has_written = false;
@@ -217,17 +217,26 @@ ostream& operator<<(ostream& os, Regression<T>& r)
 
                 os << r.get_value(i);
                 // If not a constant, add the multiplier
-                if( i != r.get_count()-1 )
-                    os << "*";
+                if( i != r.get_count()-1 ) {
+                    if( Regression<F>::FORMAT != PrintLatex ) 
+                        os << "*";
+                }
+                    
             }
             
             // Write the variable name
             if(i != r.get_count()-1) {
 
-                if( Regression<T>::FORMAT == PrintLatex || Regression<T>::FORMAT == PrintNumpy)
-                    os << Regression<T>::IVS[i];
+                if( MemeticModel<F>::FORMAT == PrintLatex ) {
+                    string s = MemeticModel<F>::IVS[i];
+                    s.replace(MemeticModel<F>::IVS[i].find("x"), 1, "x_{").append("}");
+                    os << s;
+                }
+
+                if( MemeticModel<F>::FORMAT == PrintNumpy)
+                    os << MemeticModel<F>::IVS[i];
                 
-                if( Regression<T>::FORMAT == PrintExcel ) {
+                if( MemeticModel<F>::FORMAT == PrintExcel ) {
                     os << excel_name(i+2);
                 }
 

@@ -3,17 +3,19 @@
 #include <string>
 #include <sstream>
 #include <memetico/helpers/rng.h>
+#include <memetico/optimise/objective.h>
+#include <memetico/optimise/local_search.h>
 
 void setup_regression_ivs(size_t size) {
 
     // Setup IVs in Regression
     MemeticModel<double>::IVS.clear();
     for(size_t i = 0; i < size-1; i++)
-        Regression<double>::IVS.push_back("x"+to_string(i+1));
+        MemeticModel<double>::IVS.push_back("x"+to_string(i+1));
 
 }
 
-TEST_CASE("Regression: Regression<T>(), Regression<T>(r1) ") {
+TEST_CASE("Regression: Regression<T>(), Regression<T>(r1), Regression<T>(active, vals) ") {
 
     size_t size = 6;
     setup_regression_ivs(size);
@@ -23,229 +25,151 @@ TEST_CASE("Regression: Regression<T>(), Regression<T>(r1) ") {
     m1.set_fitness(5);
     m1.set_penalty(2);
     m1.set_error(16);
-    AdditiveTerm<double> term = AdditiveTerm<double>(size);
-    REQUIRE( m1.get_term() == term );
+    for(size_t i = 0; i < m1.get_count(); i++) {
+        REQUIRE( m1.get_active(i) == false );
+        REQUIRE( m1.get_value(i) == 0);
+    }
 
     // 2. Construct from existing regressors
     Regression<double> m2 = Regression<double>(m1);
-    REQUIRE( m1.get_term() == term );
     REQUIRE( m1.get_fitness() == m2.get_fitness() );
     REQUIRE( m1.get_error() == m2.get_error() );
     REQUIRE( m1.get_penalty() == m2.get_penalty() );
+    for(size_t i = 0; i < m1.get_count(); i++) {
+        REQUIRE( m1.get_active(i) == m2.get_active(i));
+        REQUIRE( m1.get_value(i) == m2.get_value(i));
+    }
+
+    // 3. Construct based on active/vals
+    vector<double> vals = {5.2, 3.5, 0, -2.2, -13};
+    vector<bool> actives = {false, true, false, true, false};
+    Regression<double> r3 = Regression<double>(actives, vals);
+    // Actives
+    REQUIRE( r3.get_active(0) == false);
+    REQUIRE( r3.get_active(1) == true);
+    REQUIRE( r3.get_active(2) == false);
+    REQUIRE( r3.get_active(3) == true);
+    REQUIRE( r3.get_active(4) == false);
+    // Vals
+    REQUIRE( r3.get_value(0) == 5.2);
+    REQUIRE( r3.get_value(1) == 3.5);
+    REQUIRE( r3.get_value(2) == 0);
+    REQUIRE( r3.get_value(3) == -2.2);
+    REQUIRE( r3.get_value(4) == -13);
 
 }
 
 TEST_CASE("Regression: set_active, set_value, get_active, get_value") {
 
-    size_t size = 6;
-    setup_regression_ivs(size);
+    setup_regression_ivs(6);
     
-    // 1. Default Regression object has a default term object size in length
-    Regression<double> m1 = Regression<double>(size);
-    m1.set_active(0, false);
-    m1.set_active(1, true);
-    m1.set_active(2, false);
-    m1.set_active(3, true);
-    m1.set_active(4, false);
-    double d0 = 5.2;
-    double d1 = 3.5;
-    double d2 = 0;
-    double d3 = -2.2;
-    double d4 = -13;
-    m1.set_value(0, d0);
-    m1.set_value(1, d1);
-    m1.set_value(2, d2);
-    m1.set_value(3, d3);
-    m1.set_value(4, d4);
-    // 1.1 Ensure all values match new values
-    REQUIRE(m1.get_value(0) == d0);
-    REQUIRE(m1.get_value(1) == d1);
-    REQUIRE(m1.get_value(2) == d2);
-    REQUIRE(m1.get_value(3) == d3);
-    REQUIRE(m1.get_value(4) == d4);
-    // 1.2. Check chaning the original element doesn't change object
-    d0 = 7.8;
-    REQUIRE(m1.get_value(0) != d0);
-
-}
-
-TEST_CASE("Regression: set_term, get_term, ==") {
-
-    size_t size = 6;
-    setup_regression_ivs(size);
-    
-    // 1. Compare empty regression objects
-    Regression<double> m1 = Regression<double>(size);
-    Regression<double> m2 = Regression<double>(size);
-    REQUIRE(m1 == m2);
-    Regression<double> m3 = Regression<double>(size+1);
-    REQUIRE(!(m1 == m3));
-
-    // 2. Create term, assign to Regression and check it is the same as building with set_active, set_value 
-    // Setup Term
-    AdditiveTerm<double> o1 = AdditiveTerm<double>(size);
-    // Update all values
-    double d0 = 5.2;
-    double d1 = 3.5;
-    double d2 = 0;
-    double d3 = -2.2;
-    double d4 = -13;
-    o1.set_value(0, d0);
-    o1.set_value(1, d1);
-    o1.set_value(2, d2);
-    o1.set_value(3, d3);
-    o1.set_value(4, d4);
-    // 2.1 Set m4 manually, set term in m5 and ensure they are equal
-    Regression<double> m4 = Regression<double>(size);
-    m4.set_value(0, d0);
-    m4.set_value(1, d1);
-    m4.set_value(2, d2);
-    m4.set_value(3, d3);
-    m4.set_value(4, d4);
-    Regression<double> m5 = Regression<double>(size);
-    m5.set_term(o1);
-    REQUIRE( m4 == m5 );
-    REQUIRE( m4.get_term() == m5.get_term() );
-    // 2.2 Change the AdditiveTerm<T> passed in and ensure the object is not changed 
-    o1.set_value(0, d4);
-    REQUIRE( m4.get_term() == m5.get_term() );
-    // 2.3 Change the reference returned by and ensure the underlying object is changed
-    m5.get_term().set_value(0, d4);
-    REQUIRE( !(m4.get_term() == m5.get_term()) );
-    REQUIRE( m5.get_value(0) == d4 );
-
-}
-
-TEST_CASE("Regression: get_count_active, get_active_positions()") {
-
-    size_t size = 6;
-    setup_regression_ivs(size);
-
-    // 1. Test increasing number of active variables
-    Regression<double> r1 = Regression<double>(5);
-    AdditiveTerm<double> o1 = AdditiveTerm<double>(5);
-    // 1.1 Default of 0 active
-    REQUIRE(r1.get_count_active() == 0);
-    REQUIRE(r1.get_active_positions().size() == 0);
-    Element<double> d0 = Element<double>(false, 5.2);
-    Element<double> d1 = Element<double>(true, 3.5);
-    Element<double> d2 = Element<double>(false, 0);
-    Element<double> d3 = Element<double>(true, -2.2);
-    Element<double> d4 = Element<double>(false, -13);
-    // 1.2 After setting 1 active
-    o1.set_elem(0, d0);
-    o1.set_elem(1, d1);
-    r1.set_term(o1);
-    REQUIRE(r1.get_count_active() == 1);
-    REQUIRE(r1.get_active_positions().size() == 1);
-    REQUIRE(r1.get_active_positions()[0] == 1);
-    // 1.3 After setting 2 active
-    o1.set_elem(2, d2);
-    o1.set_elem(3, d3);
-    o1.set_elem(4, d4);
-    r1.set_term(o1);
-    REQUIRE(r1.get_count_active() == 2);
-    REQUIRE(r1.get_active_positions().size() == 2);
-    REQUIRE(r1.get_active_positions()[0] == 1);
-    REQUIRE(r1.get_active_positions()[1] == 3);
-    // 1.3 After setting 3 active
-    o1.set_elem(0, d3);
-    r1.set_term(o1);
-    REQUIRE(r1.get_count_active() == 3);
-    REQUIRE(r1.get_active_positions().size() == 3);
-    REQUIRE(r1.get_active_positions()[0] == 0);
-    REQUIRE(r1.get_active_positions()[1] == 1);
-    REQUIRE(r1.get_active_positions()[2] == 3);
-    // 1.4 After setting 4 active
-    o1.set_elem(2, d3);
-    r1.set_term(o1);
-    REQUIRE(r1.get_count_active() == 4);
-    REQUIRE(r1.get_active_positions().size() == 4);
-    REQUIRE(r1.get_active_positions()[0] == 0);
-    REQUIRE(r1.get_active_positions()[1] == 1);
-    REQUIRE(r1.get_active_positions()[2] == 2);
-    REQUIRE(r1.get_active_positions()[3] == 3);
-    // 1.5 After setting 5 active
-    o1.set_elem(4, d3);
-    r1.set_term(o1);
-    REQUIRE(r1.get_count_active() == 5);
-    REQUIRE(r1.get_active_positions().size() == 5);
-    REQUIRE(r1.get_active_positions()[0] == 0);
-    REQUIRE(r1.get_active_positions()[1] == 1);
-    REQUIRE(r1.get_active_positions()[2] == 2);
-    REQUIRE(r1.get_active_positions()[3] == 3);
-    REQUIRE(r1.get_active_positions()[4] == 4);
-
-}
-
-TEST_CASE("Regression: ==") {
-
-    size_t size = 6;
-    setup_regression_ivs(size);
-
-    // Setup m1 = f(x) = x1 + 2x3 + 3x5 - 20
-    Regression<double> m1 = Regression<double>(size);
-    double d0 = 1;
-    double d1 = 12;
-    double d2 = 2;
-    double d3 = -7;
-    double d4 = 3;
-    double d5 = -20;
+    // Setup default object
+    vector<double> vals = {5.2, 3.5, 0, -2.2, -13};
+    vector<bool> actives = {false, true, false, true, false};
+    Regression<double> m1 = Regression<double>(actives, vals);
+    // 1.1 Change active
+    REQUIRE(m1.get_active(0) == false );
+    REQUIRE(m1.get_active(1) == true );
+    REQUIRE(m1.get_active(2) == false );
+    REQUIRE(m1.get_active(3) == true );
+    REQUIRE(m1.get_active(4) == false );
     m1.set_active(0, true);
     m1.set_active(1, false);
     m1.set_active(2, true);
     m1.set_active(3, false);
     m1.set_active(4, true);
-    m1.set_active(5, true);
-    m1.set_value(0, d0);
-    m1.set_value(1, d1);
-    m1.set_value(2, d2);
-    m1.set_value(3, d3);
-    m1.set_value(4, d4);
-    m1.set_value(5, d5);
+    REQUIRE(m1.get_active(0) == true );
+    REQUIRE(m1.get_active(1) == false );
+    REQUIRE(m1.get_active(2) == true );
+    REQUIRE(m1.get_active(3) == false );
+    REQUIRE(m1.get_active(4) == true );
+    
+    // 1.2 Change values
+    REQUIRE(m1.get_value(0) == 5.2 );
+    REQUIRE(m1.get_value(1) == 3.5 );
+    REQUIRE(m1.get_value(2) == 0 );
+    REQUIRE(m1.get_value(3) == -2.2 );
+    REQUIRE(m1.get_value(4) == -13 );
+    m1.set_value(0, 1.1);
+    m1.set_value(1, 1.2);
+    m1.set_value(2, 1.3);
+    m1.set_value(3, 1.4);
+    m1.set_value(4, 1.5);
+    REQUIRE(m1.get_value(0) == 1.1 );
+    REQUIRE(m1.get_value(1) == 1.2 );
+    REQUIRE(m1.get_value(2) == 1.3 );
+    REQUIRE(m1.get_value(3) == 1.4 );
+    REQUIRE(m1.get_value(4) == 1.5 );
+
+}
+
+TEST_CASE("Regression: get_count_active, get_active_positions()") {
+
+    setup_regression_ivs(6);
+    
+    // Setup default object
+    vector<double> vals = {5.2, 3.5, 0, -2.2, -13};
+    vector<bool> actives = {false, true, false, true, false};
+    Regression<double> m1 = Regression<double>(actives, vals);
+    // 1.1 Check counts active
+    REQUIRE(m1.get_count_active() == 2);
+    REQUIRE(m1.get_active_positions().size() == 2);
+    REQUIRE(m1.get_active_positions()[0] == 1);
+    REQUIRE(m1.get_active_positions()[1] == 3);
+    // 1.2 Change and check again
+    m1.set_active(0, true);
+    m1.set_active(1, false);
+    m1.set_active(2, true);
+    m1.set_active(3, false);
+    m1.set_active(4, true);
+    REQUIRE(m1.get_count_active() == 3);
+    REQUIRE(m1.get_active_positions().size() == 3);
+    REQUIRE(m1.get_active_positions()[0] == 0);
+    REQUIRE(m1.get_active_positions()[1] == 2);
+    REQUIRE(m1.get_active_positions()[2] == 4);
+    // 1.3 Change to all
+    m1.set_active(0, true);
+    m1.set_active(1, true);
+    m1.set_active(2, true);
+    m1.set_active(3, true);
+    m1.set_active(4, true);
+    REQUIRE(m1.get_count_active() == 5);
+    REQUIRE(m1.get_active_positions().size() == 5);
+    REQUIRE(m1.get_active_positions()[0] == 0);
+    REQUIRE(m1.get_active_positions()[1] == 1);
+    REQUIRE(m1.get_active_positions()[2] == 2);
+    REQUIRE(m1.get_active_positions()[3] == 3);
+    REQUIRE(m1.get_active_positions()[4] == 4);
+    // 1.4 Change to none
+    m1.set_active(0, false);
+    m1.set_active(1, false);
+    m1.set_active(2, false);
+    m1.set_active(3, false);
+    m1.set_active(4, false);
+    REQUIRE(m1.get_count_active() == 0);
+    REQUIRE(m1.get_active_positions().size() == 0);
+
+}
+
+TEST_CASE("Regression: ==") {
+
+    setup_regression_ivs(6);
+
+    // Setup m1 = f(x) = x1 + 2x3 + 3x5 - 20
+    vector<double> vals = {1, 12,2,-7,3,-20};
+    vector<bool> actives = {true, false, true, false, true, true};
+    Regression<double> m1 = Regression<double>(actives, vals);
 
     // Setup m2 = f(x) = -3x2 + 4x4 + 3x5 - 3
-    Regression<double> m2 = Regression<double>(size);
-    d0 = 0;
-    d1 = -3;
-    d2 = 0;
-    d3 = 4;
-    d4 = 3;
-    d5 = -3;
-    m2.set_active(0, false);
-    m2.set_active(1, true);
-    m2.set_active(2, false);
-    m2.set_active(3, true);
-    m2.set_active(4, true);
-    m2.set_active(5, true);
-    m2.set_value(0, d0);
-    m2.set_value(1, d1);
-    m2.set_value(2, d2);
-    m2.set_value(3, d3);
-    m2.set_value(4, d4);
-    m2.set_value(5, d5);
-
+    vals = {0,-3,0,4,3,-3};
+    actives = {false, true, false, true, true, true};
+    Regression<double> m2 = Regression<double>(actives, vals);
+    
     // Setup m3 = m1 = f(x) = x1 + 2x3 + 3x5 - 20
-    Regression<double> m3 = Regression<double>(size);
-    d0 = 1;
-    d1 = 12;
-    d2 = 2;
-    d3 = -7;
-    d4 = 3;
-    d5 = -20;
-    m3.set_active(0, true);
-    m3.set_active(1, false);
-    m3.set_active(2, true);
-    m3.set_active(3, false);
-    m3.set_active(4, true);
-    m3.set_active(5, true);
-    m3.set_value(0, d0);
-    m3.set_value(1, d1);
-    m3.set_value(2, d2);
-    m3.set_value(3, d3);
-    m3.set_value(4, d4);
-    m3.set_value(5, d5);
-
+    vals = {1,12,2,-7,3,-20};
+    actives = {true, false, true, false, true, true};
+    Regression<double> m3 = Regression<double>(actives, vals);
+   
     // 1. Compare two same objects
     REQUIRE(m1 == m1);
     REQUIRE(m2 == m2);
@@ -261,8 +185,8 @@ TEST_CASE("Regression: ==") {
     REQUIRE(m4 == m5);
     REQUIRE(m5 == m4);
     // 5. Check defaul object
-    Regression<double> m6 = Regression<double>(size);
-    Regression<double> m7 = Regression<double>(size);
+    Regression<double> m6 = Regression<double>(6);
+    Regression<double> m7 = Regression<double>(6);
     REQUIRE(m6 == m7);
     REQUIRE(m7 == m6);
 
@@ -270,145 +194,92 @@ TEST_CASE("Regression: ==") {
 
 TEST_CASE("Regression: randomise()") {
 
-    size_t size = 6;
-    setup_regression_ivs(size);
+    size_t params = 6;
+    setup_regression_ivs(params);
 
+    // Seed
     RandInt ri = RandInt(42);
-    RandReal rr = RandReal(42);
-    
+    RandReal rr = RandReal(42);    
     RandInt::RANDINT = &ri;
     RandReal::RANDREAL = &rr;
 
-    // Setup m1 = f(x) = x1 + 2x3 + 3x5 - 20
-    Regression<double> m1 = Regression<double>(size);
+    // 1. Randomise variables independently
+    vector<double> vals = {0,0,0,0,0,0};
+    vector<bool> actives = {true, true, true, true, true, true};
+    Regression<double> m1 = Regression<double>(actives, vals);
+    for(size_t i = 0; i < params; i++) {
 
-    // 1. Randomise each individual varaible 
-    // 1.1 pos 3
-    size_t pos = 3;
-    REQUIRE(m1.get_value(pos) == 0);
-    m1.set_active(pos, true);
-    m1.randomise(-5, 5, pos);
-    REQUIRE(m1.get_value(pos) != 0);
-    REQUIRE(m1.get_value(pos) >= -5);
-    REQUIRE(m1.get_value(pos) <= 5);
-    // 1.2 pos 2
-    pos = 2;
-    REQUIRE(m1.get_value(pos) == 0);
-    m1.set_active(pos, true);
-    m1.randomise(-5, 5, pos);
-    REQUIRE(m1.get_value(pos) != 0);
-    REQUIRE(m1.get_value(pos) >= -5);
-    REQUIRE(m1.get_value(pos) <= 5);
-    // 1.3 pos 1
-    pos = 1;
-    REQUIRE(m1.get_value(pos) == 0);
-    m1.set_active(pos, true);
-    m1.randomise(-5, 5, pos);
-    REQUIRE(m1.get_value(pos) != 0);
-    REQUIRE(m1.get_value(pos) >= -5);
-    REQUIRE(m1.get_value(pos) <= 5);
-    // 1.4 pos 0
-    pos = 0;
-    REQUIRE(m1.get_value(pos) == 0);
-    m1.set_active(pos, true);
-    m1.randomise(-5, 5, pos);
-    REQUIRE(m1.get_value(pos) != 0);
-    REQUIRE(m1.get_value(pos) >= -5);
-    REQUIRE(m1.get_value(pos) <= 5);
-    // 1.5 pos 4
-    pos = 4;
-    REQUIRE(m1.get_value(pos) == 0);
-    m1.set_active(pos, true);
-    m1.randomise(-5, 5, pos);
-    REQUIRE(m1.get_value(pos) != 0);
-    REQUIRE(m1.get_value(pos) >= -5);
-    REQUIRE(m1.get_value(pos) <= 5);
-    // 1.5 pos 5
-    pos = 5;
-    REQUIRE(m1.get_value(pos) == 0);
-    m1.set_active(pos, true);
-    m1.randomise(-5, 5, pos);
-    REQUIRE(m1.get_value(pos) != 0);
-    REQUIRE(m1.get_value(pos) >= -5);
-    REQUIRE(m1.get_value(pos) <= 5);
+        size_t n5 = 0, n4 = 0, n3 = 0, n2 = 0, n1 = 0, z = 0, p1 = 0, p2 = 0, p3 = 0, p4 = 0, p5 = 0;
+        for(size_t j = 0; j < 1000; j++) {
+            m1.randomise(1, 5, i);
 
-    // 2. Randomise the entire object
-    m1 = Regression<double>(size);
-    m1.set_active(0, true);
-    m1.set_active(1, true);
-    m1.set_active(2, true);
-    m1.set_active(3, true);
-    m1.set_active(4, true);
-    m1.set_active(5, true);
-    m1.randomise(-5,5);
-    pos = 0;
-    REQUIRE(m1.get_value(pos) != 0);
-    REQUIRE(m1.get_value(pos) >= -5);
-    REQUIRE(m1.get_value(pos) <= 5);
-    pos = 1;
-    REQUIRE(m1.get_value(pos) != 0);
-    REQUIRE(m1.get_value(pos) >= -5);
-    REQUIRE(m1.get_value(pos) <= 5);
-    pos = 2;
-    REQUIRE(m1.get_value(pos) != 0);
-    REQUIRE(m1.get_value(pos) >= -5);
-    REQUIRE(m1.get_value(pos) <= 5);
-    pos = 3;
-    REQUIRE(m1.get_value(pos) != 0);
-    REQUIRE(m1.get_value(pos) >= -5);
-    REQUIRE(m1.get_value(pos) <= 5);
-    pos = 4;
-    REQUIRE(m1.get_value(pos) != 0);
-    REQUIRE(m1.get_value(pos) >= -5);
-    REQUIRE(m1.get_value(pos) <= 5);
-    pos = 5;
-    REQUIRE(m1.get_value(pos) != 0);
-    REQUIRE(m1.get_value(pos) >= -5);
-    REQUIRE(m1.get_value(pos) <= 5);
+            int val = m1.get_value(i);
+            switch(val) {
+                case -5: n5++; break;
+                case -4: n4++; break;
+                case -3: n3++; break;
+                case -2: n2++; break;
+                case -1: n1++; break;
+                case  0: z++;  break;
+                case  1: p1++; break;
+                case  2: p2++; break;
+                case  3: p3++; break;
+                case  4: p4++; break;
+                case  5: p5++; break;
+            }
+        }
 
-    // 3. Randomise a large number of objects and ensure they are reasonably distributed
-    // We expect 90 samples for each of the 11 categories to be completely uniformly distributed
-    // We say 70 due to the random chance, so we have around 77%
-    size_t neg5 = 0;
-    size_t neg4 = 0;
-    size_t neg3 = 0;
-    size_t neg2 = 0;
-    size_t neg1 = 0;
-    size_t zero = 0;
-    size_t pos1 = 0;
-    size_t pos2 = 0;
-    size_t pos3 = 0;
-    size_t pos4 = 0;
-    size_t pos5 = 0;
-    m1 = Regression<double>(size);
-    m1.set_active(0, true);
-    pos = 0;
-    for(size_t i = 0; i < 1000; i++) {
-        m1.randomise(-5,5,pos);
-        double val = m1.get_value(pos);
-        if( val == -5 ) neg5++;
-        if( val == -4 ) neg4++;
-        if( val == -3 ) neg3++;
-        if( val == -2 ) neg2++;
-        if( val == -1 ) neg1++;
-        if( val == 0 ) zero++;
-        if( val == 1 ) pos1++;
-        if( val == 2 ) pos2++;
-        if( val == 3 ) pos3++;
-        if( val == 4 ) pos4++;
-        if( val == 5 ) pos5++;
+        REQUIRE(n5 > 50);
+        REQUIRE(n4 > 50);
+        REQUIRE(n3 > 50);
+        REQUIRE(n2 > 50);
+        REQUIRE(n1 > 50);
+        REQUIRE(z == 0);
+        REQUIRE(p1 > 50);
+        REQUIRE(p2 > 50);
+        REQUIRE(p3 > 50);
+        REQUIRE(p4 > 50);
+        REQUIRE(p5 > 50);
+        
     }
-    REQUIRE(neg5 > 70);
-    REQUIRE(neg4 > 70);
-    REQUIRE(neg3 > 70);
-    REQUIRE(neg2 > 70);
-    REQUIRE(neg1 > 70);
-    REQUIRE(zero > 70);
-    REQUIRE(pos1 > 70);
-    REQUIRE(pos2 > 70);
-    REQUIRE(pos3 > 70);
-    REQUIRE(pos4 > 70);
-    REQUIRE(pos5 > 70);
+    
+    // 2. Randomise all varaibles
+    size_t n5 = 0, n4 = 0, n3 = 0, n2 = 0, n1 = 0, z = 0, p1 = 0, p2 = 0, p3 = 0, p4 = 0, p5 = 0;
+    for(size_t i = 0; i < 1000; i++) {
+
+        m1.randomise(1, 5);
+
+        for(size_t j = 0; j < m1.get_count(); j++) {
+
+            int val = m1.get_value(j);
+            switch(val) {
+                case -5: n5++; break;
+                case -4: n4++; break;
+                case -3: n3++; break;
+                case -2: n2++; break;
+                case -1: n1++; break;
+                case  0: z++;  break;
+                case  1: p1++; break;
+                case  2: p2++; break;
+                case  3: p3++; break;
+                case  4: p4++; break;
+                case  5: p5++; break;
+            }
+        }
+
+    }
+    REQUIRE(n5 > 50);
+    REQUIRE(n4 > 50);
+    REQUIRE(n3 > 50);
+    REQUIRE(n2 > 50);
+    REQUIRE(n1 > 50);
+    REQUIRE(z == 0);
+    REQUIRE(p1 > 50);
+    REQUIRE(p2 > 50);
+    REQUIRE(p3 > 50);
+    REQUIRE(p4 > 50);
+    REQUIRE(p5 > 50);
+        
 }
 
 TEST_CASE("Regression: recombine()") {
@@ -421,47 +292,15 @@ TEST_CASE("Regression: recombine()") {
     RandInt::RANDINT = &ri;
     RandReal::RANDREAL = &rr;
 
-    // f(x) = x1 + 2x3 + 3x5 - 20
-    Regression<double> m1 = Regression<double>(size);
-    double d0 = 1;
-    double d1 = 12;
-    double d2 = 2;
-    double d3 = -7;
-    double d4 = 3;
-    double d5 = -20;
-    m1.set_active(0, true);
-    m1.set_active(1, false);
-    m1.set_active(2, true);
-    m1.set_active(3, false);
-    m1.set_active(4, true);
-    m1.set_active(5, true);
-    m1.set_value(0, d0);
-    m1.set_value(1, d1);
-    m1.set_value(2, d2);
-    m1.set_value(3, d3);
-    m1.set_value(4, d4);
-    m1.set_value(5, d5);
+    // Setup m1 = f(x) = x1 + 2x3 + 3x5 - 20
+    vector<double> vals = {1, 12,2,-7,3,-20};
+    vector<bool> actives = {true, false, true, false, true, true};
+    Regression<double> m1 = Regression<double>(actives, vals);
 
-    // f(x) = -3x2 + 4x4 + 3x5 - 3
-    Regression<double> m2 = Regression<double>(size);
-    d0 = 0;
-    d1 = -3;
-    d2 = 0;
-    d3 = 4;
-    d4 = 3;
-    d5 = -3;
-    m2.set_active(0, false);
-    m2.set_active(1, true);
-    m2.set_active(2, false);
-    m2.set_active(3, true);
-    m2.set_active(4, true);
-    m2.set_active(5, true);
-    m2.set_value(0, d0);
-    m2.set_value(1, d1);
-    m2.set_value(2, d2);
-    m2.set_value(3, d3);
-    m2.set_value(4, d4);
-    m2.set_value(5, d5);
+    // Setup m2 = f(x) = -3x2 + 4x4 + 3x5 - 3
+    vals = {0,-3,0,4,3,-3};
+    actives = {false, true, false, true, true, true};
+    Regression<double> m2 = Regression<double>(actives, vals);
     
     // 1. Recombine using union
     Regression<double> m = Regression<double>(size);
@@ -521,6 +360,29 @@ TEST_CASE("Regression: recombine()") {
 
 }
 
+TEST_CASE("Regression: mutate()") {
+
+    size_t size = 6;
+    setup_regression_ivs(size);
+    
+    // 1. Continually mutate and ensure 
+    Regression<double> m = Regression<double>();
+    Regression<double> m1 = Regression<double>(size);
+    m1.set_active(0, true);
+    m1.set_active(1, false);
+    m1.set_active(2, true);
+    m1.set_active(3, false);
+    m1.set_active(4, true);
+    m1.set_active(5, true);
+    size_t last_active = m1.get_count_active();
+    for( size_t i = 0; i < 50; i++) {
+        m1.mutate(m);
+        REQUIRE( (m1.get_count_active() == last_active-1 || m1.get_count_active() == last_active+1) );
+        last_active = m1.get_count_active();
+    }
+}
+
+// @todo check overflow/underflow in evaluate()
 // Test Overflow 3. below
 // Test Underflow 4. below
 
@@ -529,55 +391,18 @@ TEST_CASE("Regression: evaluate()") {
     size_t size = 6;
     setup_regression_ivs(size);
     
-    // f(x) = x1 + 2x3 + 3x5 - 20
-    Regression<double> m1 = Regression<double>(size);
-    double d0 = 1;
-    double d1 = 12;
-    double d2 = 2;
-    double d3 = -7;
-    double d4 = 3;
-    double d5 = -20;
-    m1.set_active(0, true);
-    m1.set_active(1, false);
-    m1.set_active(2, true);
-    m1.set_active(3, false);
-    m1.set_active(4, true);
-    m1.set_active(5, true);
-    m1.set_value(0, d0);
-    m1.set_value(1, d1);
-    m1.set_value(2, d2);
-    m1.set_value(3, d3);
-    m1.set_value(4, d4);
-    m1.set_value(5, d5);
-   
-    // f(x) = -3x2 + 4x4 + 3x5 - 3
-    Regression<double> m2 = Regression<double>(size);
-    d0 = 0;
-    d1 = -3;
-    d2 = 0;
-    d3 = 4;
-    d4 = 3;
-    d5 = -3;
-    m2.set_active(0, false);
-    m2.set_active(1, true);
-    m2.set_active(2, false);
-    m2.set_active(3, true);
-    m2.set_active(4, true);
-    m2.set_active(5, true);
-    m2.set_value(0, d0);
-    m2.set_value(1, d1);
-    m2.set_value(2, d2);
-    m2.set_value(3, d3);
-    m2.set_value(4, d4);
-    m2.set_value(5, d5);
+    // Setup m1 = f(x) = x1 + 2x3 + 3x5 - 20
+    vector<double> vals = {1, 12,2,-7,3,-20};
+    vector<bool> actives = {true, false, true, false, true, true};
+    Regression<double> m1 = Regression<double>(actives, vals);
 
+    // Setup m2 = f(x) = -3x2 + 4x4 + 3x5 - 3
+    vals = {0,-3,0,4,3,-3};
+    actives = {false, true, false, true, true, true};
+    Regression<double> m2 = Regression<double>(actives, vals);
+    
     // 1 Test evaluation of integer values
-    vector<double> values;
-    values.push_back(4);
-    values.push_back(20);
-    values.push_back(-3);
-    values.push_back(15);
-    values.push_back(-3);
+    vector<double> values = {4,20,-3,15,-3};
     
     // 1.1 First at m1 = x1 + 2*x3 + 3*x5 - 20 
     // = 4 + 2*-2 + 3*-20
@@ -588,12 +413,7 @@ TEST_CASE("Regression: evaluate()") {
     REQUIRE( m2.evaluate(values) == -12 );
 
     // 2. Evaluate for floats now
-    values.clear();
-    values.push_back(3.1);
-    values.push_back(-43.2);
-    values.push_back(-32.1);
-    values.push_back(34.2);
-    values.push_back(-3.1);
+    values = {3.1,-43.2,-32.1,34.2,-3.1};
 
     // 2.1 First at m1 = x1 + 2*x3 +3*x5 - 20 
     // = 3.1 + 2*-32.1+3*-3.1-20
@@ -623,30 +443,69 @@ TEST_CASE("Regression: evaluate()") {
     // 4. Underflow -- untested due to 3. need to test safe_ops first
 }
 
-TEST_CASE("Regression: mutate()") {
+TEST_CASE("Regression: objective()") {
 
-    size_t size = 6;
-    setup_regression_ivs(size);
-    
-    // 1. Continually mutate and ensure 
-    Regression<double> m = Regression<double>();
-    Regression<double> m1 = Regression<double>(size);
-    m1.set_active(0, true);
-    m1.set_active(1, false);
-    m1.set_active(2, true);
-    m1.set_active(3, false);
-    m1.set_active(4, true);
-    m1.set_active(5, true);
-    size_t last_active = m1.get_count_active();
-    for( size_t i = 0; i < 50; i++) {
-        m1.mutate(m);
-        REQUIRE( (m1.get_count_active() == last_active-1 || m1.get_count_active() == last_active+1) );
-        last_active = m1.get_count_active();
-    }
+    Regression<double>::OBJECTIVE_NAME = "mse";
+    MemeticModel<double>::OBJECTIVE = objective::mse<double>;
+
+    // Load dataset
+    string fn("test_data.csv");
+    ofstream f;
+    f.open(fn);
+    if (!f.is_open())
+        throw runtime_error("Unable to open file "+ fn);
+    f << "y,x1,x2,x3,x4,x5" << endl;
+    f << "5,10.4,335,123,356,12.4" << endl;
+    f << "6,11.4,336,124,357,12.5" << endl;
+    f << "7,12.4,337,125,358,12.6" << endl;
+    f << "8,13.4,338,126,359,12.7" << endl;
+    f.close();
+    DataSet ds = DataSet(fn);
+    ds.load();
+
+    // Setup m1 = f(x) = x1 + 2x3 + 3x5 - 20
+    vector<double> vals = {1, 12,2,-7,3,-20};
+    vector<bool> actives = {true, false, true, false, true, true};
+    Regression<double> m1 = Regression<double>(actives, vals);
+    vector<size_t> idx;
+    REQUIRE( abs(m1.objective(&ds, idx)-74017.815) < 0.0001  );
+
 }
 
-// Test for 0 value
-// Test for 1, -1 explicitly 
+TEST_CASE("Regression: local_search()") {
+
+    Regression<double>::OBJECTIVE_NAME = "mse";
+    MemeticModel<double>::OBJECTIVE = objective::mse<double>;
+    MemeticModel<double>::LOCAL_SEARCH = local_search::custom_nelder_mead_redo<MemeticModel<double>>;
+
+    // Load dataset
+    string fn("test_data.csv");
+    ofstream f;
+    f.open(fn);
+    if (!f.is_open())
+        throw runtime_error("Unable to open file "+ fn);
+    f << "y,x1,x2,x3,x4,x5" << endl;
+    f << "5,10.4,335,123,356,12.4" << endl;
+    f << "6,11.4,336,124,357,12.5" << endl;
+    f << "7,12.4,337,125,358,12.6" << endl;
+    f << "8,13.4,338,126,359,12.7" << endl;
+    f.close();
+    DataSet ds = DataSet(fn);
+    ds.load();
+
+    // Setup m1 = f(x) = x1 + 2x3 + 3x5 - 20
+    vector<double> vals = {1, 12,2,-7,3,-20};
+    vector<bool> actives = {true, false, true, false, true, true};
+    Regression<double> m1 = Regression<double>(actives, vals);
+
+    // 1.1 Check there is a reduction in error
+    vector<size_t> idx;
+    double new_err = m1.local_search(&ds, idx);
+    REQUIRE( new_err <= 74017.815);
+    // 1.2 Check the evaluation of the new model is true
+    REQUIRE( m1.objective(&ds, idx) == new_err);
+
+}
 
 TEST_CASE("Regression: <<") {
 
@@ -661,81 +520,35 @@ TEST_CASE("Regression: <<") {
 
     // 2.1 m1 = f(x) = x1 + 2x3 + 3x5 - 20
     //     m1 = f(x) = B2+2*D2+3*F2-20
-    Regression<double> m1 = Regression<double>(size);
-    double d0 = 1;
-    double d1 = 12;
-    double d2 = 2;
-    double d3 = -7;
-    double d4 = 3;
-    double d5 = -20;
-    m1.set_active(0, true);
-    m1.set_active(1, false);
-    m1.set_active(2, true);
-    m1.set_active(3, false);
-    m1.set_active(4, true);
-    m1.set_active(5, true);
-    m1.set_value(0, d0);
-    m1.set_value(1, d1);
-    m1.set_value(2, d2);
-    m1.set_value(3, d3);
-    m1.set_value(4, d4);
-    m1.set_value(5, d5);
+    // Setup m1 = f(x) = x1 + 2x3 + 3x5 - 20
+    vector<double> vals = {1, 12,2,-7,3,-20};
+    vector<bool> actives = {true, false, true, false, true, true};
+    Regression<double> m1 = Regression<double>(actives, vals);
     stringstream ss1;
     ss1 << m1;
     REQUIRE(ss1.str() == "B2+2*D2+3*F2-20");
 
     // 2.2 m2 = f(x) = -3x2 + 4x4 + 3x5 - 3
     //     m2 =        -3*C2+4*E2+3*F2-3
-    Regression<double> m2 = Regression<double>(size);
-    d0 = 0;
-    d1 = -3;
-    d2 = 0;
-    d3 = 4;
-    d4 = 3;
-    d5 = -3;
-    m2.set_active(0, false);
-    m2.set_active(1, true);
-    m2.set_active(2, false);
-    m2.set_active(3, true);
-    m2.set_active(4, true);
-    m2.set_active(5, true);
-    m2.set_value(0, d0);
-    m2.set_value(1, d1);
-    m2.set_value(2, d2);
-    m2.set_value(3, d3);
-    m2.set_value(4, d4);
-    m2.set_value(5, d5);
+    // Setup m2 = f(x) = -3x2 + 4x4 + 3x5 - 3
+    vals = {0,-3,0,4,3,-3};
+    actives = {false, true, false, true, true, true};
+    Regression<double> m2 = Regression<double>(actives, vals);
     stringstream ss2;
     ss2 << m2;
     REQUIRE(ss2.str() == "-3*C2+4*E2+3*F2-3");
 
     // 2.3 -1, 1, 0 values m3 = -B2-F2-1
-    Regression<double> m3 = Regression<double>(size);
-    d0 = -1;
-    d1 = 0;
-    d2 = 0;
-    d3 = 1;
-    d4 = -1;
-    d5 = -1;
-    m3.set_active(0, true);
-    m3.set_active(1, false);
-    m3.set_active(2, true);
-    m3.set_active(3, false);
-    m3.set_active(4, true);
-    m3.set_active(5, true);
-    m3.set_value(0, d0);
-    m3.set_value(1, d1);
-    m3.set_value(2, d2);
-    m3.set_value(3, d3);
-    m3.set_value(4, d4);
-    m3.set_value(5, d5);
+    // Setup m1 = f(x) = x1 + 2x3 + 3x5 - 20
+    vals = {-1, 0, 0, 1, -1, -1};
+    actives = {true, false, true, false, true, true};
+    Regression<double> m3 = Regression<double>(actives, vals);
     stringstream ss3;
     ss3 << m3;
     REQUIRE(ss3.str() == "-B2-F2-1");
 
 }
 
-// Test TreeNode
 TEST_CASE("Regression: coeff_node") {
 
     size_t size = 6;
@@ -830,7 +643,6 @@ TEST_CASE("Regression: coeff_node") {
 
 }
 
-// Test TreeNode
 TEST_CASE("Regression: get_node") {
 
 

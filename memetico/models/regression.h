@@ -3,7 +3,6 @@
  * @author Andrew Ciezak <andy@impv.au>
  * @version 1.0
  * @brief Regression is a MemeticModel that contains a single linear function 
- * @copyright (C) 2022 Prof. Pablo Moscato, License CC-BY
  */
 
 #ifndef MEMETICO_MODELS_REGRESSION_H_
@@ -16,7 +15,7 @@ using namespace std;
 #include <memetico/helpers/excel.h>
 #include <memetico/helpers/rng.h>
 #include <memetico/helpers/safe_ops.h>
-#include <memetico/model_base/additive_term.h>
+#include <memetico/model_base/element.h>
 #include <memetico/model_base/model_meme.h>
 
 // Std Lib
@@ -40,50 +39,74 @@ class Regression : public MemeticModel<T> {
     public:
 
         /** @brief Construct Regression with a Term of param_count size */
-        Regression(size_t param_count = 0) : MemeticModel<T>() { term = AdditiveTerm<T>(param_count); };
+        Regression(size_t param_count = 0) : MemeticModel<T>() { 
+            for(size_t i = 0; i < param_count; i++)
+                elems.push_back( Element<T>() );
+        };
+
+        /** @brief Construct with actives and vals */
+        Regression(vector<bool> actives, vector<T> vals) : MemeticModel<T>() { 
+            
+            if( actives.size() != vals.size() )
+                throw runtime_error("Regression<T>: actives and vals must be the same size");
+
+            for(size_t i = 0; i < actives.size(); i++)
+                elems.push_back( Element<T>(actives[i], vals[i]) );
+        };
 
         /** @brief Construct Regression with a Term of param_count size */
-        Regression(const Regression<T> &o) : MemeticModel<T>(o) { term = AdditiveTerm<T>(o.term); };        
+        Regression(const Regression<T> &o) : MemeticModel<T>(o) { 
+
+            // Copy element between Additive Terms
+            for(size_t i = 0; i < o.elems.size(); i++)
+                elems.push_back( o.elems[i] );
+
+        };        
 
         /** @brief Set the active flag for the \a pos th element of the regression term to \a val */
-        void        set_active(size_t pos, bool val)    { term.set_active(pos, val); };
-       
-        /** @brief Set value for the \a pos th element with value \a val */
-        void        set_value(size_t pos, T val)       { term.set_value(pos, val); };
+        void    set_active(size_t pos, bool val)    {  elems[pos].set_active(val); };
         
-        /** @brief Set term */
-        void        set_term(AdditiveTerm<T>& new_term) { term = new_term; };
-
+        /** @brief Set value for the \a pos th element with value \a val */
+        void    set_value(size_t pos, T val)        {  elems[pos].set_value(val); };
+        
         /** @brief Return active flag at \a pos */
-        bool        get_active(size_t pos)              { return term.get_active(pos); };
+        bool    get_active(size_t pos)              { return elems[pos].get_active(); };
         
         /** @brief Return value at \a pos th element */
-        double      get_value(size_t pos)               { return term.get_value(pos); };
+        T       get_value(size_t pos)               { return elems[pos].get_value(); };
 
         /** @brief Return count of elements */
-        size_t      get_count()                         { return term.get_count(); };
+        size_t  get_count()                         { return elems.size(); };
         
+        /** @brief get the number of active parameters */
+        vector<size_t> get_active_positions() { 
+            vector<size_t> ret;
+            for(size_t i = 0; i < get_count(); i++) {
+                if( elems[i].get_active() ) {
+                    ret.push_back(i);
+                }
+            }
+            return ret;
+        };
+
+        /** @brief get the number of active parameters */
+        size_t  get_count_active()                  { return get_active_positions().size(); };
+
         /** @brief Return TreeNode for GPU processing */
         virtual void get_node(TreeNode * n);
-
-        /** @brief Return regression sole AdditiveTerm */
-        AdditiveTerm<T>&    get_term()                  { return term; };
-
-        /** @brief get the number of active parameters */
-        size_t              get_count_active()          { return term.get_count_active(); };
-
-        /** @brief get the number of active parameters */
-        vector<size_t>      get_active_positions()      { return term.get_active_positions(); };
-
-        void   coeff_node(TreeNode * n, float constant, int var_num);
-
+        
         /** @brief Comparison operator for Regression<T> */
         bool operator== (Regression<T>& o) {
 
             if( !(MemeticModel<T>::operator==(o)) )
                 return false;
+
+            for( size_t i = 0; i < elems.size(); i++ ) {
+                if( !(elems[i] == o.elems[i]) )
+                    return false;
+            }
                 
-            return term == o.term;
+            return true;
         }
 
         /**
@@ -135,9 +158,7 @@ class Regression : public MemeticModel<T> {
          * @param values an array of sample values that are \f$N\f$ in length
          * @return result of the Regressors evaluation at \a values
          */
-        virtual double  evaluate(vector<double> & values);  
-
-        virtual void print() {cout << "regres" << endl; };
+        double  evaluate(vector<double> & values);  
 
         /** 
          * @brief Randomise all parameter values between +[min, max] or -[max, min] or a specific parameter when \a pos is positive
@@ -148,13 +169,29 @@ class Regression : public MemeticModel<T> {
          * @bug the min max range removes the chance of being zero, but is really not suitable for the generic version. There should just be min and max
          * @bug does this really belong here?
          */
-        void    randomise(int min, int max, int pos = -1);
+        void    randomise(int min = 1, int max = 30, int pos = -1);
+
+        /** @brief Print the solution to stdout */
+        void print() override { 
+            cout << *this << endl; 
+        };
+
+        /** @brief Get the string representation of the solution */
+        string str() override {
+            stringstream ss;
+            ss.precision(18);
+            ss << *this;
+            return ss.str();
+        }
+
+        /** @brief Get TreeNode for the coefficient varaible/value pair. Public only for testing */
+        void   coeff_node(TreeNode * n, float constant, int var_num);
 
     private:
     
         /** @brief the Regression term */
-        AdditiveTerm<T> term;
-
+        vector<Element<T>> elems;
+        
 };
 
 #include <memetico/models/regression.tpp>
