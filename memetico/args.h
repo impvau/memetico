@@ -18,13 +18,15 @@
 #include <memetico/optimise/objective.h>
 #include <memetico/optimise/local_search.h>
 #include <memetico/models/cont_frac_dd.h>
+#include <memetico/models/branch_cont_frac_dd.h>
 #include <memetico/population/pop.h>
 
 namespace args {
 
 // Also defined in main
 typedef double DataType;
-typedef ContinuedFractionDynamicDepth<DataType> ModelType;
+typedef ContinuedFraction<Regression<DataType>,DataType> TermType;
+typedef BranchedContinuedFraction<TermType,DataType> ModelType;
 
 stringstream    args_out;
 
@@ -95,9 +97,9 @@ void arg_local_search(int argc, char * argv[]) {
 void arg_objective(int argc, char * argv[]) {
     // Objective function
     string arg_string = arg_value(argv, argv+argc, "-o", "--objective");
-    Model::OBJECTIVE_NAME = arg_string;
-    if( arg_string == "")                               Model::OBJECTIVE_NAME = "mse";
-    if( Model::OBJECTIVE_NAME == "mse" )     Model::OBJECTIVE = objective::mse<ModelType>;
+    MemeticModel<DataType>::OBJECTIVE_NAME = arg_string;
+    if( arg_string == "")                                   MemeticModel<DataType>::OBJECTIVE_NAME = "mse";
+    if( MemeticModel<DataType>::OBJECTIVE_NAME == "mse" )   MemeticModel<DataType>::OBJECTIVE = objective::mse<DataType>;
 }
 
 void arg_dynamic_depth(int argc, char * argv[]) {
@@ -106,7 +108,7 @@ void arg_dynamic_depth(int argc, char * argv[]) {
     if(arg_string == "none" || arg_string == "")    ModelType::DYNAMIC_DEPTH_TYPE = DynamicNone;
     if(arg_string == "adp")                         ModelType::DYNAMIC_DEPTH_TYPE = DynamicAdaptive;
     if(arg_string == "adp-mu")                      ModelType::DYNAMIC_DEPTH_TYPE = DynamicAdaptiveMutation;
-    if(arg_string == "rnd")                         ModelType::DYNAMIC_DEPTH_TYPE = DynamicRandom;
+    if(arg_string == "adp-rnd")                     ModelType::DYNAMIC_DEPTH_TYPE = DynamicRandom;
 }
 
 void arg_diversity(int argc, char * argv[]) {
@@ -267,7 +269,7 @@ void load_args(int argc, char * argv[]) {
 
     // Depth
     arg_string = arg_value(argv, argv+argc, "-f", "--fracdepth");
-    if(arg_string != "")    ModelType::DEPTH = stoi(arg_string);
+    if(arg_string != "")        meme::DEPTH = stoi(arg_string);
     
     // Diversity Count
     arg_string = arg_value(argv, argv+argc, "-dc", "--diversity-count");
