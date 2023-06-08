@@ -2,8 +2,6 @@
 
 /**
  * @file
- * @author Haoyuan Sun <hsun2@caltech.edu>
- * @author Mohammad Haque <Mohammad.Haque@newcastle.edu.au>
  * @author Andrew Ciezak <andy@impv.au>
  * @version 1.0
  * @brief Header for global variables and functions
@@ -38,8 +36,7 @@ struct Similar
 
 /**
  * @file
- * @author Haoyuan Sun <hsun2@caltech.edu>
- * @author Mohammad Haque <Mohammad.Haque@newcastle.edu.au>
+ 
  * @author Andrew Ciezak <andy@impv.au>
  * @version 1.0
  * 
@@ -127,8 +124,9 @@ extern FILE*            STD_ERR;
 /* Current Pocket Depth for Adaptive fraction */
 extern size_t           POCKET_DEPTH;
 
+extern size_t           DEPTH;
 
-extern size_t                   DIVERSITY_COUNT;
+extern size_t           DIVERSITY_COUNT;
 
 }
 
