@@ -5,201 +5,111 @@
 #include <sstream>
 #include <memetico/optimise/objective.h>
 
-void setup_cont_frac_ivs(size_t size) {
+typedef double DataType;
+typedef Regression<DataType> TermType;
+typedef ContinuedFraction<TermType,DataType> ModelType;
+
+inline void setup_cont_frac_ivs(size_t size) {
 
     // Setup IVs in Regression
-    ContinuedFraction<double>::IVS.clear();
+    ModelType::IVS.clear();
     for(size_t i = 0; i < size-1; i++)
-        ContinuedFraction<double>::IVS.push_back("x"+to_string(i+1));
+        ModelType::IVS.push_back("x"+to_string(i+1));
 
 }
 
-inline ContinuedFraction<double> frac_1() {
+inline Regression<double> build_reg_frac(vector<bool> active, vector<double> vals, size_t params) {
+
+    if( active.size() != params )
+        throw invalid_argument("active.size() != params");
+
+    if( vals.size() != params )
+        throw invalid_argument("vals.size() != params");
+
+    Regression<double> o = Regression<double>(params);
+    for(size_t i = 0; i < params; i++) {
+        o.set_active(i, active[i]);
+        o.set_value(i, vals[i]);
+    }
+
+    return o;
+}
+
+inline ContinuedFraction<Regression<double>,double> build_cont_frac(vector<bool> active, vector<double> vals, vector<bool> globals, size_t params, size_t depth) {
+
+    if( globals.size() != params)
+        throw invalid_argument("globals.size() != params");
+
+    if( active.size() != params*(2*depth+1) )
+        throw invalid_argument("active.size() != params*2*depth");
+
+    if( vals.size() != params*(2*depth+1) )
+        throw invalid_argument("vals.size() != params*2*depth");
+
+    ContinuedFraction<Regression<double>,double> c = ContinuedFraction<Regression<double>,double>(depth);
+
+    for(size_t i = 0; i < params; i++)
+        c.set_global_active(i, globals[i]);
+
+    size_t terms = 2*depth+1;
+    for(size_t i = 0; i < terms; i++) {
+
+        vector reg_active(active.begin()+i*params, active.begin()+i*params+params);
+        vector reg_vals(vals.begin()+i*params, vals.begin()+i*params+params);
+        Regression<double> o = build_reg_frac(reg_active,reg_vals,params);
+        c.set_terms(i, o);
+    }
+
+    return c;
+}
+
+inline ContinuedFraction<Regression<double>,double> frac_1() {
 
     // f(x) = x1 + 2x3 + 3x5 - 20 
-    size_t params = 6;
-    size_t depth = 0;
-    ContinuedFraction<double> o  = ContinuedFraction<double>(depth);
-    Regression<double> m1 = Regression<double>(params);
-    o.set_global_active(0, true);
-    o.set_global_active(1, false);
-    o.set_global_active(2, true);
-    o.set_global_active(3, false);
-    o.set_global_active(4, true);
-    o.set_global_active(5, true);
-    double d0 = 1;
-    double d1 = 12;
-    double d2 = 2;
-    double d3 = -7;
-    double d4 = 3;
-    double d5 = -20;
-    m1.set_active(0, true);
-    m1.set_active(1, false);
-    m1.set_active(2, true);
-    m1.set_active(3, false);
-    m1.set_active(4, true);
-    m1.set_active(5, true);
-    m1.set_value(0, d0);
-    m1.set_value(1, d1);
-    m1.set_value(2, d2);
-    m1.set_value(3, d3);
-    m1.set_value(4, d4);
-    m1.set_value(5, d5);
-    o.set_terms(0,m1);
-    return o;
+    return build_cont_frac(
+        {true, false, true, false, true, true},
+        {1, 12, 2, -7, 3, -20},
+        {true, false, true, false, true, true},
+        6,
+        0
+    );
+
 }
 
-inline ContinuedFraction<double> frac_2() {
+inline ContinuedFraction<Regression<double>,double> frac_2() {
 
     // f(x) = -3x2 + 4x4 + 3x5 - 3
-    size_t params = 6;
-    size_t depth = 0;
-    ContinuedFraction<double> o  = ContinuedFraction<double>(depth);
-    Regression<double> m2 = Regression<double>(params);
-    o.set_global_active(0, false);
-    o.set_global_active(1, true);
-    o.set_global_active(2, false);
-    o.set_global_active(3, true);
-    o.set_global_active(4, true);
-    o.set_global_active(5, true);
-    double d0 = 0;
-    double d1 = -3;
-    double d2 = 0;
-    double d3 = 4;
-    double d4 = 3;
-    double d5 = -3;
-    m2.set_active(0, false);
-    m2.set_active(1, true);
-    m2.set_active(2, false);
-    m2.set_active(3, true);
-    m2.set_active(4, true);
-    m2.set_active(5, true);
-    m2.set_value(0, d0);
-    m2.set_value(1, d1);
-    m2.set_value(2, d2);
-    m2.set_value(3, d3);
-    m2.set_value(4, d4);
-    m2.set_value(5, d5);
-    o.set_terms(0, m2);
-    return o;
+    return build_cont_frac(
+        {false, true, false, true, true, true},
+        {0,-3,0,4,3,-3},
+        {false, true, false, true, true, true},
+        6,
+        0
+    );
+
 }
 
-inline ContinuedFraction<double> frac_3() {
+inline ContinuedFraction<Regression<double>,double> frac_3() {
 
     // t1(x) =  x1 + 2x3 + 3x5 - 20
     // t2(x) = -3x2 + 4x4 + 3x5 - 3
     // t3(x) =  x1 + 2x3 + 3x5 - 20
-    size_t params = 6;
-    size_t depth = 1;
-    ContinuedFraction<double> o = ContinuedFraction<double>(depth);
-    o.set_global_active(0, true, false);
-    o.set_global_active(1, true, false);
-    o.set_global_active(2, true, false);
-    o.set_global_active(3, true, false);
-    o.set_global_active(4, true, false);
-    o.set_global_active(5, true, false);
-    Regression<double> m1 = Regression<double>(params);
-    double d0 = 1;
-    double d1 = 12;
-    double d2 = 2;
-    double d3 = -7;
-    double d4 = 3;
-    double d5 = -20;
-    m1.set_active(0, true);
-    m1.set_active(1, false);
-    m1.set_active(2, true);
-    m1.set_active(3, false);
-    m1.set_active(4, true);
-    m1.set_active(5, true);
-    m1.set_value(0, d0);
-    m1.set_value(1, d1);
-    m1.set_value(2, d2);
-    m1.set_value(3, d3);
-    m1.set_value(4, d4);
-    m1.set_value(5, d5);
-    Regression<double> m2 = Regression<double>(params);
-    d0 = 0;
-    d1 = -3;
-    d2 = 0;
-    d3 = 4;
-    d4 = 3;
-    d5 = -3;
-    m2.set_active(0, false);
-    m2.set_active(1, true);
-    m2.set_active(2, false);
-    m2.set_active(3, true);
-    m2.set_active(4, true);
-    m2.set_active(5, true);
-    m2.set_value(0, d0);
-    m2.set_value(1, d1);
-    m2.set_value(2, d2);
-    m2.set_value(3, d3);
-    m2.set_value(4, d4);
-    m2.set_value(5, d5);
-    // Set two terms
-    o.set_terms(0, m1);
-    o.set_terms(1, m2);
-    o.set_terms(2, m1);
-    return o;
-}
-
-inline ContinuedFraction<double> frac_4() {
-
-    // t1(x) =  x1 + 2x3 + 3x5 - 20
-    // t2(x) = -3x2 + 4x4 + 3x5 - 3
-    // t3(x) =  x1 + 2x3 + 3x5 - 20
-    size_t params = 6;
-    size_t depth = 1;
-    ContinuedFraction<double> o = ContinuedFraction<double>(depth);
-    o.set_global_active(0, true, false);
-    o.set_global_active(1, true, false);
-    o.set_global_active(2, true, false);
-    o.set_global_active(3, true, false);
-    o.set_global_active(4, true, false);
-    o.set_global_active(5, true, false);
-    Regression<double> m1 = Regression<double>(params);
-    double d0 = 1;
-    double d1 = 12;
-    double d2 = 2;
-    double d3 = -7;
-    double d4 = 3;
-    double d5 = -20;
-    m1.set_active(0, true);
-    m1.set_active(1, false);
-    m1.set_active(2, true);
-    m1.set_active(3, false);
-    m1.set_active(4, true);
-    m1.set_active(5, true);
-    m1.set_value(0, d0);
-    m1.set_value(1, d1);
-    m1.set_value(2, d2);
-    m1.set_value(3, d3);
-    m1.set_value(4, d4);
-    m1.set_value(5, d5);
-    Regression<double> m2 = Regression<double>(params);
-    d0 = 0;
-    d1 = -3;
-    d2 = 0;
-    d3 = 4;
-    d4 = 3;
-    d5 = -3;
-    m2.set_active(0, false);
-    m2.set_active(1, true);
-    m2.set_active(2, false);
-    m2.set_active(3, true);
-    m2.set_active(4, true);
-    m2.set_active(5, true);
-    m2.set_value(0, d0);
-    m2.set_value(1, d1);
-    m2.set_value(2, d2);
-    m2.set_value(3, d3);
-    m2.set_value(4, d4);
-    m2.set_value(5, d5);
-    // Set two terms
-    o.set_terms(0, m1);
-    o.set_terms(1, m2);
-    o.set_terms(2, m1);
-    return o;
+    // f(x) = t1(x) + t2(x) / t3(x)
+    return build_cont_frac(
+        {
+            true, false, true, false, true, true,
+            false, true, false, true, true, true,
+            true, false, true, false, true, true
+        },
+        {
+            1, 12, 2, -7, 3, -20,
+            0, -3, 0, 4, 3, -3,
+            1, 12, 2, -7, 3, -20
+        },
+        {   true, true, true, true, true, true },
+        6,
+        1
+    );
 }
 
 TEST_CASE("ContinuedFractions: set_depth, get_terms, set_terms, get_count_active, get_active, get_value") {
@@ -212,7 +122,7 @@ TEST_CASE("ContinuedFractions: set_depth, get_terms, set_terms, get_count_active
     size_t params = 6;
     size_t depth = 1;
     setup_cont_frac_ivs(params);
-    ContinuedFraction<double> o;
+    ModelType o;
 
     // 1. Set depth
     o.set_depth(depth);
@@ -393,7 +303,7 @@ TEST_CASE("ContinuedFractions: randomise") {
     size_t only_one = 0;
     for(size_t i = 0; i < 1000; i++) {
 
-        ContinuedFraction<double> m1 = ContinuedFraction<double>(params);
+        ModelType m1 = ModelType(params);
         // Loop params excluding constant
         for(size_t j = 0; j < params-1; j++) {
             if(m1.get_global_active(j)) {
@@ -432,18 +342,18 @@ TEST_CASE("ContinuedFractions: ==, ContinuedFractions<T>(ContinuedFractions<T>) 
     size_t params = 6;
     size_t depth = 0;
     setup_cont_frac_ivs(params);
-    ContinuedFraction<double> o = frac_1();
+    ModelType o = frac_1();
 
     // 1. Compare to empty fraction
-    ContinuedFraction<double> o2 = ContinuedFraction<double>();
+    ModelType o2 = ModelType();
     REQUIRE(!(o == o2));
     // 2. Compare to random fraction
-    ContinuedFraction<double> o3 = ContinuedFraction<double>(depth);
+    ModelType o3 = ModelType(depth);
     REQUIRE(!(o == o3));
     // 3. Compare to self
     REQUIRE( (o == o) );
 
-    ContinuedFraction<double> o4 = frac_1();
+    ModelType o4 = frac_1();
     // 4. Compare to same object
     REQUIRE( (o == o4) );
 
@@ -451,7 +361,7 @@ TEST_CASE("ContinuedFractions: ==, ContinuedFractions<T>(ContinuedFractions<T>) 
     o.set_fitness(5);
     o.set_penalty(2);
     o.set_error(16);
-    ContinuedFraction<double> o5 = ContinuedFraction<double>(o);
+    ModelType o5 = ModelType(o);
     REQUIRE( (o == o5) );
     REQUIRE( o.get_fitness() == o5.get_fitness() );
     REQUIRE( o.get_error() == o5.get_error() );
@@ -475,7 +385,7 @@ TEST_CASE("ContinuedFractions: evaluate ") {
 
     // 1. Check single term fraction
     // f(x) = x1 + 2x3 + 3x5 - 20
-    ContinuedFraction<double> o = frac_1();
+    ModelType o = frac_1();
     // 1.1 Evaluate on int data
     vector<double> values;
     values.push_back(4);
@@ -497,7 +407,7 @@ TEST_CASE("ContinuedFractions: evaluate ") {
     // t1(x) =  x1 + 2x3 + 3x5 - 20
     // t2(x) = -3x2 + 4x4 + 3x5 - 3
     // t3(x) =  x1 + 2x3 + 3x5 - 20
-    ContinuedFraction<double> o2 = frac_3();
+    ModelType o2 = frac_3();
     // 2.1 Evaluate on int data
     values.clear();
     values.push_back(4);
@@ -517,7 +427,7 @@ TEST_CASE("ContinuedFractions: evaluate ") {
     // t6(x) =  x1 + 2x3 + 3x5 - 20
     // t7(x) =  -3x2 + 4x4 + 3x5 - 3
     depth = 3;
-    o = ContinuedFraction<double>(depth);
+    o = ModelType(depth);
     o.set_terms(0, o2.get_terms(0) );
     o.set_terms(1, o2.get_terms(1));
     o.set_terms(2, o2.get_terms(0));
@@ -552,7 +462,7 @@ TEST_CASE("ContinuedFractions: mutate ") {
     // t1(x) =  x1 + 2x3 + 3x5 - 20
     // t2(x) = -3x2 + 4x4 + 3x5 - 3
     // t3(x) =  x1 + 2x3 + 3x5 - 20
-    ContinuedFraction<double> o1 = ContinuedFraction<double>(depth);
+    ContinuedFraction<TermType,DataType> o1 = ContinuedFraction<TermType,DataType>(depth);
     o1.set_global_active(0, false);
     o1.set_global_active(1, false);
     o1.set_global_active(2, false);
@@ -567,7 +477,7 @@ TEST_CASE("ContinuedFractions: mutate ") {
     o1.set_terms(2, m1);
 
     // 1. Setup a fraction to trigger a hard mutate
-    ContinuedFraction<double> o2 = ContinuedFraction<double>(o1);
+    ContinuedFraction<TermType,DataType> o2 = ContinuedFraction<TermType,DataType>(o1);
     o2.set_fitness(1);
     o1.set_fitness(o2.get_fitness()*2.1);
 
@@ -631,9 +541,9 @@ TEST_CASE("ContinuedFractions: recombine ") {
     // 2. Two fractions of different depth only recombine the depths they have in common
 
     // 1. 
-    ContinuedFraction<double> c = ContinuedFraction<double>(depth);
-    ContinuedFraction<double> c1 = frac_1();
-    ContinuedFraction<double> c2 = frac_2();
+    ModelType c = ModelType(depth);
+    ModelType c1 = frac_1();
+    ModelType c2 = frac_2();
     // Reset seed as CF constructors use generator
     // Now results will match those in Regression tests
     ri = RandInt(42);
@@ -650,9 +560,9 @@ TEST_CASE("ContinuedFractions: recombine ") {
     
     // 2. 
     depth = 1;
-    c = ContinuedFraction<double>(depth);
-    ContinuedFraction<double> c_copy = ContinuedFraction<double>(c);
-    ContinuedFraction<double> c3 = frac_3();    // Depth 1
+    c = ModelType(depth);
+    ModelType c_copy = ModelType(c);
+    ModelType c3 = frac_3();    // Depth 1
     ri = RandInt(42);
     rr = RandReal(42);
     c.recombine(&c1, &c3);
@@ -680,7 +590,7 @@ TEST_CASE("ContinuedFractions: << ") {
     // 3. Print with more terms
 
     // 1.
-    ContinuedFraction<double> c = frac_1();
+    ModelType c = frac_1();
     stringstream ss1;
     ss1 << c;
     REQUIRE( ss1.str() == "(B2+2*D2+3*F2-20)" );
@@ -691,7 +601,7 @@ TEST_CASE("ContinuedFractions: << ") {
     REQUIRE( ss2.str() == "(-3*C2+4*E2+3*F2-3)" );
     // 3. 
     depth = 3;
-    ContinuedFraction<double> c1 = ContinuedFraction<double>(depth);
+    ModelType c1 = ModelType(depth);
     Regression<double> t1 = frac_1().get_terms(0);
     Regression<double> t2 = frac_2().get_terms(0);
     c1.set_terms(0, t1);
@@ -722,7 +632,7 @@ TEST_CASE("ContinuedFractions: get_node ") {
     // 1. Single 
 
     // f(x) = x1 + 2x3 + 3x5 - 20 
-    ContinuedFraction<double> c1 = frac_1();
+    ModelType c1 = frac_1();
     TreeNode* n1 = new TreeNode();
     TreeNode* n2 = new TreeNode();
     c1.get_terms(0).get_node(n1);
@@ -735,7 +645,7 @@ TEST_CASE("ContinuedFractions: get_node ") {
     // t1(x) =  x1 + 2x3 + 3x5 - 20
     // t2(x) = -3x2 + 4x4 + 3x5 - 3
     // t3(x) =  x1 + 2x3 + 3x5 - 20
-    ContinuedFraction<double> c2 = frac_3();
+    ModelType c2 = frac_3();
     TreeNode * frac_node = new TreeNode();
     c2.get_node(frac_node);
     

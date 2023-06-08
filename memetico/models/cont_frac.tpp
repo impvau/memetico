@@ -2,49 +2,46 @@
 /**
  * @file
  * @author Andrew Ciezak <andy@impv.au>
- * @author Mohammad Haque <Mohammad.Haque@newcastle.edu.au>
  * @version 1.0
  * @brief Implementation of the Continued Fraction Regression class
 */
 
-template <class T>
-ContinuedFraction<T>::ContinuedFraction(size_t frac_depth) : MemeticModel<T>() {
+template <class T, class U>
+ContinuedFraction<T,U>::ContinuedFraction(size_t frac_depth) : MemeticModel<U>() {
     
     // Default values
     depth = frac_depth;
-    frac_terms = 2*depth+1;
-    params_per_term = ContinuedFraction<T>::IVS.size()+1;
+    params_per_term = MemeticModel<U>::IVS.size()+1;
 
     for(size_t i = 0; i < params_per_term; i++)
         global_active.push_back(false);
 
-    for(size_t i = 0; i < frac_terms; i++)
-        terms.push_back(Regression<T>(params_per_term));
+    for(size_t i = 0; i < get_frac_terms(); i++)
+        terms.push_back(T(params_per_term));
     
     randomise();
     sanitise();
 
 }
 
-template <class T>
-ContinuedFraction<T>::ContinuedFraction(const ContinuedFraction<T> &o) : MemeticModel<T>(o) {
+template<typename T, typename U>
+ContinuedFraction<T,U>::ContinuedFraction(const ContinuedFraction<T,U> &o) : MemeticModel<U>(o) {
 
     depth = o.get_depth();
-    frac_terms = o.get_frac_terms();
     params_per_term = o.get_params_per_term();
 
     for(size_t i = 0; i < params_per_term; i++)
         global_active.push_back( o.get_global_active(i) );
 
-    for(size_t i = 0; i < o.frac_terms; i++) {
-        Regression<T> temp = Regression<T>(o.terms[i]);
+    for(size_t i = 0; i < o.get_frac_terms(); i++) {
+        T temp = T(o.terms[i]);
         terms.push_back(temp);
     }
 
 }
 
-template <class T>
-void ContinuedFraction<T>::randomise(int min, int max) {
+template<typename T, typename U>
+void ContinuedFraction<T,U>::randomise(int min, int max) {
 
     // For all parameters
     for( size_t param = 0; param < params_per_term; param++ ) {
@@ -63,8 +60,8 @@ void ContinuedFraction<T>::randomise(int min, int max) {
     
 }
 
-template <class T>
-void ContinuedFraction<T>::sanitise() {
+template<typename T, typename U>
+void ContinuedFraction<T,U>::sanitise() {
 
     // Check all terms
     for(size_t term = 0; term < get_frac_terms(); term++) {
@@ -85,8 +82,8 @@ void ContinuedFraction<T>::sanitise() {
     }
 }
 
-template <class T>
-double ContinuedFraction<T>::evaluate(vector<double>& values) {
+template<typename T, typename U>
+double ContinuedFraction<T,U>::evaluate(vector<double>& values) {
 
     double ret = 0;
 
@@ -123,8 +120,8 @@ double ContinuedFraction<T>::evaluate(vector<double>& values) {
     
 }
 
-template <class T>
-void ContinuedFraction<T>::mutate(MemeticModel<T>& model) {
+template<typename T, typename U>
+void ContinuedFraction<T,U>::mutate(MemeticModel<U>& model) {
 
     size_t param_pos;
 
@@ -132,7 +129,7 @@ void ContinuedFraction<T>::mutate(MemeticModel<T>& model) {
     if( this->get_fitness() < 1.2 * model.get_fitness() || this->get_fitness() > 2* model.get_fitness() ) {
 
         // Select uniformly at random an independent variable (not a constant)
-        param_pos = RandInt::RANDINT->rand(0, ContinuedFraction<T>::IVS.size()-1);
+        param_pos = RandInt::RANDINT->rand(0, MemeticModel<U>::IVS.size()-1);
         
         // Toggle it globally
         set_global_active( param_pos, !get_global_active(param_pos) );
@@ -142,7 +139,7 @@ void ContinuedFraction<T>::mutate(MemeticModel<T>& model) {
 
             // With 50% chance randomise down the fraction with a non-zero value
             for(size_t i = 0; i < get_frac_terms(); i++ )
-                terms[i].randomise(ContinuedFraction<T>::RAND_LOWER, ContinuedFraction<T>::RAND_UPPER);
+                terms[i].randomise();
 
         }
     }
@@ -173,8 +170,8 @@ void ContinuedFraction<T>::mutate(MemeticModel<T>& model) {
     return;
 }
 
-template <class T>
-void ContinuedFraction<T>::get_node(TreeNode * parent) {
+template<typename T, typename U>
+void ContinuedFraction<T,U>::get_node(TreeNode * parent) {
    
     TreeNode * temp_node;
     TreeNode * save_node = nullptr;
@@ -222,42 +219,13 @@ void ContinuedFraction<T>::get_node(TreeNode * parent) {
 
 }
 
-template <class T>
-ostream& operator<<(ostream& os, ContinuedFraction<T>& c) {
-
-    size_t close = 0;
-    for( size_t i = 0; i < c.get_frac_terms(); i++) {
-
-        // For odd terms place the diver to make it the next denominator
-        if( i % 2 == 0 && i != 0) {
-            os << "/(";
-            close++;
-        }
-
-        // Print term in braces
-        os << "(" << c.get_terms(i) << ")";
-
-        // Add plus for even terms exluding the closing term
-        if( (i % 2 == 0 || i == 0) && i != c.get_frac_terms()-1 )
-            os << "+";
-
-    }
-    
-    // Close the open braces
-    for(size_t i = 0; i < close; i++)
-        os << ")";
-
-    return os;
-
-}
-
-template <class T>
-void ContinuedFraction<T>::recombine(MemeticModel<T>* model1, MemeticModel<T>* model2, int method_override) {
+template<typename T, typename U>
+void ContinuedFraction<T,U>::recombine(MemeticModel<U>* model1, MemeticModel<U>* model2, int method_override) {
 
     int method = RandInt::RANDINT->rand(0,2);
 
-    ContinuedFraction<T>* m1 = static_cast<ContinuedFraction<T>*>(model1);
-    ContinuedFraction<T>* m2 = static_cast<ContinuedFraction<T>*>(model2);
+    ContinuedFraction<T,U>* m1 = static_cast<ContinuedFraction<T,U>*>(model1);
+    ContinuedFraction<T,U>* m2 = static_cast<ContinuedFraction<T,U>*>(model2);
 
     // Minimum from m1/m2
     size_t min_terms = min(m1->get_frac_terms(), m2->get_frac_terms());
@@ -266,6 +234,7 @@ void ContinuedFraction<T>::recombine(MemeticModel<T>* model1, MemeticModel<T>* m
     min_terms = min(min_terms, get_frac_terms());
 
     for(size_t term = 0; term < min_terms; term++)
+
         terms[term].recombine( &(m1->get_terms(term)), &(m2->get_terms(term)), method);
 
     sanitise();
@@ -275,8 +244,8 @@ void ContinuedFraction<T>::recombine(MemeticModel<T>* model1, MemeticModel<T>* m
 
 }
 
-template <class T>
-vector<size_t>  ContinuedFraction<T>::get_active_positions() {
+template<typename T, typename U>
+vector<size_t>  ContinuedFraction<T,U>::get_active_positions() {
 
     vector<size_t> ret;
     
@@ -299,10 +268,10 @@ vector<size_t>  ContinuedFraction<T>::get_active_positions() {
     return ret;
 }
 
-template <class T>
-bool ContinuedFraction<T>::operator== (ContinuedFraction<T>& o) {
+template<typename T, typename U>
+bool ContinuedFraction<T,U>::operator== (ContinuedFraction<T,U>& o) {
 
-    if( !MemeticModel<T>::operator==(o) )
+    if( !MemeticModel<U>::operator==(o) )
         return false;
 
     // Check depth
@@ -310,7 +279,7 @@ bool ContinuedFraction<T>::operator== (ContinuedFraction<T>& o) {
         return false;
 
     // Check frac terms
-    if( frac_terms != o.frac_terms) 
+    if( get_frac_terms() != o.get_frac_terms()) 
         return false;
 
     // Params per term checks
@@ -339,37 +308,36 @@ bool ContinuedFraction<T>::operator== (ContinuedFraction<T>& o) {
     return true;
 }
 
-template <class T>
-void ContinuedFraction<T>::set_depth(size_t new_depth) {
+template<typename T, typename U>
+void ContinuedFraction<T,U>::set_depth(size_t new_depth) {
 
     size_t  new_frac_terms = 2*new_depth+1;
 
     // If we are reducing terms, simply remove the number of terms from the vector
-    if( new_frac_terms < frac_terms) {
+    if( new_frac_terms < get_frac_terms()) {
 
-        size_t excess_terms = frac_terms-new_frac_terms;
+        size_t excess_terms = get_frac_terms()-new_frac_terms;
         for(size_t i = 0; i < excess_terms; i++)
             terms.pop_back();
 
     // If we are adding terms, we need to increase terms
     } else {
 
-        size_t new_terms = new_frac_terms-frac_terms;
+        size_t new_terms = new_frac_terms-get_frac_terms();
         for(size_t i = 0; i < new_terms; i++) {
-            Regression<T> new_term  = Regression<T>(params_per_term);
-            new_term.randomise(ContinuedFraction<T>::RAND_LOWER, ContinuedFraction<T>::RAND_UPPER);
+            T new_term  = T(params_per_term);
+            new_term.randomise();
             terms.push_back(new_term);
         }
 
     }
 
     depth = new_depth;
-    frac_terms = new_frac_terms;
 
 }
 
-template <class T>
-void ContinuedFraction<T>::set_global_active(size_t iv, bool val, bool align_fraction) {
+template<typename T, typename U>
+void ContinuedFraction<T,U>::set_global_active(size_t iv, bool val, bool align_fraction) {
 
     // Make sure iv is within the range of paramters
     if(iv < params_per_term) {
@@ -385,3 +353,53 @@ void ContinuedFraction<T>::set_global_active(size_t iv, bool val, bool align_fra
         }
     }  
 };
+
+template<typename F, typename G>
+ostream& operator<<(std::ostream& os, ContinuedFraction<F, G>& c) {
+
+    size_t close = 0;
+    for( size_t i = 0; i < c.get_frac_terms(); i++) {
+
+        // For odd terms place the diver to make it the next denominator
+        if( i % 2 == 0 && i != 0) {
+
+            if( Model::FORMAT == PrintLatex )
+                os << "}{(";
+            else if( Model::FORMAT == PrintExcel)
+                os << "/(";
+
+            close++;
+        }
+
+        
+
+        // Print term in braces
+        os << "(" << c.get_terms(i) << ")";
+
+        //if( Model::FORMAT == PrintLatex && i != c.get_frac_terms() )
+        //  os << "}";
+
+        // Add plus for even terms exluding the closing term
+        if( (i % 2 == 0 || i == 0) && i != c.get_frac_terms()-1 ) {
+            os << "+";
+            if( Model::FORMAT == PrintLatex && i+1 < c.get_frac_terms() )
+                os << "\\frac{";
+        }
+
+        
+
+    }
+    
+    // Close the open braces
+    for(size_t i = 0; i < close; i++) {
+
+        if( Model::FORMAT == PrintLatex )
+            os << ")}";
+        else if( Model::FORMAT == PrintExcel)
+            os << ")";
+
+    }
+        
+    return os;
+
+}
