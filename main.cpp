@@ -1,8 +1,6 @@
 
 /**
  * @file
- * @author Haoyuan Sun <hsun2@caltech.edu>
- * @author Mohammad Haque <Mohammad.Haque@newcastle.edu.au>
  * @author Andrew Ciezak <andy@impv.au>
  * @version 1.0
  * @brief Entry point and harness for the memetic algorithm
@@ -20,6 +18,7 @@
 #include <memetico/optimise/objective.h>
 #include <memetico/models/regression.h>
 #include <memetico/models/cont_frac_dd.h>
+#include <memetico/models/branch_cont_frac_dd.h>
 #include <memetico/population/pop.h>
 
 // Std
@@ -46,10 +45,12 @@ long int        meme::RUN_TIME = 0;
 
 // Also defined in args.h
 typedef double DataType;
-typedef ContinuedFractionDynamicDepth<DataType> ModelType;
+typedef ContinuedFraction<Regression<DataType>,DataType> TermType;
+typedef BranchedContinuedFraction<TermType,DataType> ModelType;
 
-size_t              meme::POCKET_DEPTH = 1;
-size_t              meme::DIVERSITY_COUNT = 3;
+size_t          meme::DEPTH = 4;
+size_t          meme::POCKET_DEPTH = 1;
+size_t          meme::DIVERSITY_COUNT = 3;
 
 // File Globals
 string          meme::TRAIN_FILE = "sinx.csv";
@@ -101,7 +102,7 @@ int main(int argc, char *argv[]) {
 
     // Copy IVs to Model
     for(size_t i = 0; i < DataSet::IVS.size(); i++)
-        ContinuedFractionDynamicDepth<double>::IVS.push_back(DataSet::IVS[i]);
+        ModelType::IVS.push_back(DataSet::IVS[i]);
 
     // Create Population & run
     Population<ModelType> p(&train);
@@ -131,6 +132,8 @@ int main(int argc, char *argv[]) {
         cout << "Finished after " << meme::RUN_TIME << " milliseconds on seed " << meme::SEED << endl;
         cout << "====================================================" << endl << endl;
         cout << "Best Model Found" << endl;
+        cout << p.best_soln << endl << endl;
+        Model::FORMAT = PrintType::PrintLatex;
         cout << p.best_soln << endl << endl;
         cout << " Train MSE: " << train_score << endl;
         cout << "  Test MSE: " << test_score << endl << endl;
