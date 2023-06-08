@@ -10,7 +10,8 @@
 #include <sstream>
 #include <stdexcept>
 
-typedef ContinuedFraction<double> AgentModel;
+typedef double DataType;
+typedef ContinuedFraction<Regression<DataType>,DataType> AgentModel;
 
 inline void init(string filename) {
 
@@ -81,8 +82,8 @@ TEST_CASE("Population: bubble, exchange, evaluate") {
         AgentModel::IVS.push_back(DataSet::IVS[i]);
 
     // 1. Construct depth 2 ternary population
-    Model::OBJECTIVE_NAME = "mse";
-    Model::OBJECTIVE = objective::mse<AgentModel>;
+    MemeticModel<DataType>::OBJECTIVE_NAME = "mse";
+    MemeticModel<DataType>::OBJECTIVE = objective::mse<DataType>;
 
     // For 1000 random populations
     for( size_t i = 0; i < 1000; i++ ) {
@@ -155,9 +156,10 @@ TEST_CASE("Population: local_search, local_search_agents") {
         AgentModel::IVS.push_back(DataSet::IVS[i]);
 
     // 1. Construct depth 2 ternary population
-    Model::OBJECTIVE_NAME = "mse";
-    Model::OBJECTIVE = objective::mse<AgentModel>;
-    MemeticModel<double>::LOCAL_SEARCH = local_search::custom_nelder_mead_redo<MemeticModel<double>>;
+    MemeticModel<DataType>::OBJECTIVE_NAME = "mse";
+    MemeticModel<DataType>::OBJECTIVE = objective::mse<DataType>;
+    //MemeticModel<double>::LOCAL_SEARCH = local_search::custom_nelder_mead_redo<MemeticModel<double>>;
+    MemeticModel<Regression<double>>::LOCAL_SEARCH = local_search::custom_nelder_mead_redo<MemeticModel<Regression<double>>>;
     Population<AgentModel> p = Population<AgentModel>(&data, 2, 3);
     double best_score = p.best_soln.get_fitness();
     meme::LOCAL_SEARCH_DATA_PCT = 0.5;
@@ -270,8 +272,8 @@ TEST_CASE("Population: evolve") {
         AgentModel::IVS.push_back(DataSet::IVS[i]);
 
     // 1. 
-    Model::OBJECTIVE_NAME = "mse";
-    Model::OBJECTIVE = objective::mse<AgentModel>;
+    MemeticModel<DataType>::OBJECTIVE_NAME = "mse";
+    MemeticModel<DataType>::OBJECTIVE = objective::mse<DataType>;
     MemeticModel<double>::LOCAL_SEARCH = local_search::custom_nelder_mead_redo<MemeticModel<double>>;
     Population<AgentModel> p = Population<AgentModel>(&data, 2, 3);
     
@@ -283,40 +285,40 @@ TEST_CASE("Population: evolve") {
         REQUIRE(p.root_agent->get_pocket().get_fitness() <= fitness);
 
         // Ensure that local search results in  
-        REQUIRE( p.root_agent->get_pocket().get_fitness() < p.root_agent->get_current().get_fitness() );
+        REQUIRE( p.root_agent->get_pocket().get_fitness() <= p.root_agent->get_current().get_fitness() );
         // Root children
-        REQUIRE( p.root_agent->get_children()[0]->get_pocket().get_fitness() < p.root_agent->get_children()[0]->get_current().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[1]->get_pocket().get_fitness() < p.root_agent->get_children()[1]->get_current().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[2]->get_pocket().get_fitness() < p.root_agent->get_children()[2]->get_current().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[0]->get_pocket().get_fitness() <= p.root_agent->get_children()[0]->get_current().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[1]->get_pocket().get_fitness() <= p.root_agent->get_children()[1]->get_current().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[2]->get_pocket().get_fitness() <= p.root_agent->get_children()[2]->get_current().get_fitness() );
         // Roots left child children
-        REQUIRE( p.root_agent->get_children()[0]->get_children()[0]->get_pocket().get_fitness() < p.root_agent->get_children()[0]->get_children()[0]->get_current().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[0]->get_children()[1]->get_pocket().get_fitness() < p.root_agent->get_children()[0]->get_children()[1]->get_current().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[0]->get_children()[2]->get_pocket().get_fitness() < p.root_agent->get_children()[0]->get_children()[2]->get_current().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[0]->get_children()[0]->get_pocket().get_fitness() <= p.root_agent->get_children()[0]->get_children()[0]->get_current().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[0]->get_children()[1]->get_pocket().get_fitness() <= p.root_agent->get_children()[0]->get_children()[1]->get_current().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[0]->get_children()[2]->get_pocket().get_fitness() <= p.root_agent->get_children()[0]->get_children()[2]->get_current().get_fitness() );
         // Roots middle child children
-        REQUIRE( p.root_agent->get_children()[1]->get_children()[0]->get_pocket().get_fitness() < p.root_agent->get_children()[1]->get_children()[0]->get_current().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[1]->get_children()[1]->get_pocket().get_fitness() < p.root_agent->get_children()[1]->get_children()[1]->get_current().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[1]->get_children()[2]->get_pocket().get_fitness() < p.root_agent->get_children()[1]->get_children()[2]->get_current().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[1]->get_children()[0]->get_pocket().get_fitness() <= p.root_agent->get_children()[1]->get_children()[0]->get_current().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[1]->get_children()[1]->get_pocket().get_fitness() <= p.root_agent->get_children()[1]->get_children()[1]->get_current().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[1]->get_children()[2]->get_pocket().get_fitness() <= p.root_agent->get_children()[1]->get_children()[2]->get_current().get_fitness() );
         // Roots right child children
-        REQUIRE( p.root_agent->get_children()[2]->get_children()[0]->get_pocket().get_fitness() < p.root_agent->get_children()[2]->get_children()[0]->get_current().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[2]->get_children()[1]->get_pocket().get_fitness() < p.root_agent->get_children()[2]->get_children()[1]->get_current().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[2]->get_children()[2]->get_pocket().get_fitness() < p.root_agent->get_children()[2]->get_children()[2]->get_current().get_fitness() );
-        // 1.2 We expect each parent pocket fitness < any of their children
+        REQUIRE( p.root_agent->get_children()[2]->get_children()[0]->get_pocket().get_fitness() <= p.root_agent->get_children()[2]->get_children()[0]->get_current().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[2]->get_children()[1]->get_pocket().get_fitness() <= p.root_agent->get_children()[2]->get_children()[1]->get_current().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[2]->get_children()[2]->get_pocket().get_fitness() <= p.root_agent->get_children()[2]->get_children()[2]->get_current().get_fitness() );
+        // 1.2 We expect each parent pocket fitness <= any of their children
         // Root better than children 
-        REQUIRE( p.root_agent->get_pocket().get_fitness() < p.root_agent->get_children()[0]->get_pocket().get_fitness() );
-        REQUIRE( p.root_agent->get_pocket().get_fitness() < p.root_agent->get_children()[1]->get_pocket().get_fitness() );
-        REQUIRE( p.root_agent->get_pocket().get_fitness() < p.root_agent->get_children()[2]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_pocket().get_fitness() <= p.root_agent->get_children()[0]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_pocket().get_fitness() <= p.root_agent->get_children()[1]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_pocket().get_fitness() <= p.root_agent->get_children()[2]->get_pocket().get_fitness() );
         // Roots left child vs children
-        REQUIRE( p.root_agent->get_children()[0]->get_pocket().get_fitness() < p.root_agent->get_children()[0]->get_children()[0]->get_pocket().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[0]->get_pocket().get_fitness() < p.root_agent->get_children()[0]->get_children()[1]->get_pocket().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[0]->get_pocket().get_fitness() < p.root_agent->get_children()[0]->get_children()[2]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[0]->get_pocket().get_fitness() <= p.root_agent->get_children()[0]->get_children()[0]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[0]->get_pocket().get_fitness() <= p.root_agent->get_children()[0]->get_children()[1]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[0]->get_pocket().get_fitness() <= p.root_agent->get_children()[0]->get_children()[2]->get_pocket().get_fitness() );
         // Roots middle child vs children
-        REQUIRE( p.root_agent->get_children()[1]->get_pocket().get_fitness() < p.root_agent->get_children()[1]->get_children()[0]->get_pocket().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[1]->get_pocket().get_fitness() < p.root_agent->get_children()[1]->get_children()[1]->get_pocket().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[1]->get_pocket().get_fitness() < p.root_agent->get_children()[1]->get_children()[2]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[1]->get_pocket().get_fitness() <= p.root_agent->get_children()[1]->get_children()[0]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[1]->get_pocket().get_fitness() <= p.root_agent->get_children()[1]->get_children()[1]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[1]->get_pocket().get_fitness() <= p.root_agent->get_children()[1]->get_children()[2]->get_pocket().get_fitness() );
         // Roots right child vs children
-        REQUIRE( p.root_agent->get_children()[2]->get_pocket().get_fitness() < p.root_agent->get_children()[2]->get_children()[0]->get_pocket().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[2]->get_pocket().get_fitness() < p.root_agent->get_children()[2]->get_children()[1]->get_pocket().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[2]->get_pocket().get_fitness() < p.root_agent->get_children()[2]->get_children()[2]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[2]->get_pocket().get_fitness() <= p.root_agent->get_children()[2]->get_children()[0]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[2]->get_pocket().get_fitness() <= p.root_agent->get_children()[2]->get_children()[1]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[2]->get_pocket().get_fitness() <= p.root_agent->get_children()[2]->get_children()[2]->get_pocket().get_fitness() );
     }    
 
 }

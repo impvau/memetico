@@ -7,14 +7,14 @@
 #include <sstream>
 #include <stdexcept>
 
-typedef ContinuedFraction<double> AgentModel;
+typedef ContinuedFraction<Regression<double>,double> AgentModel;
 
 inline AgentModel frac_1() {
 
     // f(x) = x1 + 2x3 + 3x5 - 20 
     size_t params = 6;
     size_t depth = 0;
-    ContinuedFraction<double> o  = ContinuedFraction<double>(depth);
+    AgentModel o  = AgentModel(depth);
     Regression<double> m1 = Regression<double>(params);
     o.set_global_active(0, true);
     o.set_global_active(1, false);
@@ -49,7 +49,7 @@ inline AgentModel frac_2() {
     // f(x) = -3x2 + 4x4 + 3x5 - 3
     size_t params = 6;
     size_t depth = 0;
-    ContinuedFraction<double> o  = ContinuedFraction<double>(depth);
+    AgentModel o = AgentModel(depth);
     Regression<double> m2 = Regression<double>(params);
     o.set_global_active(0, false);
     o.set_global_active(1, true);
@@ -499,7 +499,9 @@ TEST_CASE("Agent: bubble") {
     AgentModel curr0 = a.get_current();
     AgentModel pock1 = a.get_children()[0]->get_pocket();
     AgentModel curr1 = a.get_children()[0]->get_current();
+     
     a.bubble();
+    
     // 1.1 Confirm pockets have changed
     REQUIRE(a.get_pocket() == pock1);
     REQUIRE(a.get_children()[0]->get_pocket() == pock0);
