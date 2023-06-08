@@ -3,7 +3,6 @@
  * @author Andrew Ciezak <andy@impv.au>
  * @version 1.0
  * @brief Agent representing a node in a memetic Population
- * @copyright (C) 2022 Prof. Pablo Moscato, License CC-BY
  */
 
 #ifndef MEMETICO_AGENT_H
@@ -136,7 +135,6 @@ class Agent {
          * @return  void
          */
         void        bubble();
-
 
         /** 
          * @brief Ouput the Agent parameter names and values

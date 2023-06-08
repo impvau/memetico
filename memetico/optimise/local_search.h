@@ -3,8 +3,6 @@
 /**
  * @file
  * @author Andrew Ciezak <andy@impv.au>
- * @author Mohammad Haque <Mohammad.Haque@newcastle.edu.au>
- * @author Haoyuan Sun <hsun2@caltech.edu>
  * @version 1.0
  * @brief Collection of local search functions
 */

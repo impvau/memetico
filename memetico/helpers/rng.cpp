@@ -1,7 +1,6 @@
 
 /**
  * @file
- * @author Haoyuan Sun <hsun2@caltech.edu>
  * @author Andrew Ciezak <andy@impv.au>
  * @version 1.0
  * 

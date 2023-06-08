@@ -3,7 +3,6 @@
  * @author Andrew Ciezak <andy@impv.au>
  * @version 1.0
  * @brief Population of Agents
- * @copyright (C) 2022 Prof. Pablo Moscato, License CC-BY
  */
 
 #ifndef MEMETICO_POPULATION_H
@@ -181,6 +180,8 @@ class Population {
         Agent<U>*       root_agent = nullptr;
 
         static DiversityType DIVERSITY_TYPE;
+
+        void set_best_soln(U& soln)     {best_soln = U(soln);};
 
     private:
 

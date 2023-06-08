@@ -2,8 +2,6 @@
 /**
  * @file
  * @author Andrew Ciezak <andy@impv.au>
- * @author Mohammad Haque <Mohammad.Haque@newcastle.edu.au>
- * @author Haoyuan Sun <hsun2@caltech.edu>
  * @version 1.0
  * @brief Implementation of objective functions
 */
@@ -20,7 +18,7 @@ using namespace meme;
  * 
  */
 template <class U>
-double objective::mse(Model* model, DataSet* train, vector<size_t>& selected ) {
+double objective::mse(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected ) {
 
     auto start = chrono::system_clock::now();
 
@@ -101,7 +99,7 @@ double objective::mse(Model* model, DataSet* train, vector<size_t>& selected ) {
 }
 
 template <class U>
-double objective::cuda_mse(U* model, DataSet* train, vector<size_t>& selected ) {
+double objective::cuda_mse(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected ) {
  
     // Convert CFR to Program
     Program p;
@@ -141,7 +139,7 @@ double objective::cuda_mse(U* model, DataSet* train, vector<size_t>& selected ) 
  * 
  */
 template <class U>
-double objective::nmse(U* model, DataSet* train, vector<size_t>& selected ) {
+double objective::nmse(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected ) {
 
     try {
 
@@ -248,7 +246,7 @@ double objective::nmse(U* model, DataSet* train, vector<size_t>& selected ) {
 }
 
 template <class U>
-double objective::compare(U* m1, U* m2, DataSet* train) {
+double objective::compare(MemeticModel<U>* m1, MemeticModel<U>* m2, DataSet* train) {
 
     double error_dist = 0;
     double err1, err2;

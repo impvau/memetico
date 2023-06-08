@@ -4,8 +4,6 @@ using namespace meme;
 /**
  * @file
  * @author Andrew Ciezak <andy@impv.au>
- * @author Mohammad Haque <Mohammad.Haque@newcastle.edu.au>
- * @author Haoyuan Sun <hsun2@caltech.edu>
  * @version 1.0
  * @brief Implementation of local search functions
 */
@@ -16,7 +14,7 @@ double local_search::model_evaluate(vector<double>& params, vector<size_t>& posi
         model->set_value(positions[i], params[i]);
     }
 
-    return Model::OBJECTIVE(model, data, selected);
+    return model->objective(data, selected);
 }
 
 /**
