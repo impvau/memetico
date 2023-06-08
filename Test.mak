@@ -2,7 +2,7 @@ ROOT_DIR:=$(shell pwd)
 
 # Flags for compiling with NVCC
 CU = nvcc
-CUFLAGS = -std=c++17 -O0 -g -ccbin g++-10 -I "/usr/include/eigen3" -I "/usr/include/nlohmann/" -I "$(ROOT_DIR)/"
+CUFLAGS = -std=c++17 -O0 -g -ccbin g++-10 -I "/usr/include/eigen3" -I "/usr/include/nlohmann/" -I "$(ROOT_DIR)/ "
 
 LDFLAGS =  -lgomp
 
@@ -10,9 +10,9 @@ LDFLAGS =  -lgomp
 LIST_HELPERS_CODE = 	memetico/helpers/rng
 LIST_HELPERS_TEST = 	# To be implemented
 LIST_MODEL_BASE_CODE = 	memetico/model_base/model
-LIST_MODEL_BASE_TEST = 	memetico/model_base/element.test memetico/model_base/additive_term.test memetico/model_base/model.test
+LIST_MODEL_BASE_TEST = 	memetico/model_base/element.test memetico/model_base/model.test
 LIST_MODELS_CODE = 		# All code via template classes, so effectively all code is in header files
-LIST_MODELS_TEST = 		memetico/models/regression.test memetico/models/cont_frac.test
+LIST_MODELS_TEST = 		memetico/models/regression.test memetico/models/cont_frac.test memetico/models/branch_cont_frac_dd.test
 LIST_POP_CODE =			# working.. may all be in tpp/header files
 LIST_POP_TEST =			memetico/population/agent.test memetico/population/pop.test
 LIST_DATA_CODE =		memetico/data/data_set
@@ -20,7 +20,7 @@ LIST_DATA_TEST =		memetico/data/data_set.test
 LIST_GPU_CODE =			memetico/gpu/cuda
 LIST_GPU_TEST =			memetico/gpu/cuda.test
 LIST_OPTIMISE_CODE =	
-LIST_OPTIMISE_TEST =	memetico/optimise/objective.test
+LIST_OPTIMISE_TEST =	memetico/optimise/objective.test memetico/optimise/local_search.test
 # Aggregates
 LIST_TEST = $(LIST_HELPERS_TEST) $(LIST_MODEL_BASE_TEST) $(LIST_MODELS_TEST) $(LIST_POP_TEST) $(LIST_DATA_TEST) $(LIST_GPU_TEST) $(LIST_OPTIMISE_TEST)
 LIST_CODE = $(LIST_HELPERS_CODE) $(LIST_MODEL_BASE_CODE) $(LIST_MODELS_CODE) $(LIST_POP_CODE) $(LIST_DATA_CODE) $(LIST_GPU_CODE) $(LIST_OPTIMISE_CODE)
@@ -51,7 +51,7 @@ bin/%.o : %.cu
 
 # Compiile main executable.
 main: $(OBJ)
-	$(CU) $^ $(LDFLAGS) -o bin/main 
+	$(CU) $^ $(LDFLAGS) -o bin/main
 
 # Clean bin directories to ensure recompilation
 clean:
