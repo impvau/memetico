@@ -8,8 +8,7 @@ ROOT_DIR:=$(shell pwd)
 
 # Flags for compiling with NVCC
 CU = nvcc
-#CUFLAGS = -std=c++17 -O0 -g -ccbin g++-10 -I "/usr/include/eigen3" -I "/usr/include/nlohmann/" -I "$(ROOT_DIR)/"
-CUFLAGS = -std=c++17 -O3 -g -I "/usr/include/eigen3" -I "/usr/include/nlohmann/" -I "$(ROOT_DIR)/"
+CUFLAGS = -std=c++17 -O3 -g -ccbin g++-10 -I "/usr/include/eigen3" -I "/usr/include/nlohmann/" -I "$(ROOT_DIR)/"
 
 LDFLAGS =  -lgomp
 
@@ -52,4 +51,4 @@ main: $(OBJ)
 
 # Clean bin directories to ensure recompilation
 clean:
-	rm -f bin/memetico/* bin/memetico/helpers/* bin/memetico/models/* bin/memetico/model_base/* bin/memetico/population/* bin/memetico/data/* bin/gpu/data/* bin/*  
+	rm -f bin/memetico/* bin/memetico/helpers/* bin/memetico/models/* bin/memetico/model_base/* bin/memetico/population/* bin/memetico/data/* bin/memetico/gpu/* bin/memetico/optimise/*  bin/*
