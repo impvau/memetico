@@ -2,8 +2,7 @@
 /** @file
  * @author Andrew Ciezak <andy@impv.au>
  * @version 1.0
- * @brief A Model representing a machine learning solution
- * @copyright (C) 2022 Prof. Pablo Moscato, License CC-BY
+ * @brief A class representing a Model that has fitness, error and penalty but may apply to TSP, SR or other problems
  */
 
 #ifndef MEMETICO_MODELS_MODEL_H_
@@ -20,7 +19,7 @@ using namespace std;
 using namespace cusr;
 
 /**
- * @brief The Model class representing the lowest-level representation of a solution
+ * @brief A class representing a Model that has fitness, error and penalty but may apply to TSP, SR or other problems
  * 
  * The class implements basic attributes that are common to all models, applicable equally to the TSP to Regression problems.
  * We must extend this class to handle these problems, where the TSP may implement a distance matrix and a regression problem
@@ -76,8 +75,8 @@ class Model {
         /** @brief getter for fitness */
         double          get_fitness()               { return fitness; };
         
-        /** @brief getter for fitness */
-        double          get_count_active()          { return 0; };
+        ///** @brief getter for fitness */
+        //double          get_count_active()          { return 0; };
 
         /** @brief Return TreeNode for GPU evaluation */
         virtual void    get_node(TreeNode * n)      {};
@@ -92,6 +91,7 @@ class Model {
         virtual double  evaluate(vector<double> & values) { return numeric_limits<double>::max(); };
         
         virtual void    print()                     {   cout << "model" << endl;};
+
         virtual string  str()                       {   return "model";};
 
         /** @brief output operator for a model */
@@ -112,12 +112,6 @@ class Model {
             return true;
         }
         
-        /** @brief name of the objective function */
-        static string   OBJECTIVE_NAME;
-
-        /** @brief objective function to evaluate the solutions */
-        static double   (*OBJECTIVE)(Model*, DataSet*, vector<size_t>&);
-
         /** @brief Format to print all regressions as */
         static PrintType        FORMAT;
 
