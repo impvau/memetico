@@ -142,7 +142,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Write Training results
-    ofstream train_log(meme::LOG_DIR+to_string(meme::SEED)+".TrainResults.csv");
+    ofstream train_log(meme::LOG_DIR+to_string(meme::SEED)+".Train.Predict.csv");
     if (train_log.is_open()) {
 
         train_log << setprecision(meme::PREC) << "y" << endl;
@@ -152,7 +152,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Write Testing results
-    ofstream test_log(meme::LOG_DIR+to_string(meme::SEED)+".TestResults.csv");
+    ofstream test_log(meme::LOG_DIR+to_string(meme::SEED)+".Test.Predict.csv");
     if (test_log.is_open()) {
 
         test_log << setprecision(meme::PREC) << "y" << endl;
