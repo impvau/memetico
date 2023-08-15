@@ -81,17 +81,14 @@ namespace cusr {
 #define S_OFF THREAD_PER_BLOCK * (CUSR_DEPTH + 1) * blockIdx.x + top * THREAD_PER_BLOCK + threadIdx.x
 
     __global__ void
-    calFitnessGPU_MSE(int len, float *ds, int dsPitch, float *label, size_t *idxs, float *stack, float *result,
-                        int dataset_size, bool is_subset, bool do_print) {
+    calFitnessGPU(int len, float *ds, int dsPitch, float *label, size_t *idxs, float *stack, float *result,
+                        int dataset_size, bool is_subset, bool do_print, metric_t metric) {
 
         extern __shared__ float shared[];
         shared[threadIdx.x] = 0;
         
         // each thread is responsible for one datapoint
         int dataset_no = blockIdx.x * THREAD_PER_BLOCK + threadIdx.x;
-
-        //if(do_print)
-        //printf("Starting calFitnessGPU_MSE ds_size: %d is_subset: %d \n", dataset_no, is_subset);
 
         if (dataset_no < dataset_size) {
 
@@ -111,12 +108,8 @@ namespace cusr {
 
                     if( is_subset) {
                         stack[S_OFF] = ((float *) ((char *) ds + var_num * dsPitch))[idxs[dataset_no]];
-                        //if( dataset_no == 1 && do_print)
-                        //    printf("S_OFF: %d, Node: Var, Num: %d, Stack: %f \n", S_OFF, var_num, stack[S_OFF]);
                     } else {
                         stack[S_OFF] = ((float *) ((char *) ds + var_num * dsPitch))[dataset_no];
-                        //if( dataset_no == 1 && do_print)
-                        //    printf("S_OFF: %d, Node: Var, Num: %d, Stack: %f \n", S_OFF, var_num, stack[S_OFF]);
                     }
                     top++;
 
@@ -159,27 +152,18 @@ namespace cusr {
                     if (function == Function::ADD) {
                         stack[S_OFF] = var1 + var2;
                         top++;
-                        //if( dataset_no == 1 && do_print)
-                        //    printf("S_OFF: %d, Node: Add, Nums: '%f+%f', Stack: %f \n", S_OFF, var1, var2, stack[S_OFF]);
                     } else if (function == Function::SUB) {
                         stack[S_OFF] = var1 - var2;
                         top++;
-                        //if( dataset_no == 1 && do_print)
-                        //    printf("S_OFF: %d, Node: Sub, Nums: '%f-%f', Stack: %f \n", S_OFF, var1, var2, stack[S_OFF]);
                     } else if (function == Function::MUL) {
                         stack[S_OFF] = var1 * var2;
                         top++;
-                        //if( dataset_no == 1 && do_print)
-                        //    printf("S_OFF: %d, Node: Mul, Nums: '%f*%f', Stack: %f \n", S_OFF, var1, var2, stack[S_OFF]);
                     } else if (function == Function::DIV) {
                         if (var2 == 0) {
                             var2 = DELTA;
                         }
                         stack[S_OFF] = var1 / var2;
                         top++;
-                        //if( dataset_no == 1 && do_print)
-                        //    printf("S_OFF: %d, Node: Div, Nums: '%f/%f', Stack: %f \n", S_OFF, var1, var2, stack[S_OFF]);
-
                     } else if (function == Function::MAX) {
                         stack[S_OFF] = var1 >= var2 ? var1 : var2;
                         top++;
@@ -200,17 +184,21 @@ namespace cusr {
                 label_value = label[idxs[dataset_no]];
             else 
                 label_value = label[dataset_no];
-            float loss = prefix_value - label_value;
-            float fitness = loss * loss;
+
+            float loss;
+            float fitness;
+            if(metric == metric_t::mean_square_error || metric == metric_t::root_mean_square_error) {
+                loss = prefix_value - label_value;
+                fitness = loss * loss;
+            }
+            if(metric == metric_t::mean_absolute_error) {
+                loss = abs(prefix_value - label_value);
+                fitness = loss;
+            }
 
             shared[threadIdx.x] = fitness;
 
-            //if(do_print)
-            //    printf("%f,%f,%f,%f, Thread: %d, Shared: %f \n", prefix_value, label_value, loss, fitness, threadIdx.x, shared[threadIdx.x]);
-
         }
-
-        //printf("Args No Thread: %d, %d, dataset_no: %d,  Thread: %d, Shared: %f  \n", len, dataset_size, dataset_no, threadIdx.x, shared[threadIdx.x]);
 
         __syncthreads();
 
@@ -249,8 +237,6 @@ namespace cusr {
             shared[threadIdx.x] += shared[threadIdx.x + 1];
             result[blockIdx.x] = shared[0];
 
-            //if(do_print)
-            //    printf("Final score: %f \n", shared[0]);
         }
     }
 
@@ -290,28 +276,17 @@ namespace cusr {
         cudaMemcpyToSymbol(d_nodeType, h_nodeType, sizeof(float) * program.length);
 
         int size;
+        if( dataset.subset_size > 0 )
+            size = dataset.subset_size;
+        else 
+            size = dataset.dataset_size;
 
         // -------- calculation and synchronization --------
-        //if (metric == metric_t::mean_absolute_error) {
-        //    calFitnessGPU_MAE<<<blockNum, THREAD_PER_BLOCK, sizeof(float) * THREAD_PER_BLOCK>>>
-        //            (program.length, dataset.dataset, dataset.dataset_pitch, dataset.label, stack, result,
-        //                dataset.dataset_size);
-        //    cudaDeviceSynchronize();
-        //} else if (metric == metric_t::mean_square_error || metric == metric_t::root_mean_square_error) {
-        if (metric == metric_t::mean_square_error || metric == metric_t::root_mean_square_error) {
 
-            
-            if( dataset.subset_size > 0 )
-                size = dataset.subset_size;
-            else 
-                size = dataset.dataset_size;
-
-            calFitnessGPU_MSE<<<blockNum, THREAD_PER_BLOCK, sizeof(float) * THREAD_PER_BLOCK >>>
-                (program.length, dataset.dataset, dataset.dataset_pitch, dataset.label, dataset.subset, stack, result,
-                    size, dataset.subset_size > 0, false);            
-            cudaDeviceSynchronize();                
-
-        }
+        calFitnessGPU<<<blockNum, THREAD_PER_BLOCK, sizeof(float) * THREAD_PER_BLOCK>>>
+                    (program.length, dataset.dataset, dataset.dataset_pitch, dataset.label, dataset.subset, stack, result,
+                        size, dataset.subset_size > 0, false, metric);
+        cudaDeviceSynchronize();
 
         // -------- reduction on the result --------
         cudaMemcpy(h_res, result, sizeof(float) * blockNum, cudaMemcpyDeviceToHost);
@@ -324,7 +299,7 @@ namespace cusr {
         if (metric == metric_t::mean_absolute_error || metric == metric_t::mean_square_error) {
             program.fitness = ans / (float) size;
         } else if (metric == metric_t::root_mean_square_error) {
-            program.fitness = std::sqrt(ans / (float) size);
+            program.fitness = sqrt(ans / (float) size);
         }
     }
 

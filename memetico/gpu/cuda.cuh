@@ -26,8 +26,8 @@ namespace cusr {
 
     /** Types of objective function implemented on the GPU*/
     typedef enum Metric {
-        mean_absolute_error,        // Not implemented/checked
-        root_mean_square_error,     // Not implemented/checked
+        mean_absolute_error,     
+        root_mean_square_error,
         mean_square_error
     } metric_t;
 
