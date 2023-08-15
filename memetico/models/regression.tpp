@@ -228,8 +228,14 @@ ostream& operator<<(ostream& os, Regression<F>& r)
             if(i != r.get_count()-1) {
 
                 if( MemeticModel<F>::FORMAT == PrintLatex ) {
+
                     string s = MemeticModel<F>::IVS[i];
-                    s.replace(MemeticModel<F>::IVS[i].find("x"), 1, "x_{").append("}");
+                    regex pattern("^x(\\d{1,4})$");
+                    smatch match;
+                    if( regex_match(s, match, pattern) ) {
+                        int value = std::stoi(match[1].str());
+                        s = "x_{" + std::to_string(value) + "}";
+                    }
                     os << s;
                 }
 
