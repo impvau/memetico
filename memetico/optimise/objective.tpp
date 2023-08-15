@@ -87,7 +87,7 @@ double objective::mse(MemeticModel<U>* model, DataSet* train, vector<size_t>& se
 
     } else  {
 
-        model->set_error( cuda_mse(model, train, selected) );
+        model->set_error( cuda_error(model, train, selected) );
         model->set_penalty( 1+model->get_count_active()*meme::PENALTY );
         model->set_fitness( multiply(model->get_error(),model->get_penalty()) );
     }
@@ -99,17 +99,104 @@ double objective::mse(MemeticModel<U>* model, DataSet* train, vector<size_t>& se
 }
 
 template <class U>
-double objective::cuda_mse(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected ) {
- 
+double objective::mae(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected ) {
+
+    auto start = chrono::system_clock::now();
+
+    if( !train->get_gpu() ) {
+
+        try {
+
+            double error_sum = 0;
+            double error;
+        
+            if( selected.size() == 0) {
+                
+                for(size_t i = 0; i < train->get_count(); i++) {
+
+                    double frac_val = model->evaluate(train->samples[i]);
+
+                    // Determine residual and square
+                    error = add(frac_val, -train->y[i]);
+                    error = fabs(error);
+
+                    // Weight squared error
+                    if(train->has_weight())
+                        error = multiply(error, train->weight[i]);
+
+                    // Sum of squared error
+                    error_sum = add(error_sum, error);
+
+                }
+
+                model->set_error(error_sum / train->get_count());
+
+            } else {
+
+                for(size_t i : selected) {
+
+                    double frac_val = model->evaluate(train->samples[i]);
+
+                    // Determine residual and square
+                    error = add(frac_val, -train->y[i]);
+                    error = fabs(error);
+
+                    // Weight squared error
+                    if(train->has_weight())
+                        error = multiply(error, train->weight[i]);
+
+                    // Sum of squared error
+                    error_sum = add(error_sum, error);
+                }
+                
+                model->set_error(error_sum / selected.size());
+
+            }
+            
+            model->set_penalty( 1+model->get_count_active()*meme::PENALTY );
+            model->set_fitness( multiply(model->get_error(),model->get_penalty()) );
+
+        } catch (exception& e) {
+
+            model->set_error(numeric_limits<double>::max());
+            model->set_penalty(numeric_limits<double>::max());
+            model->set_fitness(numeric_limits<double>::max());
+
+        }
+
+    } else  {
+
+        model->set_error( cuda_error(model, train, selected, metric_t::mean_absolute_error) );
+        model->set_penalty( 1+model->get_count_active()*meme::PENALTY );
+        model->set_fitness( multiply(model->get_error(),model->get_penalty()) );
+    }
+    
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double, milli> ms = end-start;
+    
+    return model->get_fitness();
+
+}
+
+template <class U>
+double objective::rmse(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected ) {
+
+    mse(model, train, selected);
+    model->set_error( sqrt(model->get_error()) );
+    model->set_fitness( multiply(model->get_error(),model->get_penalty()));
+    return model->get_fitness();
+
+}
+
+template <class U>
+double objective::cuda_error(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected, metric_t metric) {
+
     // Convert CFR to Program
     Program p;
-    //model->print();
     TreeNode *tn_frac = new TreeNode();
     model->get_node(tn_frac);
     get_prefix(p.prefix, tn_frac);
     p.length = p.prefix.size();
-    //cout << prefix_to_infix(p.prefix) << endl;
-    //model->print();
 
     // Setup call to GPU Calculate Fitness
     vector<Program> pop;
@@ -123,7 +210,7 @@ double objective::cuda_mse(MemeticModel<U>* model, DataSet* train, vector<size_t
         blockNum = (selected.size() - 1) / THREAD_PER_BLOCK + 1;
 
 
-    double ret = cusr::calculateFitness(train->device_data, blockNum, pop, metric_t::mean_square_error);
+    double ret = cusr::calculateFitness(train->device_data, blockNum, pop, metric);
     delete tn_frac;
     return ret;
 

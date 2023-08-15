@@ -24,10 +24,13 @@ template <class U>
 double mse(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected = vector<size_t>());
 
 template <class U>
-double mse2(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected = vector<size_t>());
+double mae(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected = vector<size_t>());
 
 template <class U>
-double cuda_mse(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected = vector<size_t>());
+double rmse(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected = vector<size_t>());
+
+template <class U>
+double cuda_error(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected = vector<size_t>(), metric_t metric = metric_t::mean_square_error);
 
 template <class U>
 double nmse(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected = vector<size_t>());
