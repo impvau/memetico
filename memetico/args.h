@@ -31,7 +31,13 @@ typedef BranchedContinuedFraction<TermType,DataType> ModelType;
 stringstream    args_out;
 
 bool arg_exists(char** begin, char** end, string short_option, string long_option) {
-    return find(begin, end, short_option) != end || find(begin, end, long_option) != end;
+
+    if(find(begin, end, short_option) != end || find(begin, end, long_option) != end) {
+        args_out << "    \"" << short_option << "\"" << endl;
+        return true;
+    }
+
+    return false;
 }
 
 string arg_value(char** begin, char** end, string short_option, string long_option) {
@@ -100,6 +106,8 @@ void arg_objective(int argc, char * argv[]) {
     MemeticModel<DataType>::OBJECTIVE_NAME = arg_string;
     if( arg_string == "")                                   MemeticModel<DataType>::OBJECTIVE_NAME = "mse";
     if( MemeticModel<DataType>::OBJECTIVE_NAME == "mse" )   MemeticModel<DataType>::OBJECTIVE = objective::mse<DataType>;
+    if( MemeticModel<DataType>::OBJECTIVE_NAME == "mae" )   MemeticModel<DataType>::OBJECTIVE = objective::mae<DataType>;
+    if( MemeticModel<DataType>::OBJECTIVE_NAME == "rmse" )   MemeticModel<DataType>::OBJECTIVE = objective::rmse<DataType>;
 }
 
 void arg_dynamic_depth(int argc, char * argv[]) {
