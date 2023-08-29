@@ -25,8 +25,11 @@ namespace args {
 
 // Also defined in main
 typedef double DataType;
-typedef ContinuedFraction<Regression<DataType>,DataType> TermType;
-typedef BranchedContinuedFraction<TermType,DataType> ModelType;
+typedef Regression<DataType> TermType;
+typedef ContinuedFractionDynamicDepth<TermType,DataType> ModelType;
+
+//typedef ContinuedFraction<Regression<DataType>,DataType> TermType;
+//typedef BranchedContinuedFraction<TermType,DataType> ModelType;
 
 stringstream    args_out;
 
