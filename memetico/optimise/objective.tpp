@@ -182,8 +182,20 @@ template <class U>
 double objective::rmse(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected ) {
 
     mse(model, train, selected);
-    model->set_error( sqrt(model->get_error()) );
-    model->set_fitness( multiply(model->get_error(),model->get_penalty()));
+
+    try {
+
+        model->set_error( sqrt(model->get_error()) );
+        model->set_fitness( multiply(model->get_error(),model->get_penalty()));
+
+    } catch (exception& e) {
+
+        model->set_error(numeric_limits<double>::max());
+        model->set_penalty(numeric_limits<double>::max());
+        model->set_fitness(numeric_limits<double>::max());
+
+    }
+
     return model->get_fitness();
 
 }
@@ -195,6 +207,7 @@ double objective::cuda_error(MemeticModel<U>* model, DataSet* train, vector<size
     Program p;
     TreeNode *tn_frac = new TreeNode();
     model->get_node(tn_frac);
+    cout << model << endl;
     get_prefix(p.prefix, tn_frac);
     p.length = p.prefix.size();
 
