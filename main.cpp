@@ -37,16 +37,19 @@ bool            meme::INT_ONLY = false;
 size_t          meme::LOCAL_SEARCH_RUNS = 4;
 size_t          meme::NELDER_MEAD_STALE = 10;
 size_t          meme::NELDER_MEAD_MOVES = 1500;
-double          meme::LOCAL_SEARCH_DATA_PCT = 1;
-double          meme::PENALTY = 0.35;
+double          meme::LOCAL_SEARCH_DATA_PCT = 0;
+double          meme::PENALTY = 0;
 size_t          meme::GEN = 0;
 long int        meme::MAX_TIME = 10*60;
 long int        meme::RUN_TIME = 0;
 
 // Also defined in args.h
 typedef double DataType;
-typedef ContinuedFraction<Regression<DataType>,DataType> TermType;
-typedef BranchedContinuedFraction<TermType,DataType> ModelType;
+typedef Regression<DataType> TermType;
+typedef ContinuedFractionDynamicDepth<TermType,DataType> ModelType;
+
+//typedef ContinuedFraction<Regression<DataType>,DataType> TermType;
+//typedef BranchedContinuedFraction<TermType,DataType> ModelType;
 
 size_t          meme::DEPTH = 4;
 size_t          meme::POCKET_DEPTH = 1;
