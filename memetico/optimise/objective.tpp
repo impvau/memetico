@@ -1,7 +1,7 @@
 
 /**
  * @file
- * @author andy@impv.au
+ * @author Andrew Ciezak <andy@impv.au>
  * @version 1.0
  * @brief Implementation of objective functions
 */
@@ -370,7 +370,7 @@ double objective::s_cor(MemeticModel<U>* model, DataSet* train, vector<size_t>& 
 }
 
 // Helper function to compute ranks
-vector<double> objective::s_rank(vector<double>& data) {
+inline vector<double> objective::s_rank(vector<double>& data) {
     vector<size_t> indices(data.size());
     iota(indices.begin(), indices.end(), 0);
 
