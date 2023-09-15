@@ -2,7 +2,7 @@
 
 /**
  * @file
- * @author Andrew Ciezak <andy@impv.au>
+ * @author andy@impv.au
  * @version 1.0
  * @brief Header for global variables and functions
  * 
@@ -34,15 +34,7 @@ struct Similar
 };
 
 
-/**
- * @file
- 
- * @author Andrew Ciezak <andy@impv.au>
- * @version 1.0
- * 
- * @brief Global variables for memetic algorithm
- * 
- */ 
+/** @brief Global variables for memetic algorithm */ 
 namespace meme {
 
 /** Flag to use GPU */
