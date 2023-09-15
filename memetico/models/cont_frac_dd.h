@@ -16,16 +16,6 @@
 #include <typeinfo>
 
 /**
- * @brief Types of Dynamic Depth approaches
- */
-enum DynamicDepthType {
-    DynamicNone,
-    DynamicAdaptive,
-    DynamicRandom,
-    DynamicAdaptiveMutation
-};
-
-/**
  * @brief The ContinuedFractionAdaptiveDepth class extends the ContinuedFraction class with adaptive depth logic
  */
 
@@ -57,7 +47,7 @@ class ContinuedFractionDynamicDepth : public MemeticModel<typename Traits::UType
             Traits::template MPType<typename Traits::UType, ContinuedFractionDynamicDepth<Traits>>::mutate(model);
 
             // If we are using the adaptive mutate approach
-            if( DYNAMIC_DEPTH_TYPE == DynamicAdaptiveMutation ) {
+            if( meme::DYNAMIC_DEPTH_TYPE == DynamicAdaptiveMutation ) {
 
                 size_t d = determine_depth();
                 this->set_depth(d);
@@ -70,7 +60,7 @@ class ContinuedFractionDynamicDepth : public MemeticModel<typename Traits::UType
             int rand = meme::DEPTH;
 
             // If adaptive approach or adaptive mutatution approach
-            if(DYNAMIC_DEPTH_TYPE == DynamicAdaptive || DYNAMIC_DEPTH_TYPE == DynamicAdaptiveMutation) {
+            if(meme::DYNAMIC_DEPTH_TYPE == DynamicAdaptive || meme::DYNAMIC_DEPTH_TYPE == DynamicAdaptiveMutation) {
 
                 rand = meme::RANDINT(meme::POCKET_DEPTH-1, meme::POCKET_DEPTH+1);
                 
@@ -78,7 +68,7 @@ class ContinuedFractionDynamicDepth : public MemeticModel<typename Traits::UType
                 if(rand < 0 )   rand = 0;
 
             // If random depth
-            } else if (DYNAMIC_DEPTH_TYPE == DynamicRandom)
+            } else if (meme::DYNAMIC_DEPTH_TYPE == DynamicRandom)
                 rand = meme::RANDINT(0, 5);
             
             //cout << "New fraction of depth: " << rand << endl;
@@ -86,13 +76,8 @@ class ContinuedFractionDynamicDepth : public MemeticModel<typename Traits::UType
             return size_t(rand);
         };
 
-        static DynamicDepthType DYNAMIC_DEPTH_TYPE;
-
     private: 
         
 };
 
-template <typename Traits>
-DynamicDepthType ContinuedFractionDynamicDepth<Traits>::DYNAMIC_DEPTH_TYPE = DynamicNone;
-    
 #endif

@@ -120,6 +120,18 @@ extern size_t           DEPTH;
 
 extern size_t           DIVERSITY_COUNT;
 
+/**
+ * @brief Types of Dynamic Depth approaches
+ */
+enum DynamicDepthType {
+    DynamicNone,
+    DynamicAdaptive,
+    DynamicRandom,
+    DynamicAdaptiveMutation
+};
+
+extern DynamicDepthType DYNAMIC_DEPTH_TYPE;
+
 // Define the template strucutre of a model
 template<
     typename T,         

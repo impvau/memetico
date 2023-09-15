@@ -169,7 +169,7 @@ namespace mutation {
 
                 if (hashes_by_size[size].find(hash_bools(set)) == hashes_by_size[size].end()) {
                     hashes_by_size[size].insert(hash_bools(set));
-                    cout << "Found on iteration: " << j << " hash: " << hash_bools(set) << " count:" << hashes_by_size[size].size() << endl;
+                    //cout << "Found on iteration: " << j << " hash: " << hash_bools(set) << " count:" << hashes_by_size[size].size() << endl;
                     return set;
                 }
             }

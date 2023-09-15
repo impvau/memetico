@@ -48,6 +48,8 @@ size_t          meme::DEPTH = 4;
 size_t          meme::POCKET_DEPTH = 1;
 size_t          meme::DIVERSITY_COUNT = 3;
 
+DynamicDepthType meme::DYNAMIC_DEPTH_TYPE = DynamicNone;
+
 // File Globals
 string          meme::TRAIN_FILE = "sinx.csv";
 string          meme::TEST_FILE = "sinx.csv";

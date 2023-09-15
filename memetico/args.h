@@ -2,7 +2,7 @@
 
 /**
  * @file
- * @author Andrew Ciezak <andy@impv.au>
+ * @author andy@impv.au
  * @version 1.0
  * @brief Header for global variables and functions
  * 
@@ -20,16 +20,9 @@
 #include <memetico/models/cont_frac_dd.h>
 #include <memetico/models/branch_cont_frac_dd.h>
 #include <memetico/population/pop.h>
+#include <memetico/global_types.h>
 
 namespace args {
-
-// Also defined in main
-typedef double DataType;
-typedef Regression<DataType> TermType;
-typedef ContinuedFractionDynamicDepth<TermType,DataType> ModelType;
-
-//typedef ContinuedFraction<Regression<DataType>,DataType> TermType;
-//typedef BranchedContinuedFraction<TermType,DataType> ModelType;
 
 stringstream    args_out;
 
@@ -111,15 +104,17 @@ void arg_objective(int argc, char * argv[]) {
     if( MemeticModel<DataType>::OBJECTIVE_NAME == "mse" )   MemeticModel<DataType>::OBJECTIVE = objective::mse<DataType>;
     if( MemeticModel<DataType>::OBJECTIVE_NAME == "mae" )   MemeticModel<DataType>::OBJECTIVE = objective::mae<DataType>;
     if( MemeticModel<DataType>::OBJECTIVE_NAME == "rmse" )   MemeticModel<DataType>::OBJECTIVE = objective::rmse<DataType>;
+    if( MemeticModel<DataType>::OBJECTIVE_NAME == "pcor" )   MemeticModel<DataType>::OBJECTIVE = objective::p_cor<DataType>;
+    if( MemeticModel<DataType>::OBJECTIVE_NAME == "scor" )   MemeticModel<DataType>::OBJECTIVE = objective::s_cor<DataType>;
 }
 
 void arg_dynamic_depth(int argc, char * argv[]) {
     // Dynamic Depth Type
     string arg_string = arg_value(argv, argv+argc, "-dd", "--dynamic-depth");
-    if(arg_string == "none" || arg_string == "")    ModelType::DYNAMIC_DEPTH_TYPE = DynamicNone;
-    if(arg_string == "adp")                         ModelType::DYNAMIC_DEPTH_TYPE = DynamicAdaptive;
-    if(arg_string == "adp-mu")                      ModelType::DYNAMIC_DEPTH_TYPE = DynamicAdaptiveMutation;
-    if(arg_string == "adp-rnd")                     ModelType::DYNAMIC_DEPTH_TYPE = DynamicRandom;
+    if(arg_string == "none" || arg_string == "")    meme::DYNAMIC_DEPTH_TYPE = DynamicNone;
+    if(arg_string == "adp")                         meme::DYNAMIC_DEPTH_TYPE = DynamicAdaptive;
+    if(arg_string == "adp-mu")                      meme::DYNAMIC_DEPTH_TYPE = DynamicAdaptiveMutation;
+    if(arg_string == "adp-rnd")                     meme::DYNAMIC_DEPTH_TYPE = DynamicRandom;
 }
 
 void arg_diversity(int argc, char * argv[]) {
@@ -275,7 +270,7 @@ void load_args(int argc, char * argv[]) {
     arg_log(argc, argv);
     arg_local_search(argc, argv);
     arg_objective(argc, argv);
-    
+
     // CFR Specific
 
     // Depth
