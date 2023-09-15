@@ -47,7 +47,7 @@ class ContinuedFractionDynamicDepth : public MemeticModel<typename Traits::UType
             Traits::template MPType<typename Traits::UType, ContinuedFractionDynamicDepth<Traits>>::mutate(model);
 
             // If we are using the adaptive mutate approach
-            if( meme::DYNAMIC_DEPTH_TYPE == DynamicAdaptiveMutation ) {
+            if( meme::DYNAMIC_DEPTH_TYPE == meme::DynamicAdaptiveMutation ) {
 
                 size_t d = determine_depth();
                 this->set_depth(d);
@@ -60,7 +60,7 @@ class ContinuedFractionDynamicDepth : public MemeticModel<typename Traits::UType
             int rand = meme::DEPTH;
 
             // If adaptive approach or adaptive mutatution approach
-            if(meme::DYNAMIC_DEPTH_TYPE == DynamicAdaptive || meme::DYNAMIC_DEPTH_TYPE == DynamicAdaptiveMutation) {
+            if(meme::DYNAMIC_DEPTH_TYPE == meme::DynamicAdaptive || meme::DYNAMIC_DEPTH_TYPE == meme::DynamicAdaptiveMutation) {
 
                 rand = meme::RANDINT(meme::POCKET_DEPTH-1, meme::POCKET_DEPTH+1);
                 
@@ -68,7 +68,7 @@ class ContinuedFractionDynamicDepth : public MemeticModel<typename Traits::UType
                 if(rand < 0 )   rand = 0;
 
             // If random depth
-            } else if (meme::DYNAMIC_DEPTH_TYPE == DynamicRandom)
+            } else if (meme::DYNAMIC_DEPTH_TYPE == meme::DynamicRandom)
                 rand = meme::RANDINT(0, 5);
             
             //cout << "New fraction of depth: " << rand << endl;
