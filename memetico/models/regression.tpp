@@ -137,7 +137,7 @@ void Regression<T>::recombine(MemeticModel<T> * m1, MemeticModel<T> * m2, int me
 template <class T>
 void Regression<T>::randomise(int min, int max, int pos) {
 
-    if( pos > -1 && get_active(pos)) {
+    if( pos > -1 ) {
 
         //  Turn on with even chance of positive/negative value
         if( RandReal::RANDREAL->rand() < 0.5 ) {
@@ -153,19 +153,15 @@ void Regression<T>::randomise(int min, int max, int pos) {
         // For all paramters in the Regression
         for(size_t param = 0; param < get_count(); param++) {
             
-            // if the parameter is active
-            if(get_active(param)) {
-
-                //  Turn on with even chance of positive/negative value
-                if( RandReal::RANDREAL->rand() < 0.5 ) {
-                    double rand = RandInt::RANDINT->rand(min, max);
-                    set_value(param, rand);
-                } else {                              
-                    double rand = RandInt::RANDINT->rand(max*-1, min*-1);
-                    set_value(param, rand);
-                }
-            
+            //  Turn on with even chance of positive/negative value
+            if( RandReal::RANDREAL->rand() < 0.5 ) {
+                double rand = RandInt::RANDINT->rand(min, max);
+                set_value(param, rand);
+            } else {                              
+                double rand = RandInt::RANDINT->rand(max*-1, min*-1);
+                set_value(param, rand);
             }
+
         }
     }
 }
