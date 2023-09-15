@@ -161,7 +161,6 @@ class ContinuedFraction : public MemeticModel<typename Traits::UType>,
          */
         double  evaluate(vector<double>& values) override;
 
-
         /** @brief Print the solution to stdout */
         void print() override { 
             cout << *this << endl; 
@@ -215,7 +214,6 @@ class ContinuedFraction : public MemeticModel<typename Traits::UType>,
         
         vector<typename Traits::TType> terms;
 
-
     private:
 
         /** @brief Given a sequential index pos, return the term it appears on */
@@ -223,9 +221,6 @@ class ContinuedFraction : public MemeticModel<typename Traits::UType>,
         
         /** @brief Given a sequential index pos, return the parameter possition it is (i.e. position in params_per_term) */
         size_t param_from_pos(size_t pos) const { return pos % params_per_term; };
-
-        /** Global active flag that applies for the independent varaible down all depths and overrides any setting in the active array */
-        vector<bool>   global_active;
 
         /** Zero-based depth of the fraction */
         size_t  depth;
