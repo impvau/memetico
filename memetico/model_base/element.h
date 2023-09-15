@@ -1,6 +1,6 @@
 
 /** @file
- * @author Andrew Ciezak <andy@impv.au>
+ * @author andy@impv.au
  * @version 1.0
  * @brief A class representing an Element in a Regression model, which may be active or inactive and has an associated value of type T.
  */

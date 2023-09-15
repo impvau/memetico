@@ -1,6 +1,6 @@
 
 /** @file
- * @author Andrew Ciezak <andy@impv.au>
+ * @author andy@impv.au
  * @version 1.0
  * @brief A class representing a Model that has fitness, error and penalty but may apply to TSP, SR or other problems
  */
