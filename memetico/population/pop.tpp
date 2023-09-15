@@ -61,6 +61,11 @@ void Population<U>::run() {
         chrono::duration<double, milli> generation_ms = generation_end-generation_start;
         cout << setw(5) << GEN << " " << setw(15) << best_soln.get_fitness() <<  " (" << setw(15) << best_soln.get_error() << ") " << setw(10) << " duration: " << setw(10) << generation_ms.count() << "ms root_depth: " << meme::POCKET_DEPTH << " frac: " << best_soln << endl;       
 
+        if( best_soln.get_fitness() < 1e-10 ) {
+            cout << "Solution found" << endl;
+            break;
+        }
+
         auto end_time = chrono::system_clock::now();
         if( MAX_TIME*1000 < chrono::duration_cast<chrono::milliseconds>(end_time-start_time).count() ) {
             cout << "Maximum time (" << MAX_TIME << " s) reached on gen " << GEN << ". Exiting after " << chrono::duration_cast<chrono::milliseconds>(end_time-start_time).count() << " ms" << endl;
