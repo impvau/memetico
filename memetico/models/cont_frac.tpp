@@ -13,9 +13,6 @@ ContinuedFraction<Traits>::ContinuedFraction(size_t frac_depth) : MemeticModel<t
     depth = frac_depth;
     params_per_term = MemeticModel<typename Traits::UType>::IVS.size()+1;
 
-    for(size_t i = 0; i < params_per_term; i++)
-        global_active.push_back(false);
-
     for(size_t i = 0; i < get_frac_terms(); i++)
         terms.push_back(typename Traits::TType(params_per_term));
     
@@ -211,15 +208,6 @@ bool ContinuedFraction<Traits>::operator== (ContinuedFraction<Traits>& o) {
     // Params per term checks
     if( params_per_term != o.params_per_term)
         return false;
-
-    // Global active checks
-    if( global_active.size() != o.global_active.size() )
-        return false;
-
-    for(size_t i = 0 ; i < global_active.size() ; i++) {
-        if( global_active[i] != o.global_active[i] )
-            return false;
-    }
 
     // Term checks
     if( terms.size() != o.terms.size( ))
