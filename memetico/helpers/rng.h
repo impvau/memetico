@@ -1,7 +1,7 @@
 
 /**
  * @file
- * @author Andrew Ciezak <andy@impv.au>
+ * @author andy@impv.au
  * @version 1.0
  * 
  * @brief Wrapper classes for global int and double random number generation
@@ -66,6 +66,16 @@ class RandInt {
                 gen);
 
             return selection;
+        }
+
+        /** @brief Return unique list of random values between start and end */
+        vector<bool> unique_bools(size_t amount) {
+
+            vector<bool> set;
+            for( size_t i = 0; i < amount; i++)
+                set.push_back(rand(0,1));
+
+            return set;
         }
 
         /** @brief Reference to global int randomiser */
