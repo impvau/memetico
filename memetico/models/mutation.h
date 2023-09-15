@@ -21,7 +21,7 @@ namespace mutation {
     struct MutateHardSoft : public MutationPolicy<U> {
 
         MutateHardSoft (size_t frac_depth = 4) {
-            
+                   
             size_t params = MemeticModel<U>::IVS.size()+1;
 
             // add global flags for each paramter
@@ -29,17 +29,26 @@ namespace mutation {
 
                 if(i == params-1)
                     global_active.push_back(true);
-
+                
                 else
 
                     // Randomly turn the IV on/off, always set the constant on
                     if( RandReal::RANDREAL->rand() < (2.0/3.0))
                         global_active.push_back(true);
 
-                    else                               
+                    else
                         global_active.push_back(false);
-
+        
             }
+        }
+
+        void    initialise() {
+
+            auto& model = static_cast<Derived&>(*this);
+
+            for(size_t i = 0; i < model.get_params_per_term(); i++)
+                model.set_global_active(i, model.get_global_active(i));
+
         }
 
         /* Policy mutation process */
@@ -138,11 +147,8 @@ namespace mutation {
 
             vector<bool> set = unique_vector();
 
-            for(size_t i = 0; i < set.size(); i++) {
+            for(size_t i = 0; i < set.size(); i++)
                 model.set_active(i, set[i]);
-                if(model.get_value(i) == 0)
-                    model.set_value(i, RandInt::RANDINT->rand(-30, 30));
-            }
             
             return;
         };
