@@ -1,6 +1,6 @@
 
 /** @file
- * @author Andrew Ciezak <andy@impv.au>
+ * @author andy@impv.au
  * @version 1.0
  * @brief ContinuedFraction is MemeticModel where each fraction term is a Regression
  */
@@ -10,6 +10,8 @@
 
 // Local
 #include <memetico/helpers/safe_ops.h>
+#include <memetico/helpers/hash.h>
+#include <memetico/globals.h>
 #include <memetico/model_base/model_meme.h>
 #include <memetico/helpers/print.h>
 #include <memetico/models/regression.h>
@@ -20,6 +22,8 @@
 #include <iostream>
 #include <sstream>
 #include <math.h>
+#include <unordered_set>
+#include <unordered_map>
 
 /**
  * @brief The ContinuedFraction class extends the Regression class for a new Model representation
@@ -33,8 +37,10 @@
  * The independent variables are utilised in each term, resulting in increasing coefficients and constants to optimise as fraction depth increases.
  * 
  */
-template<typename T, typename U>
-class ContinuedFraction : public MemeticModel<U> {
+template <typename Traits>
+class ContinuedFraction : public MemeticModel<typename Traits::UType>, 
+                          public Traits::template MPType<typename Traits::UType, 
+                          ContinuedFraction<Traits>> {
 
     public:
 
@@ -55,56 +61,41 @@ class ContinuedFraction : public MemeticModel<U> {
         ContinuedFraction(size_t frac_depth = 4);
         
         /** Constrct fraction as copy of o */
-        ContinuedFraction(const ContinuedFraction<T,U> &o);
+        ContinuedFraction(const ContinuedFraction<Traits> &o);
 
         //// Overriding functions 
-
-        /** @brief Return value at index pos in the fraction*/
-        double  get_value(size_t pos) override {
-            size_t term = floor(pos/params_per_term);
-            size_t param = pos % params_per_term;
-
-            // Only globally or locally on
-            if( get_global_active(param) || terms[term].get_active(param) )  
-                return terms[term].get_value(param);
-            else                            
-                return 0;
+        
+        /** @brief Return value given a sequential index pos in the fraction */
+        typename Traits::UType  get_value(size_t pos) override {
+            return terms[term_from_pos(pos)].get_value(param_from_pos(pos));
         };
 
-        /** @brief Return active flat at index pos in the fraction */
+        /** @brief Return active flag given a sqeuential index pos in the fraction */
         bool    get_active(size_t pos) override {
-            size_t term = floor(pos/params_per_term);
-            size_t param = pos % params_per_term;
-            
-             // Only globally or locally on
-            if( get_global_active(param) || terms[term].get_active(param) )  
-                return terms[term].get_active(param);
-            else                            
-                return false;
+            return terms[term_from_pos(pos)].get_active(param_from_pos(pos));
         };
 
         /** @brief Set value of paramter at fraction pos to val */
-        void    set_value(size_t pos, U val) override {
-            size_t term = floor(pos/params_per_term);
-            size_t param = pos % params_per_term;
-            terms[term].set_value(param, val);
+        void    set_value(size_t pos, typename Traits::UType val) override {
+            terms[term_from_pos(pos)].set_value(param_from_pos(pos), val);
         };
 
         /** @brief Set local active flag of varaible at pos to val  */
         void    set_active(size_t pos, bool val) override {
-            size_t term = floor(pos/params_per_term);
-            size_t param = pos % params_per_term;
-            terms[term].set_active(param, val);
+            terms[term_from_pos(pos)].set_active(param_from_pos(pos), val);
         };
 
-        /** @brief Return number of active paramters across the entire fraction */
+        /** @brief Return total number of active paramters across the entire fraction */
         size_t  get_count_active() override { return get_active_positions().size(); };
+
+        /** @brief Return vector of indices of the active varaibles positions*/
+        vector<size_t>  get_active_positions() override;
 
         /** @brief Return TreeNode for GPU processing */
         void    get_node(TreeNode * n) override;
 
         /** @brief Comparison operator for ContinuedFraction<T> */
-        bool    operator== (ContinuedFraction<T,U>& o);
+        bool    operator== (ContinuedFraction<Traits>& o);
 
         /**
          * @brief Output operator for ContinuedFraction<T>
@@ -119,14 +110,8 @@ class ContinuedFraction : public MemeticModel<U> {
          * @return os
          *           
          */        
-        template<typename F, typename G>
-        friend ostream& operator<<(std::ostream& os, ContinuedFraction<F, G>& c);
-
-        /** @brief Return vector of active varaible indices 
-         * @bug We should use the specific size of each object T rather than that stored in the Cf.
-         * Later, we may wish to have a dynamic number of parameters per fraction term.
-         */
-        vector<size_t>  get_active_positions() override;
+        template <typename Traits2>
+        friend ostream& operator<<(std::ostream& os, ContinuedFraction<Traits2>& c);
 
         /**  
          * @brief mutate \a this MemeticModel with consideration of the associated \a pocket solution
@@ -148,7 +133,12 @@ class ContinuedFraction : public MemeticModel<U> {
          * 
          * @param pocket the pocket solution associated with the current solution i.e. \a this
          */
-        void    mutate(MemeticModel<U>& pocket) override;
+        void    mutate(MemeticModel<typename Traits::UType>& pocket) override {
+
+            // Call mutation policy
+            Traits::template MPType<typename Traits::UType, ContinuedFraction<Traits>>::mutate(pocket);
+
+        }
 
         /**  
          * @brief recombine \a this MemeticModel considering two other MemeticModels
@@ -160,7 +150,7 @@ class ContinuedFraction : public MemeticModel<U> {
          * @param m1 first MemeticModel
          * @param m2 second MemeticModel
          */
-        void    recombine(MemeticModel<U>* model1, MemeticModel<U>* model2, int method_override = -1) override;
+        void recombine(MemeticModel<typename Traits::UType>* model1, MemeticModel<typename Traits::UType>* model2, int method_override = -1) override;
 
         /** 
          * @brief Evaluate a ContinuedFraction given sample values
@@ -209,26 +199,18 @@ class ContinuedFraction : public MemeticModel<U> {
         /** @brief Return total maximum number of paramters over all fraction terms (some may be masked) */
         size_t  get_param_count() const             { return params_per_term*get_frac_terms(); };
 
-        /** @brief Return number of pararmters globally turned on */
-        bool    get_global_active(size_t iv) const  { return global_active[iv]; };
-
         /** @brief Return term at specific position in the fraction t0, t1, t2.. etc. */
-        T& get_terms(size_t term)                   { return terms[term]; };
+        typename Traits::TType& get_terms(size_t term)                   { return terms[term]; };
 
         /** @brief Set term at pos to obj */
-        void    set_terms(size_t pos, T& obj)    { terms[pos] = obj; };
+        void    set_terms(size_t pos, typename Traits::TType& obj)    { terms[pos] = obj; };
 
         /** @brief add term at pos to obj */
-        void    add_terms(T& obj)    { terms.push_back(obj); };
+        void    add_terms(typename Traits::TType& obj)    { terms.push_back(obj); };
 
         void    pop_terms()    { terms.pop_back(); };
 
         void    set_params_per_term(size_t p)    { params_per_term = p; };
-
-        /** @brief Set global active flag for a specific data variable iv to val  */
-        void    set_global_active(size_t iv, bool val, bool align_fraction = true);
-
-        void    add_global_active(bool val)  {   global_active.push_back(val);    }
 
         /** @brief Set depth of the fraction and remove/add randomised terms */
         void    set_depth(size_t new_depth);
@@ -241,9 +223,16 @@ class ContinuedFraction : public MemeticModel<U> {
          */
         void    sanitise();
         
-        vector<T> terms;
+        vector<typename Traits::TType> terms;
+
 
     private:
+
+        /** @brief Given a sequential index pos, return the term it appears on */
+        size_t term_from_pos(size_t pos) const { return floor(pos/params_per_term); };
+        
+        /** @brief Given a sequential index pos, return the parameter possition it is (i.e. position in params_per_term) */
+        size_t param_from_pos(size_t pos) const { return pos % params_per_term; };
 
         /** Global active flag that applies for the independent varaible down all depths and overrides any setting in the active array */
         vector<bool>   global_active;
