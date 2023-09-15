@@ -1,6 +1,6 @@
 
 /** @file
- * @author Andrew Ciezak <andy@impv.au>
+ * @author andy@impv.au
  * @version 1.0
  * @brief Regression is a MemeticModel that contains a single linear function 
  */
@@ -67,8 +67,13 @@ class Regression : public MemeticModel<T> {
         void    set_active(size_t pos, bool val)    {  elems[pos].set_active(val); };
         
         /** @brief Set value for the \a pos th element with value \a val */
-        void    set_value(size_t pos, T val)        {  elems[pos].set_value(val); };
-        
+        void    set_value(size_t pos, T val)        {  
+            if( abs(val) >  1e-8 and abs(val) < 1e8 )
+                elems[pos].set_value(val); 
+            else
+                elems[pos].set_value(0);
+        };
+
         /** @brief Return active flag at \a pos */
         bool    get_active(size_t pos)              { return elems[pos].get_active(); };
         
