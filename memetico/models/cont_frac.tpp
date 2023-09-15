@@ -37,26 +37,6 @@ ContinuedFraction<Traits>::ContinuedFraction(const ContinuedFraction<Traits> &o)
 }
 
 template <typename Traits>
-void ContinuedFraction<Traits>::randomise(int min, int max) {
-
-    // For all parameters
-    /*for( size_t param = 0; param < params_per_term; param++ ) {
-
-        // Randomly turn the IV on/off, always set the constant on
-        if( RandReal::RANDREAL->rand() < (2.0/3.0) || params_per_term-1 == param )
-            set_global_active(param, true);
-        else                               
-            set_global_active(param, false);
-
-    }*/
-
-    // Randomise all parameters in all frac_terms, this will respect the active status
-    for(size_t term = 0; term < get_frac_terms(); term++)
-        terms[term].randomise(min, max);
-    
-}
-
-template <typename Traits>
 void ContinuedFraction<Traits>::sanitise() {
 
     // Check all terms

@@ -161,16 +161,6 @@ class ContinuedFraction : public MemeticModel<typename Traits::UType>,
          */
         double  evaluate(vector<double>& values) override;
 
-        /**
-         * @brief Randomise all paramters to a uniformally random value inclusively between min and max
-         * - Randomly activate globally the independent varaibles with 50% chance (i.e. first N-1 parameters)
-         * - Set the constant on (i.e. Nth parameter)
-         * - Randomise the varaibles between \a min and \a max as per T::randomise() function
-         * 
-         * @param min           Minimum value inclusive
-         * @param max           Maximum value inclusive
-         */
-        void    randomise(int min = 1, int max = 30);
 
         /** @brief Print the solution to stdout */
         void print() override { 

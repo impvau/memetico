@@ -51,10 +51,10 @@ class ContinuedFractionDynamicDepth : public MemeticModel<typename Traits::UType
         /** @brief Mutate operator 
          * Mutate as standard ContinuedFraction but if DynamicAdaptiveMutation is set, then re-determine depth
         */
-        void    mutate(MemeticModel<U> & model) override {
+        void    mutate(MemeticModel<typename Traits::UType> & model) override {
             
             // Call normal mutate
-            ContinuedFraction<T,U>::mutate(model);
+            Traits::template MPType<typename Traits::UType, ContinuedFractionDynamicDepth<Traits>>::mutate(model);
 
             // If we are using the adaptive mutate approach
             if( DYNAMIC_DEPTH_TYPE == DynamicAdaptiveMutation ) {
