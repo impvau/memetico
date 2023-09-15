@@ -1,6 +1,6 @@
 
 /** @file
- * @author Andrew Ciezak <andy@impv.au>
+ * @author andy@impv.au
  * @version 1.0
  * @brief ContinuedFraction is MemeticModel where each fraction term is a Regression
  */
@@ -25,18 +25,18 @@
 /**
  * @brief 
  */
-template<typename T, typename U>
-class BranchedContinuedFraction : public ContinuedFractionDynamicDepth<T,U> {
+template <typename Traits>
+class BranchedContinuedFraction : public ContinuedFractionDynamicDepth<Traits> {
 
     public:
 
-        BranchedContinuedFraction(size_t not_used = 0) : ContinuedFractionDynamicDepth<T,U>(this->determine_depth()) {
+        BranchedContinuedFraction(size_t not_used = 0) : ContinuedFractionDynamicDepth<Traits>(this->determine_depth()) {
         //BranchedContinuedFraction(size_t not_used = 0) : ContinuedFractionDynamicDepth<T,U>(1) {
 
             this->sub_depth = meme::DEPTH;
 
             for(size_t i = 0; i < this->get_frac_terms(); i++) {
-                T temp = T(this->sub_depth);
+                typename Traits::TType temp = typename Traits::TType(this->sub_depth);
                 this->set_terms(i, temp);
                 if(i == 0 )
                     this->set_params_per_term(this->get_terms(0).get_param_count());
@@ -44,12 +44,12 @@ class BranchedContinuedFraction : public ContinuedFractionDynamicDepth<T,U> {
 
         };
 
-        BranchedContinuedFraction(const BranchedContinuedFraction<T,U> &o) : ContinuedFractionDynamicDepth<T,U>(o) {
+        BranchedContinuedFraction(const BranchedContinuedFraction<Traits> &o) : ContinuedFractionDynamicDepth<Traits>(o) {
             
             this->sub_depth = o.sub_depth;
 
             for(size_t i = 0; i < this->get_frac_terms(); i++) {
-                T temp = T(this->terms[i]);
+                typename Traits::TType temp = typename Traits::TType(this->terms[i]);
                 this->set_terms(i, temp);
                 if(i == 0 )
                     this->set_params_per_term(this->get_terms(0).get_param_count());
@@ -76,7 +76,7 @@ class BranchedContinuedFraction : public ContinuedFractionDynamicDepth<T,U> {
             return count;
         };
 
-        void    mutate(MemeticModel<U>& pocket) override {
+        void    mutate(MemeticModel<typename Traits::UType>& pocket) override {
 
             return;
 
@@ -101,10 +101,10 @@ class BranchedContinuedFraction : public ContinuedFractionDynamicDepth<T,U> {
          * @param m1 first MemeticModel
          * @param m2 second MemeticModel
          */
-        void    recombine(MemeticModel<U>* model1, MemeticModel<U>* model2, int method_override = -1) override {
+        void    recombine(MemeticModel<typename Traits::UType>* model1, MemeticModel<typename Traits::UType>* model2, int method_override = -1) override {
 
-            BranchedContinuedFraction<T,U>* m1 = static_cast<BranchedContinuedFraction<T,U>*>(model1);
-            BranchedContinuedFraction<T,U>* m2 = static_cast<BranchedContinuedFraction<T,U>*>(model2);
+            BranchedContinuedFraction<Traits>* m1 = static_cast<BranchedContinuedFraction<Traits>*>(model1);
+            BranchedContinuedFraction<Traits>* m2 = static_cast<BranchedContinuedFraction<Traits>*>(model2);
 
             int method = RandInt::RANDINT->rand(0,2);
 
@@ -146,7 +146,7 @@ class BranchedContinuedFraction : public ContinuedFractionDynamicDepth<T,U> {
             return active_pos;
         }
 
-        bool operator== (ContinuedFraction<T,U>& o) {
+        bool operator== (ContinuedFraction<Traits>& o) {
 
             if( this->get_depth() != o.get_depth())
                 return false;
@@ -179,7 +179,7 @@ class BranchedContinuedFraction : public ContinuedFractionDynamicDepth<T,U> {
 
                 size_t new_terms = new_frac_terms-this->get_frac_terms();
                 for(size_t i = 0; i < new_terms; i++) {
-                    T new_term  = T(1);
+                    typename Traits::TType new_term  = typename Traits::TType(1);
                     new_term.randomise();
                     this->add_terms(new_term);
                 }

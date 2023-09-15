@@ -1,6 +1,6 @@
 
 /** @file
- * @author Andrew Ciezak <andy@impv.au>
+ * @author andy@impv.au
  * @version 1.0
  * @brief ContinuedFractionDynamicDepth is a ContinuedFraction that can dynamically change depth
  */
@@ -28,8 +28,11 @@ enum DynamicDepthType {
 /**
  * @brief The ContinuedFractionAdaptiveDepth class extends the ContinuedFraction class with adaptive depth logic
  */
-template<typename T, typename U>
-class ContinuedFractionDynamicDepth : public ContinuedFraction<T,U> {
+
+template <typename Traits>
+class ContinuedFractionDynamicDepth : public MemeticModel<typename Traits::UType>, 
+                          public Traits::template MPType<typename Traits::UType, 
+                          ContinuedFraction<Traits>> {
 
     public:
 
@@ -38,11 +41,12 @@ class ContinuedFractionDynamicDepth : public ContinuedFraction<T,U> {
          * however using a depth in the range [best_model_depth-1, best_model_depth+1] while ensuring 
          * depth is not negative (reset to 0 when attempted)
          */
-        ContinuedFractionDynamicDepth(size_t depth = ContinuedFractionDynamicDepth<T,U>::determine_depth()) : ContinuedFraction<T,U>( depth ) {};
+        //ContinuedFractionDynamicDepth(size_t depth = ContinuedFractionDynamicDepth<T,U,MP>::determine_depth()) : ContinuedFraction<T,U,MP>( depth ) {};
+        ContinuedFractionDynamicDepth(size_t depth = determine_depth()) : ContinuedFraction<Traits>( depth ) {};
 
         /** @brief Copy constructor */
-        ContinuedFractionDynamicDepth(const ContinuedFractionDynamicDepth<T,U> &o) :
-            ContinuedFraction<T,U>::ContinuedFraction<T,U>(o) {};
+        ContinuedFractionDynamicDepth(const ContinuedFractionDynamicDepth<Traits> &o) :
+            ContinuedFraction<Traits>::ContinuedFraction<Traits>(o) {};
 
         /** @brief Mutate operator 
          * Mutate as standard ContinuedFraction but if DynamicAdaptiveMutation is set, then re-determine depth
@@ -88,7 +92,7 @@ class ContinuedFractionDynamicDepth : public ContinuedFraction<T,U> {
         
 };
 
-template<typename T, typename U>
-DynamicDepthType ContinuedFractionDynamicDepth<T,U>::DYNAMIC_DEPTH_TYPE = DynamicNone;
+template <typename Traits>
+DynamicDepthType ContinuedFractionDynamicDepth<Traits>::DYNAMIC_DEPTH_TYPE = DynamicNone;
     
 #endif
