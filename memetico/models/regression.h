@@ -42,6 +42,7 @@ class Regression : public MemeticModel<T> {
         Regression(size_t param_count = 0) : MemeticModel<T>() { 
             for(size_t i = 0; i < param_count; i++)
                 elems.push_back( Element<T>() );
+            randomise();
         };
 
         /** @brief Construct with actives and vals */
@@ -164,7 +165,7 @@ class Regression : public MemeticModel<T> {
          * @return result of the Regressors evaluation at \a values
          */
         double  evaluate(vector<double> & values);  
-
+        
         /** 
          * @brief Randomise all parameter values between +[min, max] or -[max, min] or a specific parameter when \a pos is positive
          * @param min minimium value
