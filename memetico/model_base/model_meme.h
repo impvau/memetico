@@ -1,6 +1,6 @@
 
 /** @file
- * @author Andrew Ciezak <andy@impv.au>
+ * @author andy@impv.au
  * @version 1.0
  * @brief A class extending Model to represent a solution in a genetic or memetic algorithm
  */
@@ -95,8 +95,8 @@ class MemeticModel : public Model {
          * or we are using something like a coordinate representation for a parameter? We may 
          * need to extend here to a second template U but holding off for now.
          */
-        virtual double  get_value(size_t pos)               {return 0;};
-
+        virtual T       get_value(size_t pos)               {return 0;};
+        
         /**  
          * @brief determine the number of parameters used in the model
          * @return number of parameters with an active flag
@@ -153,7 +153,7 @@ class MemeticModel : public Model {
         static string   OBJECTIVE_NAME;
 
         /** @brief objective function to evaluate the solutions */
-        static double   (*OBJECTIVE)(MemeticModel<T>*, DataSet*, vector<size_t>&);
+        static double   (*OBJECTIVE)(MemeticModel<T>*, DataSet*, vector<size_t>&);      
 };
 
 template<typename T>
