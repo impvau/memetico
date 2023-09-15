@@ -1,7 +1,7 @@
 
 /**
  * @file
- * @author Andrew Ciezak <andy@impv.au>
+ * @author andy@impv.au
  * @version 1.0
  * @brief Implementation of objective functions
 */
@@ -227,6 +227,161 @@ double objective::cuda_error(MemeticModel<U>* model, DataSet* train, vector<size
     delete tn_frac;
     return ret;
 
+}
+
+template <class U>
+double objective::p_cor(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected) {
+
+    auto start = chrono::system_clock::now();
+
+    try {
+        size_t n = 0;
+        double mean_x = 0, mean_y = 0;
+        double m2_x = 0, m2_y = 0, crossproduct = 0;
+
+        auto calculateCorrelation = [&](size_t i) {
+            double x = model->evaluate(train->samples[i]);
+            double y = train->y[i];
+            n++;
+            double delta_x = x - mean_x;
+            double delta_y = y - mean_y;
+            mean_x += delta_x / n;
+            mean_y += delta_y / n;
+            m2_x += delta_x * (x - mean_x);
+            m2_y += delta_y * (y - mean_y);
+            crossproduct += delta_x * (y - mean_y);
+        };
+
+        if (selected.size() == 0) {
+            for(size_t i = 0; i < train->get_count(); i++) {
+                calculateCorrelation(i);
+            }
+        } else {
+            for (size_t i : selected) {
+                calculateCorrelation(i);
+            }
+        }  
+
+        double variance_x = m2_x / n;
+        double variance_y = m2_y / n;
+        
+        // Check for near-constant values
+        const double epsilon = 1e-8; // Small threshold for variance
+        if (variance_x < epsilon || variance_y < epsilon) {
+            // Set an indicative error for near-constant values
+            model->set_error(1);
+            model->set_penalty(1);
+            model->set_fitness(1);
+            return model->get_fitness();
+        }
+
+        double covariance = crossproduct / n;
+        double pearson_correlation = covariance / sqrt(variance_x * variance_y);
+
+        if (abs(pearson_correlation) > 1) {
+            return 1;
+        }
+
+        model->set_error(1 - abs(pearson_correlation));
+        model->set_penalty(1);
+        model->set_fitness(1 - abs(pearson_correlation));
+
+    } catch (exception& e) {
+        // Return impossible lack of correlation
+        model->set_error(1);
+        model->set_penalty(1);
+        model->set_fitness(1);
+    }
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double, milli> ms = end-start;
+
+    return model->get_fitness();
+}
+
+template <class U>
+double objective::s_cor(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected) {
+
+    auto start = chrono::system_clock::now();
+
+    vector<double> x_values;
+    vector<double> y_values;
+
+    // Populate x_values and y_values
+    if (selected.size() == 0) {
+        for(size_t i = 0; i < train->get_count(); i++) {
+            x_values.push_back(model->evaluate(train->samples[i]));
+            y_values.push_back(train->y[i]);
+        }
+    } else {
+        for (size_t i : selected) {
+            x_values.push_back(model->evaluate(train->samples[i]));
+            y_values.push_back(train->y[i]);
+        }
+    }
+
+    // Get ranks for x and y values
+    vector<double> x_ranks = s_rank(x_values);
+    vector<double> y_ranks = s_rank(y_values);
+
+    size_t n = x_ranks.size();
+    double mean_x = 0, mean_y = 0;
+    double m2_x = 0, m2_y = 0, crossproduct = 0;
+
+    for (size_t i = 0; i < n; ++i) {
+        double x = x_ranks[i];
+        double y = y_ranks[i];
+        double delta_x = x - mean_x;
+        double delta_y = y - mean_y;
+        mean_x += delta_x / (i + 1);
+        mean_y += delta_y / (i + 1);
+        m2_x += delta_x * (x - mean_x);
+        m2_y += delta_y * (y - mean_y);
+        crossproduct += delta_x * (y - mean_y);
+    }
+
+    double variance_x = m2_x / n;
+    double variance_y = m2_y / n;
+
+    // Check for near-constant ranks
+    const double epsilon = 1e-8;  // Small threshold for variance
+    if (variance_x < epsilon || variance_y < epsilon) {
+        model->set_error(1);
+        model->set_penalty(1);
+        model->set_fitness(1);
+        return model->get_fitness();
+    }
+
+    double covariance = crossproduct / n;
+    double spearman_correlation = covariance / sqrt(variance_x * variance_y);
+
+    if (abs(spearman_correlation) > 1) {
+        return 1;
+    }
+
+    model->set_error(1 - abs(spearman_correlation));
+    model->set_penalty(1);
+    model->set_fitness(1 - abs(spearman_correlation));
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double, milli> ms = end-start;
+
+    return model->get_fitness();
+}
+
+// Helper function to compute ranks
+vector<double> objective::s_rank(vector<double>& data) {
+    vector<size_t> indices(data.size());
+    iota(indices.begin(), indices.end(), 0);
+
+    sort(indices.begin(), indices.end(), [&data](size_t a, size_t b) { return data[a] < data[b]; });
+
+    vector<double> ranks(data.size());
+    for (size_t i = 0; i < data.size(); i++) {
+        ranks[indices[i]] = i + 1;
+    }
+
+    return ranks;
 }
 
 /**

@@ -1,7 +1,7 @@
 
 /**
  * @file
- * @author Andrew Ciezak <andy@impv.au>
+ * @author andy@impv.au
  * @version 1.0
  * @brief Collection of objective functions
 */
@@ -37,6 +37,14 @@ double nmse(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected = v
 
 template <class U>
 double compare(MemeticModel<U>* m1, MemeticModel<U>* m2, DataSet* train);
+
+template <class U>
+double p_cor(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected = vector<size_t>());
+
+template <class U>
+double s_cor(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected = vector<size_t>());
+
+vector<double> s_rank(vector<double>& data);
 
 }
 
