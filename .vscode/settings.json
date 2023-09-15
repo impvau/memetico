@@ -92,7 +92,10 @@
         "__nullptr": "cpp",
         "stack": "cpp",
         "__functional_03": "cpp",
-        "__string": "cpp"
+        "__string": "cpp",
+        "__locale": "cpp",
+        "target": "cpp",
+        "__config": "cpp"
     },
     "testMate.cpp.test.executables": "filename.exe"
 }
