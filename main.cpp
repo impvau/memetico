@@ -20,6 +20,7 @@
 #include <memetico/models/cont_frac_dd.h>
 #include <memetico/models/branch_cont_frac_dd.h>
 #include <memetico/population/pop.h>
+#include <memetico/global_types.h>
 
 // Std
 #include <cstdlib>
@@ -43,14 +44,6 @@ size_t          meme::GEN = 0;
 long int        meme::MAX_TIME = 10*60;
 long int        meme::RUN_TIME = 0;
 
-// Also defined in args.h
-typedef double DataType;
-typedef Regression<DataType> TermType;
-typedef ContinuedFractionDynamicDepth<TermType,DataType> ModelType;
-
-//typedef ContinuedFraction<Regression<DataType>,DataType> TermType;
-//typedef BranchedContinuedFraction<TermType,DataType> ModelType;
-
 size_t          meme::DEPTH = 4;
 size_t          meme::POCKET_DEPTH = 1;
 size_t          meme::DIVERSITY_COUNT = 3;
@@ -60,7 +53,6 @@ string          meme::TRAIN_FILE = "sinx.csv";
 string          meme::TEST_FILE = "sinx.csv";
 string          meme::LOG_DIR = "out/";
 ofstream        meme::master_log;
-
 
 // Technical Globals
 size_t          meme::PREC = 18;
