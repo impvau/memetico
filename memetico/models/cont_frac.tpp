@@ -16,6 +16,8 @@ ContinuedFraction<Traits>::ContinuedFraction(size_t frac_depth) : MemeticModel<t
     for(size_t i = 0; i < get_frac_terms(); i++)
         terms.push_back(typename Traits::TType(params_per_term));
     
+    Traits::template MPType<typename Traits::UType, ContinuedFraction<Traits>>::initialise();
+    
     sanitise();
 
 }
