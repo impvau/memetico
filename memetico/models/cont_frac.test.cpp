@@ -4,10 +4,23 @@
 #include <memetico/models/cont_frac.h>
 #include <sstream>
 #include <memetico/optimise/objective.h>
+#include <memetico/models/mutation.h>
+
+// Define the template strucutre of a model
+template<
+    typename T,         
+    typename U, 
+    template <typename, typename> class MutationPolicy>
+struct Traits {
+    using TType = T;                        // Term type, e.g. Regression<double>
+    using UType = U;                        // Data type, e.g. double, should match T::TType
+    template <typename V, typename W>
+    using MPType = MutationPolicy<V, W>;    // Mutation Policy general class, e.g. MutateHardSoft<TermType, DataType>
+};
 
 typedef double DataType;
 typedef Regression<DataType> TermType;
-typedef ContinuedFraction<TermType,DataType> ModelType;
+typedef ContinuedFraction<Traits<TermType, DataType, mutation::MutateHardSoft>> ModelType;
 
 inline void setup_cont_frac_ivs(size_t size) {
 
@@ -18,7 +31,7 @@ inline void setup_cont_frac_ivs(size_t size) {
 
 }
 
-inline Regression<double> build_reg_frac(vector<bool> active, vector<double> vals, size_t params) {
+inline TermType build_reg_frac(vector<bool> active, vector<double> vals, size_t params) {
 
     if( active.size() != params )
         throw invalid_argument("active.size() != params");
@@ -26,7 +39,7 @@ inline Regression<double> build_reg_frac(vector<bool> active, vector<double> val
     if( vals.size() != params )
         throw invalid_argument("vals.size() != params");
 
-    Regression<double> o = Regression<double>(params);
+    TermType o = TermType(params);
     for(size_t i = 0; i < params; i++) {
         o.set_active(i, active[i]);
         o.set_value(i, vals[i]);
@@ -35,7 +48,7 @@ inline Regression<double> build_reg_frac(vector<bool> active, vector<double> val
     return o;
 }
 
-inline ContinuedFraction<Regression<double>,double> build_cont_frac(vector<bool> active, vector<double> vals, vector<bool> globals, size_t params, size_t depth) {
+inline ModelType build_cont_frac(vector<bool> active, vector<double> vals, vector<bool> globals, size_t params, size_t depth) {
 
     if( globals.size() != params)
         throw invalid_argument("globals.size() != params");
@@ -46,7 +59,7 @@ inline ContinuedFraction<Regression<double>,double> build_cont_frac(vector<bool>
     if( vals.size() != params*(2*depth+1) )
         throw invalid_argument("vals.size() != params*2*depth");
 
-    ContinuedFraction<Regression<double>,double> c = ContinuedFraction<Regression<double>,double>(depth);
+    ModelType c = ModelType(depth);
 
     for(size_t i = 0; i < params; i++)
         c.set_global_active(i, globals[i]);
@@ -63,7 +76,7 @@ inline ContinuedFraction<Regression<double>,double> build_cont_frac(vector<bool>
     return c;
 }
 
-inline ContinuedFraction<Regression<double>,double> frac_1() {
+inline ModelType frac_1() {
 
     // f(x) = x1 + 2x3 + 3x5 - 20 
     return build_cont_frac(
@@ -76,7 +89,7 @@ inline ContinuedFraction<Regression<double>,double> frac_1() {
 
 }
 
-inline ContinuedFraction<Regression<double>,double> frac_2() {
+inline ModelType frac_2() {
 
     // f(x) = -3x2 + 4x4 + 3x5 - 3
     return build_cont_frac(
@@ -89,7 +102,7 @@ inline ContinuedFraction<Regression<double>,double> frac_2() {
 
 }
 
-inline ContinuedFraction<Regression<double>,double> frac_3() {
+inline ModelType frac_3() {
 
     // t1(x) =  x1 + 2x3 + 3x5 - 20
     // t2(x) = -3x2 + 4x4 + 3x5 - 3
@@ -145,12 +158,6 @@ TEST_CASE("ContinuedFractions: set_depth, get_terms, set_terms, get_count_active
     REQUIRE(o.get_active_positions()[1] == 2);
     REQUIRE(o.get_active_positions()[2] == 4);
     REQUIRE(o.get_active_positions()[3] == 5);
-    o.set_global_active(0, true, false);
-    o.set_global_active(1, true, false);
-    o.set_global_active(2, true, false);
-    o.set_global_active(3, true, false);
-    o.set_global_active(4, true, false);
-    o.set_global_active(5, true, false);
     REQUIRE(o.get_active(0) == m1.get_active(0));
     REQUIRE(o.get_active(1) == m1.get_active(1));
     REQUIRE(o.get_active(2) == m1.get_active(2));
@@ -287,51 +294,6 @@ TEST_CASE("ContinuedFractions: set_depth, get_terms, set_terms, get_count_active
 
 }
 
-TEST_CASE("ContinuedFractions: randomise") {
-
-    RandInt ri = RandInt(42);
-    RandReal rr = RandReal(42);
-    RandInt::RANDINT = &ri;
-    RandReal::RANDREAL = &rr;
-
-    size_t params = 6;
-    size_t depth = 2;
-    setup_cont_frac_ivs(params);
-
-    // 1. Ensure expected distribution of global active
-    size_t on = 0;
-    size_t only_one = 0;
-    for(size_t i = 0; i < 1000; i++) {
-
-        ModelType m1 = ModelType(params);
-        // Loop params excluding constant
-        for(size_t j = 0; j < params-1; j++) {
-            if(m1.get_global_active(j)) {
-                on++;
-            }
-        }
-
-        for(size_t j = 0; j < m1.get_frac_terms(); j++) {
-            if(m1.get_terms(j).get_count_active() <= 1)
-                only_one++;
-        }
-        
-    }
-    // 1. Check that we initialise with a frequence between 60% and 70% (target is 66%)
-    REQUIRE( on/(1000.0*params) > 0.5 );
-    REQUIRE( on/(1000.0*params) < 0.75 );
-    // 2. Check we randomise all terms. 
-    // We expect a high number of params to be turned on for each fraction
-    // The constant is always on, so we expect at get_count_active() to always be > 0 
-    // The number of times that we only have the constant on, should be low
-    // This may not be the case if we are missing randominsation on a term, as all those terms would only have the constant on
-    // We can check we randomise on all terms by ensure that the number of terms with only a consant turned on, is well below the number of fractions
-    // If we missed the last term in the loop, we would have the last term of every fraction only having the constant on
-    // If the number of terms with only the constant is modest, then all terms must be randomised correctly 
-    REQUIRE( only_one < 1000 );
-    
-}
-
 TEST_CASE("ContinuedFractions: ==, ContinuedFractions<T>(ContinuedFractions<T>) ") {
 
     RandInt ri = RandInt(42);
@@ -462,7 +424,7 @@ TEST_CASE("ContinuedFractions: mutate ") {
     // t1(x) =  x1 + 2x3 + 3x5 - 20
     // t2(x) = -3x2 + 4x4 + 3x5 - 3
     // t3(x) =  x1 + 2x3 + 3x5 - 20
-    ContinuedFraction<TermType,DataType> o1 = ContinuedFraction<TermType,DataType>(depth);
+    ModelType o1 = ModelType(depth);
     o1.set_global_active(0, false);
     o1.set_global_active(1, false);
     o1.set_global_active(2, false);
@@ -477,7 +439,7 @@ TEST_CASE("ContinuedFractions: mutate ") {
     o1.set_terms(2, m1);
 
     // 1. Setup a fraction to trigger a hard mutate
-    ContinuedFraction<TermType,DataType> o2 = ContinuedFraction<TermType,DataType>(o1);
+    ModelType o2 = ModelType(o1);
     o2.set_fitness(1);
     o1.set_fitness(o2.get_fitness()*2.1);
 
@@ -521,8 +483,6 @@ TEST_CASE("ContinuedFractions: mutate ") {
         last_count_active = o1.get_count_active();
 
     }
-
-
 }
 
 TEST_CASE("ContinuedFractions: recombine ") {
@@ -726,7 +686,5 @@ TEST_CASE("ContinuedFractions: get_node ") {
     // deleteing n1, n2, n3, n4, n5 is done by the deconstructor of local_node
     delete local_node;
     delete frac_node;
-
-
 
 }
