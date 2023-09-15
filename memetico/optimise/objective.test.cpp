@@ -6,9 +6,24 @@
 #include <memetico/optimise/objective.h>
 #include <string>
 #include <ostream>
+#include <memetico/models/mutation.h>
+
+// Define the template strucutre of a model
+template<
+    typename T,         
+    typename U, 
+    template <typename, typename> class MutationPolicy>
+struct Traits {
+    using TType = T;                        // Term type, e.g. Regression<double>
+    using UType = U;                        // Data type, e.g. double, should match T::TType
+    template <typename V, typename W>
+    using MPType = MutationPolicy<V, W>;    // Mutation Policy general class, e.g. MutateHardSoft<TermType, DataType>
+};
 
 typedef double DataType;
-typedef ContinuedFraction<Regression<DataType>,DataType> AgentModel;
+typedef Regression<DataType> TermType;
+typedef ContinuedFraction<Traits<TermType, DataType, mutation::MutateHardSoft>> ModelType;
+
 
 inline void init(string filename) {
 
@@ -58,12 +73,12 @@ inline void init(string filename) {
 
 }
 
-inline AgentModel small_frac() {
+inline ModelType small_frac() {
 
     // f(x) = x1 - 20 
     size_t params = 2;
     size_t depth = 0;
-    AgentModel o  = AgentModel(depth);
+    ModelType o  = ModelType(depth);
     Regression<double> m1 = Regression<double>(params);
     o.set_global_active(0, true);
     o.set_global_active(1, true);
@@ -92,20 +107,22 @@ TEST_CASE("Objective: mse on CPU") {
     DataSet ds = DataSet(fn);
     ds.load();
 
-    AgentModel f1 = small_frac();
+    ModelType f1 = small_frac();
 
-    AgentModel::IVS.clear();
+    ModelType::IVS.clear();
     for(size_t i = 0; i < DataSet::IVS.size(); i++)
-        AgentModel::IVS.push_back(DataSet::IVS[i]);
+        ModelType::IVS.push_back(DataSet::IVS[i]);
 
     vector<size_t> all;
     double res = objective::mse<DataType>(&f1, &ds, all);
     REQUIRE( (res-6845.240365625) < 0.0000001 );
 }
 
+
+/*
 TEST_CASE("Objective: mse on GPU") {
 
-    /*
+    
     RandInt ri = RandInt(42);
     RandReal rr = RandReal(42);
     RandInt::RANDINT = &ri;
@@ -127,5 +144,6 @@ TEST_CASE("Objective: mse on GPU") {
     vector<size_t> all;
     double res = objective::mse<AgentModel>(&f1, &ds, all);
     REQUIRE( (res-6845.240365625) < 0.0000001 );
-    */
+    
 }
+*/

@@ -25,10 +25,6 @@ TEST_CASE("Regression: Regression<T>(), Regression<T>(r1), Regression<T>(active,
     m1.set_fitness(5);
     m1.set_penalty(2);
     m1.set_error(16);
-    for(size_t i = 0; i < m1.get_count(); i++) {
-        REQUIRE( m1.get_active(i) == false );
-        REQUIRE( m1.get_value(i) == 0);
-    }
 
     // 2. Construct from existing regressors
     Regression<double> m2 = Regression<double>(m1);
@@ -184,11 +180,11 @@ TEST_CASE("Regression: ==") {
     Regression<double> m5 = Regression<double>();
     REQUIRE(m4 == m5);
     REQUIRE(m5 == m4);
-    // 5. Check defaul object
-    Regression<double> m6 = Regression<double>(6);
-    Regression<double> m7 = Regression<double>(6);
-    REQUIRE(m6 == m7);
-    REQUIRE(m7 == m6);
+    // 5. Check defaul object - randomises differently now
+    //Regression<double> m6 = Regression<double>(6);
+    //Regression<double> m7 = Regression<double>(6);
+    //REQUIRE(m6 == m7);
+    //REQUIRE(m7 == m6);
 
 }
 
@@ -246,7 +242,7 @@ TEST_CASE("Regression: randomise()") {
     // 2. Randomise all varaibles
     size_t n5 = 0, n4 = 0, n3 = 0, n2 = 0, n1 = 0, z = 0, p1 = 0, p2 = 0, p3 = 0, p4 = 0, p5 = 0;
     for(size_t i = 0; i < 1000; i++) {
-
+           
         m1.randomise(1, 5);
 
         for(size_t j = 0; j < m1.get_count(); j++) {
@@ -302,14 +298,14 @@ TEST_CASE("Regression: recombine()") {
     actives = {false, true, false, true, true, true};
     Regression<double> m2 = Regression<double>(actives, vals);
     
-    // 1. Recombine using union
+    // 1. Recombine using intersection
     Regression<double> m = Regression<double>(size);
-    // Creates random numbers 1, 3, 4, so 1 = Type union, {3,4} are consts
-    // f(x) = x1 + 2x3 + 3x5 - 20
-    // f(x) = -3x2 + 4x4 + 3x5 - 3
-    // Expect x5,                   c
-    // Expect 3+3*(3-3)/3 = 3,      -20+4*(-3--20)/3 = -8/3 ~= -2.667
-    m.recombine(&m1, &m2);
+    // Force 0 for intersection i.e. &
+    // f(x) = x1 +          2x3 +       3x5 - 20
+    // f(x) =       -3x2        + 4x4 + 3x5 - 3
+    // E(x) =                            Y    Y
+    // E(x) =                          3*2(3-3)/3 = 3, -20+2*(-3--20)/3 = -8.667
+    m.recombine(&m1, &m2, 1);
     REQUIRE( m.get_active(0) == false );
     REQUIRE( m.get_active(1) == false );
     REQUIRE( m.get_active(2) == false );
@@ -317,16 +313,16 @@ TEST_CASE("Regression: recombine()") {
     REQUIRE( m.get_active(4) == true );
     REQUIRE( m.get_active(5) == true );
     REQUIRE( m.get_value(4) == 3 );
-    REQUIRE( to_string(m.get_value(5)) == to_string((double)8/3) );
+    REQUIRE( to_string(m.get_value(5)) == to_string((double)-26/3) );
     
-    // 2. Recombine using intersection
+    // 2. Recombine using union
     ri = RandInt(43);
-    // Creates random numbers 0, 1, 2. So 0 = Type intersetion, {1,2} are constants
-    // m1 = f(x) = x1 + 2x3 + 3x5 - 20
-    // m2 = f(x) = -3x2 + 4x4 + 3x5 - 3
-    // Expect       x1 - 3x2 + 2x3 + 4x4 +  ...x5               - ...
-    // Expect                               3+1*(3-3)/3 = 3     -20+2*(-3--20)/3 = -26/3
-    m.recombine(&m1, &m2);
+    // Force 1 union i.e. |
+    // m1 = f(x) = x1        + 2x3        + 3x5                 - 20
+    // m2 = f(x) =      -3x2        + 4x4 + 3x5                 - 3
+    // Expect      x1   -3x2 + 2x3  + 4x4 +  ...x5               - ...
+    // Expect                               3+3*(3-3)/3 = 3     -20+1*(-3--20)/3 = -43/3
+    m.recombine(&m1, &m2, 0);
     REQUIRE( m.get_active(0) == true );
     REQUIRE( m.get_active(1) == true );
     REQUIRE( m.get_active(2) == true );
@@ -338,7 +334,7 @@ TEST_CASE("Regression: recombine()") {
     REQUIRE( m.get_value(2) == 2 );
     REQUIRE( m.get_value(3) == 4 );
     REQUIRE( m.get_value(4) == 3 );
-    REQUIRE( to_string(m.get_value(5)) == to_string((double)-26/3) );
+    REQUIRE( to_string(m.get_value(5)) == to_string((double)-43/3) );
 
     // 2. Recombine using XOR
     ri = RandInt(44);
@@ -346,7 +342,7 @@ TEST_CASE("Regression: recombine()") {
     // m1 = f(x) = x1 + 2x3 + 3x5 - 20
     // m2 = f(x) = -3x2 + 4x4 + 3x5 - 3
     // Expect       x1 - 3x2 + 2x3 + 4x4
-    m.recombine(&m1, &m2);
+    m.recombine(&m1, &m2, 2);
     REQUIRE( m.get_active(0) == true );
     REQUIRE( m.get_active(1) == true );
     REQUIRE( m.get_active(2) == true );

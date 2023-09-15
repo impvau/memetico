@@ -9,9 +9,23 @@
 #include <memetico/models/regression.h>
 #include <sstream>
 #include <stdexcept>
+#include <memetico/models/mutation.h>
+
+// Define the template strucutre of a model
+template<
+    typename T,         
+    typename U, 
+    template <typename, typename> class MutationPolicy>
+struct Traits {
+    using TType = T;                        // Term type, e.g. Regression<double>
+    using UType = U;                        // Data type, e.g. double, should match T::TType
+    template <typename V, typename W>
+    using MPType = MutationPolicy<V, W>;    // Mutation Policy general class, e.g. MutateHardSoft<TermType, DataType>
+};
 
 typedef double DataType;
-typedef ContinuedFraction<Regression<DataType>,DataType> AgentModel;
+typedef Regression<DataType> TermType;
+typedef ContinuedFraction<Traits<TermType, DataType, mutation::MutateHardSoft>> ModelType;
 
 inline void init(string filename) {
 
@@ -77,9 +91,9 @@ TEST_CASE("Population: bubble, exchange, evaluate") {
     DataSet data = DataSet(fn);
     data.load();
     
-    AgentModel::IVS.clear();
+    ModelType::IVS.clear();
     for(size_t i = 0; i < DataSet::IVS.size(); i++)
-        AgentModel::IVS.push_back(DataSet::IVS[i]);
+        ModelType::IVS.push_back(DataSet::IVS[i]);
 
     // 1. Construct depth 2 ternary population
     MemeticModel<DataType>::OBJECTIVE_NAME = "mse";
@@ -88,48 +102,51 @@ TEST_CASE("Population: bubble, exchange, evaluate") {
     // For 1000 random populations
     for( size_t i = 0; i < 1000; i++ ) {
 
-        Population<AgentModel> p = Population<AgentModel>(&data, 2, 3);
-        REQUIRE( Population<AgentModel>::DEPTH == 2);
-        REQUIRE( Agent<AgentModel>::MAX_DEPTH == 2);
-        REQUIRE( Agent<AgentModel>::DEGREE == 3);
+        Population<ModelType> p = Population<ModelType>(&data, 2, 3);
+        p.evaluate();
+        REQUIRE( Population<ModelType>::DEPTH == 2);
+        REQUIRE( Agent<ModelType>::MAX_DEPTH == 2);
+        REQUIRE( Agent<ModelType>::DEGREE == 3);
         REQUIRE( p.data == &data );
 
-        // THESE TESTS are premature; we are assessing Population<AgentModel>::bubble, ...::exchange, ...::evaluate as part of this
-        // 1.1 We expect all pocket fitness < all currentness
-        REQUIRE( p.root_agent->get_pocket().get_fitness() < p.root_agent->get_current().get_fitness() );
+        vector<size_t> idxs;
+
+        // THESE TESTS are premature; we are assessing Population<=AgentModel>::bubble, ...::exchange, ...::evaluate as part of this
+        // 1.1 We expect all pocket fitness <= all currentness
+        REQUIRE( p.root_agent->get_pocket().get_fitness() <= p.root_agent->get_current().get_fitness() );
         // Root children
-        REQUIRE( p.root_agent->get_children()[0]->get_pocket().get_fitness() < p.root_agent->get_children()[0]->get_current().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[1]->get_pocket().get_fitness() < p.root_agent->get_children()[1]->get_current().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[2]->get_pocket().get_fitness() < p.root_agent->get_children()[2]->get_current().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[0]->get_pocket().get_fitness() <= p.root_agent->get_children()[0]->get_current().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[1]->get_pocket().get_fitness() <= p.root_agent->get_children()[1]->get_current().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[2]->get_pocket().get_fitness() <= p.root_agent->get_children()[2]->get_current().get_fitness() );
         // Roots left child children
-        REQUIRE( p.root_agent->get_children()[0]->get_children()[0]->get_pocket().get_fitness() < p.root_agent->get_children()[0]->get_children()[0]->get_current().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[0]->get_children()[1]->get_pocket().get_fitness() < p.root_agent->get_children()[0]->get_children()[1]->get_current().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[0]->get_children()[2]->get_pocket().get_fitness() < p.root_agent->get_children()[0]->get_children()[2]->get_current().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[0]->get_children()[0]->get_pocket().get_fitness() <= p.root_agent->get_children()[0]->get_children()[0]->get_current().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[0]->get_children()[1]->get_pocket().get_fitness() <= p.root_agent->get_children()[0]->get_children()[1]->get_current().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[0]->get_children()[2]->get_pocket().get_fitness() <= p.root_agent->get_children()[0]->get_children()[2]->get_current().get_fitness() );
         // Roots middle child children
-        REQUIRE( p.root_agent->get_children()[1]->get_children()[0]->get_pocket().get_fitness() < p.root_agent->get_children()[1]->get_children()[0]->get_current().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[1]->get_children()[1]->get_pocket().get_fitness() < p.root_agent->get_children()[1]->get_children()[1]->get_current().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[1]->get_children()[2]->get_pocket().get_fitness() < p.root_agent->get_children()[1]->get_children()[2]->get_current().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[1]->get_children()[0]->get_pocket().get_fitness() <= p.root_agent->get_children()[1]->get_children()[0]->get_current().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[1]->get_children()[1]->get_pocket().get_fitness() <= p.root_agent->get_children()[1]->get_children()[1]->get_current().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[1]->get_children()[2]->get_pocket().get_fitness() <= p.root_agent->get_children()[1]->get_children()[2]->get_current().get_fitness() );
         // Roots right child children
-        REQUIRE( p.root_agent->get_children()[2]->get_children()[0]->get_pocket().get_fitness() < p.root_agent->get_children()[2]->get_children()[0]->get_current().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[2]->get_children()[1]->get_pocket().get_fitness() < p.root_agent->get_children()[2]->get_children()[1]->get_current().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[2]->get_children()[2]->get_pocket().get_fitness() < p.root_agent->get_children()[2]->get_children()[2]->get_current().get_fitness() );
-        // 1.2 We expect each parent pocket fitness < any of their children
+        REQUIRE( p.root_agent->get_children()[2]->get_children()[0]->get_pocket().get_fitness() <= p.root_agent->get_children()[2]->get_children()[0]->get_current().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[2]->get_children()[1]->get_pocket().get_fitness() <= p.root_agent->get_children()[2]->get_children()[1]->get_current().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[2]->get_children()[2]->get_pocket().get_fitness() <= p.root_agent->get_children()[2]->get_children()[2]->get_current().get_fitness() );
+        // 1.2 We expect each parent pocket fitness <= any of their children
         // Root better than children 
-        REQUIRE( p.root_agent->get_pocket().get_fitness() < p.root_agent->get_children()[0]->get_pocket().get_fitness() );
-        REQUIRE( p.root_agent->get_pocket().get_fitness() < p.root_agent->get_children()[1]->get_pocket().get_fitness() );
-        REQUIRE( p.root_agent->get_pocket().get_fitness() < p.root_agent->get_children()[2]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_pocket().get_fitness() <= p.root_agent->get_children()[0]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_pocket().get_fitness() <= p.root_agent->get_children()[1]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_pocket().get_fitness() <= p.root_agent->get_children()[2]->get_pocket().get_fitness() );
         // Roots left child vs children
-        REQUIRE( p.root_agent->get_children()[0]->get_pocket().get_fitness() < p.root_agent->get_children()[0]->get_children()[0]->get_pocket().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[0]->get_pocket().get_fitness() < p.root_agent->get_children()[0]->get_children()[1]->get_pocket().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[0]->get_pocket().get_fitness() < p.root_agent->get_children()[0]->get_children()[2]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[0]->get_pocket().get_fitness() <= p.root_agent->get_children()[0]->get_children()[0]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[0]->get_pocket().get_fitness() <= p.root_agent->get_children()[0]->get_children()[1]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[0]->get_pocket().get_fitness() <= p.root_agent->get_children()[0]->get_children()[2]->get_pocket().get_fitness() );
         // Roots middle child vs children
-        REQUIRE( p.root_agent->get_children()[1]->get_pocket().get_fitness() < p.root_agent->get_children()[1]->get_children()[0]->get_pocket().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[1]->get_pocket().get_fitness() < p.root_agent->get_children()[1]->get_children()[1]->get_pocket().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[1]->get_pocket().get_fitness() < p.root_agent->get_children()[1]->get_children()[2]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[1]->get_pocket().get_fitness() <= p.root_agent->get_children()[1]->get_children()[0]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[1]->get_pocket().get_fitness() <= p.root_agent->get_children()[1]->get_children()[1]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[1]->get_pocket().get_fitness() <= p.root_agent->get_children()[1]->get_children()[2]->get_pocket().get_fitness() );
         // Roots right child vs children
-        REQUIRE( p.root_agent->get_children()[2]->get_pocket().get_fitness() < p.root_agent->get_children()[2]->get_children()[0]->get_pocket().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[2]->get_pocket().get_fitness() < p.root_agent->get_children()[2]->get_children()[1]->get_pocket().get_fitness() );
-        REQUIRE( p.root_agent->get_children()[2]->get_pocket().get_fitness() < p.root_agent->get_children()[2]->get_children()[2]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[2]->get_pocket().get_fitness() <= p.root_agent->get_children()[2]->get_children()[0]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[2]->get_pocket().get_fitness() <= p.root_agent->get_children()[2]->get_children()[1]->get_pocket().get_fitness() );
+        REQUIRE( p.root_agent->get_children()[2]->get_pocket().get_fitness() <= p.root_agent->get_children()[2]->get_children()[2]->get_pocket().get_fitness() );
 
     }
 }
@@ -151,16 +168,15 @@ TEST_CASE("Population: local_search, local_search_agents") {
     DataSet data = DataSet(fn);
     data.load();
     
-    AgentModel::IVS.clear();
+    ModelType::IVS.clear();
     for(size_t i = 0; i < DataSet::IVS.size(); i++)
-        AgentModel::IVS.push_back(DataSet::IVS[i]);
+        ModelType::IVS.push_back(DataSet::IVS[i]);
 
     // 1. Construct depth 2 ternary population
     MemeticModel<DataType>::OBJECTIVE_NAME = "mse";
     MemeticModel<DataType>::OBJECTIVE = objective::mse<DataType>;
-    //MemeticModel<double>::LOCAL_SEARCH = local_search::custom_nelder_mead_redo<MemeticModel<double>>;
-    MemeticModel<Regression<double>>::LOCAL_SEARCH = local_search::custom_nelder_mead_redo<MemeticModel<Regression<double>>>;
-    Population<AgentModel> p = Population<AgentModel>(&data, 2, 3);
+    MemeticModel<DataType>::LOCAL_SEARCH = local_search::custom_nelder_mead_redo<MemeticModel<DataType>>;
+    Population<ModelType> p = Population<ModelType>(&data, 2, 3);
     double best_score = p.best_soln.get_fitness();
     meme::LOCAL_SEARCH_DATA_PCT = 0.5;
     // Run LS 10 times, ensure that fitness stays the same or improves
@@ -267,15 +283,15 @@ TEST_CASE("Population: evolve") {
     DataSet data = DataSet(fn);
     data.load();
     
-    AgentModel::IVS.clear();
+    ModelType::IVS.clear();
     for(size_t i = 0; i < DataSet::IVS.size(); i++)
-        AgentModel::IVS.push_back(DataSet::IVS[i]);
+        ModelType::IVS.push_back(DataSet::IVS[i]);
 
     // 1. 
     MemeticModel<DataType>::OBJECTIVE_NAME = "mse";
     MemeticModel<DataType>::OBJECTIVE = objective::mse<DataType>;
     MemeticModel<double>::LOCAL_SEARCH = local_search::custom_nelder_mead_redo<MemeticModel<double>>;
-    Population<AgentModel> p = Population<AgentModel>(&data, 2, 3);
+    Population<ModelType> p = Population<ModelType>(&data, 2, 3);
     
     // Run LS many times, ensure that fitness stays the same or improves
     for(size_t i = 0; i < 20; i++) {

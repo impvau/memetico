@@ -6,10 +6,23 @@
 #include <sstream>
 #include <memetico/optimise/objective.h>
 #include <vector>
+#include <memetico/models/mutation.h>
+
+// Define the template strucutre of a model
+template<
+    typename T,         
+    typename U, 
+    template <typename, typename> class MutationPolicy>
+struct Traits {
+    using TType = T;                        // Term type, e.g. Regression<double>
+    using UType = U;                        // Data type, e.g. double, should match T::TType
+    template <typename V, typename W>
+    using MPType = MutationPolicy<V, W>;    // Mutation Policy general class, e.g. MutateHardSoft<TermType, DataType>
+};
 
 typedef double DataType;
-typedef ContinuedFraction<Regression<DataType>,DataType> TermType;
-typedef BranchedContinuedFraction<TermType,DataType> ModelType;
+typedef ContinuedFraction<Traits<Regression<DataType>, DataType, mutation::MutateHardSoft>> TermType;
+typedef BranchedContinuedFraction<Traits<Regression<DataType>, DataType, mutation::MutateHardSoft>> ModelType;
 
 inline void setup_cont_frac_ivs(size_t size) {
 

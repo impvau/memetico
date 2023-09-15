@@ -28,7 +28,7 @@ typedef Regression<DataType> TermType;      // Model terms are Regression<double
 // - The fifth defines the local search strategy employed
 // - The sixth defines the objective strategy employed
 
-typedef ContinuedFraction<ContinuedFractionTraits<TermType, DataType, mutation::MutateUniqueMask>> ModelType;
+typedef ContinuedFraction<ContinuedFractionTraits<TermType, DataType, mutation::MutateHardSoft>> ModelType;
 //typedef ContinuedFractionDynamicDepth<ContinuedFractionTraits<TermType, DataType, mutation::MutateUniqueMask>> ModelType;
 //typedef BranchedContinuedFraction<ContinuedFractionTraits<TermType, DataType, mutation::MutateUniqueMask>> ModelType;
 

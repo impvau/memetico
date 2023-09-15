@@ -6,15 +6,39 @@
 #include <memetico/models/regression.h>
 #include <sstream>
 #include <stdexcept>
+#include <memetico/models/mutation.h>
 
-typedef ContinuedFraction<Regression<double>,double> AgentModel;
+// Define the template strucutre of a model
+template<
+    typename T,         
+    typename U, 
+    template <typename, typename> class MutationPolicy>
+struct Traits {
+    using TType = T;                        // Term type, e.g. Regression<double>
+    using UType = U;                        // Data type, e.g. double, should match T::TType
+    template <typename V, typename W>
+    using MPType = MutationPolicy<V, W>;    // Mutation Policy general class, e.g. MutateHardSoft<TermType, DataType>
+};
 
-inline AgentModel frac_1() {
+typedef double DataType;
+typedef Regression<DataType> TermType;
+typedef ContinuedFraction<Traits<TermType, DataType, mutation::MutateHardSoft>> ModelType;
+
+inline void setup_cont_frac_ivs(size_t size) {
+
+    // Setup IVs in Regression
+    MemeticModel<DataType>::IVS.clear();
+    for(size_t i = 0; i < size-1; i++)
+        MemeticModel<DataType>::IVS.push_back("x"+to_string(i+1));
+
+}
+
+inline ModelType frac_1() {
 
     // f(x) = x1 + 2x3 + 3x5 - 20 
     size_t params = 6;
     size_t depth = 0;
-    AgentModel o  = AgentModel(depth);
+    ModelType o  = ModelType(depth);
     Regression<double> m1 = Regression<double>(params);
     o.set_global_active(0, true);
     o.set_global_active(1, false);
@@ -44,12 +68,12 @@ inline AgentModel frac_1() {
     return o;
 }
 
-inline AgentModel frac_2() {
+inline ModelType frac_2() {
 
     // f(x) = -3x2 + 4x4 + 3x5 - 3
     size_t params = 6;
     size_t depth = 0;
-    AgentModel o = AgentModel(depth);
+    ModelType o = ModelType(depth);
     Regression<double> m2 = Regression<double>(params);
     o.set_global_active(0, false);
     o.set_global_active(1, true);
@@ -103,9 +127,9 @@ TEST_CASE("Agent: Agent<T>, get_depth, get_number, get_children, get_parent, is_
     
     // 1. Not possible size_t varaible
     // 2. Construct without DEGREE set
-    Agent<AgentModel>::DEGREE = 0;
+    Agent<ModelType>::DEGREE = 0;
     try {
-        Agent<AgentModel> a = Agent<AgentModel>();
+        Agent<ModelType> a = Agent<ModelType>();
     } catch (const exception& ex) {
         stringstream ss; 
         ss << ex.what();
@@ -113,9 +137,9 @@ TEST_CASE("Agent: Agent<T>, get_depth, get_number, get_children, get_parent, is_
     }
 
     // 3. Construct MAX_DEPTH 0, degree 1
-    Agent<AgentModel>::DEGREE = 1;
-    Agent<AgentModel>::MAX_DEPTH = 0;
-    Agent<AgentModel> a1 = Agent<AgentModel>(0, 0, 0);
+    Agent<ModelType>::DEGREE = 1;
+    Agent<ModelType>::MAX_DEPTH = 0;
+    Agent<ModelType> a1 = Agent<ModelType>(0, 0, 0);
     REQUIRE( a1.get_children().size() == 0);
     REQUIRE( a1.get_parent() == nullptr);
     REQUIRE( a1.get_depth() == 0 );
@@ -129,9 +153,9 @@ TEST_CASE("Agent: Agent<T>, get_depth, get_number, get_children, get_parent, is_
     REQUIRE( !(a1.get_current() == a1.get_pocket()) );   
 
     // 4. Construct MAX_DEPTH 0, degree 3 - should not change anything as no children
-    Agent<AgentModel>::DEGREE = 3;
-    Agent<AgentModel>::MAX_DEPTH = 0;
-    Agent<AgentModel> a2 = Agent<AgentModel>(0, 0, 0);
+    Agent<ModelType>::DEGREE = 3;
+    Agent<ModelType>::MAX_DEPTH = 0;
+    Agent<ModelType> a2 = Agent<ModelType>(0, 0, 0);
     REQUIRE( a2.get_children().size() == 0);
     REQUIRE( a2.get_parent() == nullptr);
     REQUIRE( a2.get_depth() == 0 );
@@ -143,9 +167,9 @@ TEST_CASE("Agent: Agent<T>, get_depth, get_number, get_children, get_parent, is_
     REQUIRE( !(a2.get_current() == a2.get_pocket()) );
 
     // 5. Construct MAX_DEPTH 0, degree 6 - should not change anything as no children
-    Agent<AgentModel>::DEGREE = 6;
-    Agent<AgentModel>::MAX_DEPTH = 0;
-    Agent<AgentModel> a3 = Agent<AgentModel>(0, 0, 0);
+    Agent<ModelType>::DEGREE = 6;
+    Agent<ModelType>::MAX_DEPTH = 0;
+    Agent<ModelType> a3 = Agent<ModelType>(0, 0, 0);
     REQUIRE( a3.get_children().size() == 0);
     REQUIRE( a3.get_parent() == nullptr);
     REQUIRE( a3.get_depth() == 0 );
@@ -157,10 +181,9 @@ TEST_CASE("Agent: Agent<T>, get_depth, get_number, get_children, get_parent, is_
     REQUIRE( !(a3.get_current() == a3.get_pocket()) );
     
     // 6. Construct MAX_DEPTH 1, degree 1
-    Agent<AgentModel>::DEGREE = 1;
-    Agent<AgentModel>::MAX_DEPTH = 1;
-    //Agent<AgentModel> a = Agent<AgentModel>(0, 0, 0);
-    Agent<AgentModel> a4 = Agent<AgentModel>(0, 0, 0);
+    Agent<ModelType>::DEGREE = 1;
+    Agent<ModelType>::MAX_DEPTH = 1;
+    Agent<ModelType> a4 = Agent<ModelType>(0, 0, 0);
     // 6.1 Expect 1 child, still no parent
     REQUIRE( a4.get_children().size() == 1);
     REQUIRE( a4.get_parent() == nullptr);
@@ -185,9 +208,9 @@ TEST_CASE("Agent: Agent<T>, get_depth, get_number, get_children, get_parent, is_
     REQUIRE( !a4.get_children()[0]->get_parent()->is_leaf() );
 
     // 7. Construct MAX_DEPTH 1, degree 3
-    Agent<AgentModel>::DEGREE = 3;
-    Agent<AgentModel>::MAX_DEPTH = 1;
-    Agent<AgentModel> a5 = Agent<AgentModel>(0, 0, 0);
+    Agent<ModelType>::DEGREE = 3;
+    Agent<ModelType>::MAX_DEPTH = 1;
+    Agent<ModelType> a5 = Agent<ModelType>(0, 0, 0);
     REQUIRE( a5.get_children().size() == 3);
     REQUIRE( a5.get_parent() == nullptr);
     REQUIRE( a5.get_depth() == 0 );
@@ -223,9 +246,9 @@ TEST_CASE("Agent: Agent<T>, get_depth, get_number, get_children, get_parent, is_
     REQUIRE( !(a5.get_children()[2]->get_current() == a5.get_children()[2]->get_pocket()) );
 
     // 8. Construct MAX_DEPTH 1, degree 6
-    Agent<AgentModel>::DEGREE = 6;
-    Agent<AgentModel>::MAX_DEPTH = 1;
-    Agent<AgentModel> a6 = Agent<AgentModel>(0, 0, 0);
+    Agent<ModelType>::DEGREE = 6;
+    Agent<ModelType>::MAX_DEPTH = 1;
+    Agent<ModelType> a6 = Agent<ModelType>(0, 0, 0);
     REQUIRE( a6.get_children().size() == 6);
     REQUIRE( a6.get_parent() == nullptr);
     REQUIRE( a6.get_depth() == 0 );
@@ -288,9 +311,9 @@ TEST_CASE("Agent: Agent<T>, get_depth, get_number, get_children, get_parent, is_
     REQUIRE( !(a6.get_children()[5]->get_current() == a6.get_children()[5]->get_pocket()) );
 
     // 9. Construct MAX_DEPTH 2, degree 3
-    Agent<AgentModel>::DEGREE = 3;
-    Agent<AgentModel>::MAX_DEPTH = 2;
-    Agent<AgentModel> a7 = Agent<AgentModel>(0, 0, 0);
+    Agent<ModelType>::DEGREE = 3;
+    Agent<ModelType>::MAX_DEPTH = 2;
+    Agent<ModelType> a7 = Agent<ModelType>(0, 0, 0);
     REQUIRE( a7.get_children().size() == 3);
     REQUIRE( a7.get_parent() == nullptr);
     REQUIRE( a7.get_depth() == 0 );
@@ -433,12 +456,19 @@ TEST_CASE("Agent: set_pocket, set_current, get_pocket, get_current, get_memebers
     // 4. Trigger the exchange process
     // 5. Renew the 
     
-    Agent<AgentModel>::DEGREE = 1;
-    Agent<AgentModel>::MAX_DEPTH = 1;
-    Agent<AgentModel> a = Agent<AgentModel>(0, 0, 0);
+    RandInt ri = RandInt(42);
+    RandReal rr = RandReal(42);    
+    RandInt::RANDINT = &ri;
+    RandReal::RANDREAL = &rr;
+    
+    setup_cont_frac_ivs(6);
+
+    Agent<ModelType>::DEGREE = 1;
+    Agent<ModelType>::MAX_DEPTH = 1;
+    Agent<ModelType> a = Agent<ModelType>(0, 0, 0);
     // 1. Set know pocket, confirm we can get pocket
-    AgentModel pock = frac_1();
-    AgentModel curr = frac_2();
+    ModelType pock = frac_1();
+    ModelType curr = frac_2();
     REQUIRE( !(pock == curr) );
     REQUIRE( !(a.get_pocket() == pock) );
     a.set_pocket(pock);
@@ -462,16 +492,16 @@ TEST_CASE("Agent: set_pocket, set_current, get_pocket, get_current, get_memebers
     a.set_current(curr);
     REQUIRE( (a.get_members()[0] == pock) );
     REQUIRE( (a.get_members()[1] == curr) );
-    REQUIRE( (a.get_members()[Agent<AgentModel>::POCKET] == pock) );
-    REQUIRE( (a.get_members()[Agent<AgentModel>::CURRENT]== curr) );
+    REQUIRE( (a.get_members()[Agent<ModelType>::POCKET] == pock) );
+    REQUIRE( (a.get_members()[Agent<ModelType>::CURRENT]== curr) );
     
     // 4. Trigger the exchange process
     a.exchange();
-    REQUIRE( (a.get_members()[Agent<AgentModel>::POCKET] == curr) );
-    REQUIRE( (a.get_members()[Agent<AgentModel>::CURRENT]== pock) );
+    REQUIRE( (a.get_members()[Agent<ModelType>::POCKET] == curr) );
+    REQUIRE( (a.get_members()[Agent<ModelType>::CURRENT]== pock) );
     a.exchange();
-    REQUIRE( (a.get_members()[Agent<AgentModel>::POCKET] == pock) );
-    REQUIRE( (a.get_members()[Agent<AgentModel>::CURRENT]== curr) );
+    REQUIRE( (a.get_members()[Agent<ModelType>::POCKET] == pock) );
+    REQUIRE( (a.get_members()[Agent<ModelType>::CURRENT]== curr) );
 
 }
 
@@ -487,18 +517,18 @@ TEST_CASE("Agent: bubble") {
     // 2. Case 1, but both best child pocket and current < parent pocket (i.e. child current goes to pocket, parent pocket goes to child current)
     // 3. Parent with multi child, confirm best child pocket with parent pocket
 
-    Agent<AgentModel>::DEGREE = 1;
-    Agent<AgentModel>::MAX_DEPTH = 1;
+    Agent<ModelType>::DEGREE = 1;
+    Agent<ModelType>::MAX_DEPTH = 1;
     
     // 1. Parent with single child, confirm pocks swap when fitness is smaller in child
-    Agent<AgentModel> a = Agent<AgentModel>(0, 0, 0);
+    Agent<ModelType> a = Agent<ModelType>(0, 0, 0);
     a.get_pocket().set_fitness(10);
     a.get_children()[0]->get_pocket().set_fitness(9);
     a.get_children()[0]->get_current().set_fitness(11);     // Child current will not exchange with new child pocket
-    AgentModel pock0 = a.get_pocket();
-    AgentModel curr0 = a.get_current();
-    AgentModel pock1 = a.get_children()[0]->get_pocket();
-    AgentModel curr1 = a.get_children()[0]->get_current();
+    ModelType pock0 = a.get_pocket();
+    ModelType curr0 = a.get_current();
+    ModelType pock1 = a.get_children()[0]->get_pocket();
+    ModelType curr1 = a.get_children()[0]->get_current();
      
     a.bubble();
     
@@ -510,7 +540,7 @@ TEST_CASE("Agent: bubble") {
     REQUIRE(a.get_children()[0]->get_current() == curr1);
     
     // 2. Case 1, but both best child pocket and current < parent pocket (i.e. child current goes to pocket, parent pocket goes to child current)
-    Agent<AgentModel> a2 = Agent<AgentModel>(0, 0, 0);
+    Agent<ModelType> a2 = Agent<ModelType>(0, 0, 0);
     a2.get_pocket().set_fitness(10);
     a2.get_children()[0]->get_pocket().set_fitness(8);
     a2.get_children()[0]->get_current().set_fitness(9);     // Child current will not exchange with new child pocket
@@ -527,9 +557,9 @@ TEST_CASE("Agent: bubble") {
     REQUIRE(a2.get_children()[0]->get_current() == pock0);
     
     // 3. Parent with multi child, confirm best child pocket with parent pocket
-    Agent<AgentModel>::DEGREE = 3;
-    Agent<AgentModel>::MAX_DEPTH = 1;
-    Agent<AgentModel> a3 = Agent<AgentModel>(0, 0, 0);
+    Agent<ModelType>::DEGREE = 3;
+    Agent<ModelType>::MAX_DEPTH = 1;
+    Agent<ModelType> a3 = Agent<ModelType>(0, 0, 0);
     // Set parent fitness
     a3.get_pocket().set_fitness(10);
     a3.get_pocket().set_fitness(15);
@@ -545,10 +575,10 @@ TEST_CASE("Agent: bubble") {
     curr0 = a3.get_current();
     pock1 = a3.get_children()[0]->get_pocket();
     curr1 = a3.get_children()[0]->get_current();
-    AgentModel pock2 = a3.get_children()[1]->get_pocket();
-    AgentModel curr2 = a3.get_children()[1]->get_current();
-    AgentModel pock3 = a3.get_children()[2]->get_pocket();
-    AgentModel curr3 = a3.get_children()[2]->get_current();
+    ModelType pock2 = a3.get_children()[1]->get_pocket();
+    ModelType curr2 = a3.get_children()[1]->get_current();
+    ModelType pock3 = a3.get_children()[2]->get_pocket();
+    ModelType curr3 = a3.get_children()[2]->get_current();
     // 
     a3.bubble();
     REQUIRE(a3.get_pocket() == pock2);   // Pocket swaped with middle child

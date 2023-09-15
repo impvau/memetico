@@ -7,10 +7,24 @@
 #include <memetico/optimise/local_search.h>
 #include <string>
 #include <ostream>
+#include <memetico/models/mutation.h>
+
+// Define the template strucutre of a model
+template<
+    typename T,         
+    typename U, 
+    template <typename, typename> class MutationPolicy>
+struct Traits {
+    using TType = T;                        // Term type, e.g. Regression<double>
+    using UType = U;                        // Data type, e.g. double, should match T::TType
+    template <typename V, typename W>
+    using MPType = MutationPolicy<V, W>;    // Mutation Policy general class, e.g. MutateHardSoft<TermType, DataType>
+};
 
 typedef double DataType;
-typedef Regression<DataType> AgentModelReg;
-typedef ContinuedFraction<Regression<DataType>,DataType> AgentModel;
+typedef Regression<DataType> TermType;
+typedef ContinuedFraction<Traits<TermType, DataType, mutation::MutateHardSoft>> ModelType;
+
 
 inline void init(string filename) {
 
@@ -60,12 +74,12 @@ inline void init(string filename) {
 
 }
 
-inline AgentModel small_frac() {
+inline ModelType small_frac() {
 
     // f(x) = x1 - 20 
     size_t params = 2;
     size_t depth = 0;
-    AgentModel o  = AgentModel(depth);
+    ModelType o  = ModelType(depth);
     Regression<double> m1 = Regression<double>(params);
     o.set_global_active(0, true);
     o.set_global_active(1, true);
@@ -110,8 +124,8 @@ TEST_CASE("Localsearch: on Regression<double>") {
     DataSet ds = DataSet(fn);
     ds.load();
 
-    AgentModelReg f1 = small_regress_frac();
-    AgentModelReg f1_copy = AgentModelReg(f1);
+    TermType f1 = small_regress_frac();
+    TermType f1_copy = TermType(f1);
 
     MemeticModel<double>* model = static_cast<MemeticModel<double>*>(&f1);
 
@@ -142,13 +156,11 @@ TEST_CASE("Localsearch: on ContinuedFraction<double>") {
     DataSet ds = DataSet(fn);
     ds.load();
 
-    AgentModel f1 = small_frac();
-    AgentModel f1_copy = AgentModel(f1);
-
+    ModelType f1 = small_frac();
+    ModelType f1_copy = ModelType(f1);
 
     //MemeticModel<double>* model = static_cast<MemeticModel<double>*>(&f1);
     MemeticModel<double>* model = static_cast<MemeticModel<double>*>(&f1);
-
 
     MemeticModel<double>::IVS.clear();
     for(size_t i = 0; i < DataSet::IVS.size(); i++)
