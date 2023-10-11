@@ -126,19 +126,18 @@ namespace mutation {
 
         MutateUniqueMask (size_t frac_depth = 4)  {
 
-            size_t params = MemeticModel<U>::IVS.size()+1;
-            size = (frac_depth*2+1)*(params);
-
-            // We select an unseen combination of parameters for the flag states
-            // While mutate() may seem out of place, it achieves the same thing
-            // we want with a new fraction. Note we fake an argument that is not 
-            // neccessary for the function as this
-            auto& model = static_cast<Derived&>(*this);
-            mutate(model);
-
+            hashes_by_size = unordered_map<size_t, unordered_set<size_t>>();        
+            size = 0;    
         };
 
         // No copy constructor extension is neccessary as our data memeber is static
+        void    initialise() {
+
+            auto& model = static_cast<Derived&>(*this);
+            size = model.get_params_per_term()*model.get_frac_terms();
+            mutate(model);
+
+        };
 
         /** @brief mutate the variable masks to an unseen set of masks */
         void mutate(MemeticModel<U>& other) {
