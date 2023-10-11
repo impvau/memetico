@@ -207,7 +207,6 @@ double objective::cuda_error(MemeticModel<U>* model, DataSet* train, vector<size
     Program p;
     TreeNode *tn_frac = new TreeNode();
     model->get_node(tn_frac);
-    cout << model << endl;
     get_prefix(p.prefix, tn_frac);
     p.length = p.prefix.size();
 
