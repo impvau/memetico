@@ -20,9 +20,7 @@
  */
 
 template <typename Traits>
-class ContinuedFractionDynamicDepth : public MemeticModel<typename Traits::UType>, 
-                          public Traits::template MPType<typename Traits::UType, 
-                          ContinuedFraction<Traits>> {
+class ContinuedFractionDynamicDepth :  public ContinuedFraction<Traits> {
 
     public:
 
@@ -44,7 +42,7 @@ class ContinuedFractionDynamicDepth : public MemeticModel<typename Traits::UType
         void    mutate(MemeticModel<typename Traits::UType> & model) override {
             
             // Call normal mutate
-            Traits::template MPType<typename Traits::UType, ContinuedFractionDynamicDepth<Traits>>::mutate(model);
+            Traits::template MPType<typename Traits::UType, ContinuedFraction<Traits>>::mutate(model);
 
             // If we are using the adaptive mutate approach
             if( meme::DYNAMIC_DEPTH_TYPE == meme::DynamicAdaptiveMutation ) {
@@ -69,7 +67,7 @@ class ContinuedFractionDynamicDepth : public MemeticModel<typename Traits::UType
 
             // If random depth
             } else if (meme::DYNAMIC_DEPTH_TYPE == meme::DynamicRandom)
-                rand = meme::RANDINT(0, 5);
+                rand = meme::RANDINT(0, meme::DEPTH);
             
             //cout << "New fraction of depth: " << rand << endl;
 
