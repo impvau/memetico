@@ -235,7 +235,7 @@ void Population<U>::local_search_single(Agent<U> * agent, bool is_current, vecto
     copy.local_search(data, idx);
 
      // Set best soln if 
-    if( idx.empty() && best_soln.get_fitness() < best_soln.get_fitness() )
+    if( idx.empty() && copy.get_fitness() < best_soln.get_fitness() )
         set_best_soln(copy);
 
     // Set current if fitness is better
