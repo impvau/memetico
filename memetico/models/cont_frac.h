@@ -67,11 +67,21 @@ class ContinuedFraction : public MemeticModel<typename Traits::UType>,
         
         /** @brief Return value given a sequential index pos in the fraction */
         typename Traits::UType  get_value(size_t pos) override {
+
+            // Code to force through origin
+            //if( pos == get_params_per_term()-1 ||  pos == get_params_per_term()*2-1)
+            //    return 0;
+
             return terms[term_from_pos(pos)].get_value(param_from_pos(pos));
         };
 
         /** @brief Return active flag given a sqeuential index pos in the fraction */
         bool    get_active(size_t pos) override {
+            
+            // Code to force through origin
+            //if( pos == get_params_per_term()-1 ||  pos == get_params_per_term()*2-1)
+            //    return false;
+
             return terms[term_from_pos(pos)].get_active(param_from_pos(pos));
         };
 
