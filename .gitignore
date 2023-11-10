@@ -52,3 +52,5 @@ out/*
 # Misc
 .hash
 **.csv
+
+data
