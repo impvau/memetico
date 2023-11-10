@@ -60,7 +60,7 @@ class ContinuedFractionDynamicDepth :  public ContinuedFraction<Traits> {
             // If adaptive approach or adaptive mutatution approach
             if(meme::DYNAMIC_DEPTH_TYPE == meme::DynamicAdaptive || meme::DYNAMIC_DEPTH_TYPE == meme::DynamicAdaptiveMutation) {
 
-                rand = meme::RANDINT(meme::POCKET_DEPTH-1, meme::POCKET_DEPTH+1);
+                rand = meme::RANDINT(0, meme::POCKET_DEPTH+1);
                 
                 // Dont allow negative depth
                 if(rand < 0 )   rand = 0;
