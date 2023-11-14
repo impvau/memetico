@@ -26,6 +26,7 @@ double objective::mse(MemeticModel<U>* model, DataSet* train, vector<size_t>& se
 
         try {
 
+            double weight_sum = 0;
             double error_sum = 0;
             double error;
         
@@ -41,15 +42,19 @@ double objective::mse(MemeticModel<U>* model, DataSet* train, vector<size_t>& se
                     error = multiply(error, error);
 
                     // Weight squared error
-                    if(train->has_weight())
+                    if(train->has_weight()) {
                         error = multiply(error, train->weight[i]);
+                        weight_sum += train->weight[i];
+                    }
 
                     // Sum of squared error
                     error_sum = add(error_sum, error);
 
                 }
 
-                model->set_error(error_sum / train->get_count());
+                // After the loop, use weight_sum to calculate the average error
+                if(weight_sum > 0)  model->set_error(error_sum / weight_sum);
+                else                model->set_error(error_sum / train->get_count());
 
             } else {
 
@@ -63,15 +68,18 @@ double objective::mse(MemeticModel<U>* model, DataSet* train, vector<size_t>& se
                     error = multiply(error, error);
 
                     // Weight squared error
-                    if(train->has_weight())
+                    if(train->has_weight()) {
                         error = multiply(error, train->weight[i]);
+                        weight_sum += train->weight[i];
+                    }
 
                     // Sum of squared error
                     error_sum = add(error_sum, error);
                 }
                 
-                model->set_error(error_sum / selected.size());
-
+                // After the loop, use weight_sum to calculate the average error
+                if(weight_sum > 0)  model->set_error(error_sum / weight_sum);
+                else                model->set_error(error_sum / train->get_count());
             }
             
             model->set_penalty( 1+model->get_count_active()*meme::PENALTY );
@@ -231,71 +239,121 @@ double objective::cuda_error(MemeticModel<U>* model, DataSet* train, vector<size
 template <class U>
 double objective::p_cor(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected) {
 
-    auto start = chrono::system_clock::now();
+        auto start = chrono::system_clock::now();
 
     try {
-        size_t n = 0;
-        double mean_x = 0, mean_y = 0;
-        double m2_x = 0, m2_y = 0, crossproduct = 0;
+        double pearson_correlation;
+        const double epsilon = 1e-5; // Small threshold for variance
 
-        auto calculateCorrelation = [&](size_t i) {
-            double x = model->evaluate(train->samples[i]);
-            double y = train->y[i];
-            n++;
-            double delta_x = x - mean_x;
-            double delta_y = y - mean_y;
-            mean_x += delta_x / n;
-            mean_y += delta_y / n;
-            m2_x += delta_x * (x - mean_x);
-            m2_y += delta_y * (y - mean_y);
-            crossproduct += delta_x * (y - mean_y);
-        };
+        if (train->has_weight()) {
+            double sum_weight = 0;
+            double weighted_mean_x = 0, weighted_mean_y = 0;
+            double weighted_m2_x = 0, weighted_m2_y = 0, weighted_crossproduct = 0;
 
-        if (selected.size() == 0) {
-            for(size_t i = 0; i < train->get_count(); i++) {
-                calculateCorrelation(i);
+            auto calculateWeightedCorrelation = [&](size_t i) {
+                double x = model->evaluate(train->samples[i]);
+                double y = train->y[i];
+                double weight = train->weight[i];
+                sum_weight += weight;
+
+                double delta_x = x - weighted_mean_x;
+                double delta_y = y - weighted_mean_y;
+                weighted_mean_x += (delta_x * weight) / sum_weight;
+                weighted_mean_y += (delta_y * weight) / sum_weight;
+                weighted_m2_x += weight * delta_x * (x - weighted_mean_x);
+                weighted_m2_y += weight * delta_y * (y - weighted_mean_y);
+                weighted_crossproduct += weight * delta_x * (y - weighted_mean_y);
+            };
+
+            if (selected.size() == 0) {
+                for (size_t i = 0; i < train->get_count(); i++) {
+                    calculateWeightedCorrelation(i);
+                }
+            } else {
+                for (size_t i : selected) {
+                    calculateWeightedCorrelation(i);
+                }
             }
+
+            double weighted_variance_x = weighted_m2_x / sum_weight;
+            double weighted_variance_y = weighted_m2_y / sum_weight;
+            double weighted_covariance = weighted_crossproduct / sum_weight;
+
+            if (weighted_variance_x < epsilon || weighted_variance_y < epsilon) {
+                model->set_error(1);
+                model->set_penalty(1);
+                model->set_fitness(1);
+                return model->get_fitness();
+            }
+
+            pearson_correlation = weighted_covariance / sqrt(weighted_variance_x * weighted_variance_y);
+
         } else {
-            for (size_t i : selected) {
-                calculateCorrelation(i);
-            }
-        }  
+            size_t n = 0;
+            double mean_x = 0, mean_y = 0;
+            double m2_x = 0, m2_y = 0, crossproduct = 0;
 
-        double variance_x = m2_x / n;
-        double variance_y = m2_y / n;
-        
-        // Check for near-constant values
-        const double epsilon = 1e-8; // Small threshold for variance
-        if (variance_x < epsilon || variance_y < epsilon) {
-            // Set an indicative error for near-constant values
-            model->set_error(1);
-            model->set_penalty(1);
-            model->set_fitness(1);
-            return model->get_fitness();
+            auto calculateCorrelation = [&](size_t i) {
+                double x = model->evaluate(train->samples[i]);
+                double y = train->y[i];
+                n++;
+                double delta_x = x - mean_x;
+                double delta_y = y - mean_y;
+                mean_x += delta_x / n;
+                mean_y += delta_y / n;
+                m2_x += delta_x * (x - mean_x);
+                m2_y += delta_y * (y - mean_y);
+                crossproduct += delta_x * (y - mean_y);
+            };
+
+            if (selected.size() == 0) {
+                for(size_t i = 0; i < train->get_count(); i++) {
+                    calculateCorrelation(i);
+                }
+            } else {
+                for (size_t i : selected) {
+                    calculateCorrelation(i);
+                }
+            }  
+
+            double variance_x = m2_x / n;
+            double variance_y = m2_y / n;
+
+            if (variance_x < epsilon || variance_y < epsilon) {
+                model->set_error(1);
+                model->set_penalty(1);
+                model->set_fitness(1);
+                return model->get_fitness();
+            }
+
+            pearson_correlation = crossproduct / n / sqrt(variance_x * variance_y);
         }
 
-        double covariance = crossproduct / n;
-        double pearson_correlation = covariance / sqrt(variance_x * variance_y);
-
         if (abs(pearson_correlation) > 1) {
-            return 1;
+            pearson_correlation = 1;
         }
 
         model->set_error(1 - abs(pearson_correlation));
-        model->set_penalty(1);
-        model->set_fitness(1 - abs(pearson_correlation));
+        model->set_penalty(1+model->get_count_active()*meme::PENALTY);
+        model->set_fitness(1 - abs(pearson_correlation/model->get_penalty()) );
 
-    } catch (exception& e) {
-        // Return impossible lack of correlation
+    } catch (const std::exception& e) {
         model->set_error(1);
         model->set_penalty(1);
         model->set_fitness(1);
     }
 
     auto end = chrono::high_resolution_clock::now();
-    chrono::duration<double, milli> ms = end-start;
+    chrono::duration<double, std::milli> ms = end - start;
+
+    if (std::isnan(model->get_error())) {
+        model->set_error(1);
+        model->set_penalty(1);
+        model->set_fitness(1);
+    }
 
     return model->get_fitness();
+
 }
 
 template <class U>
