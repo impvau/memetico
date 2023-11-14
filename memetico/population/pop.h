@@ -181,7 +181,10 @@ class Population {
 
         static DiversityType DIVERSITY_TYPE;
 
-        void set_best_soln(U& soln)     {best_soln = U(soln);};
+        void set_best_soln(U& soln)     {
+            best_soln = U(soln);
+            POCKET_DEPTH = best_soln.get_depth();
+        };
 
     private:
 
