@@ -343,7 +343,6 @@ void Population<U>::stale() {
         stale_count = 0;
         stale_times = 0;
         set_best_soln(root_agent->get_pocket());
-        POCKET_DEPTH = best_soln.get_depth();
     }
 
     if (Population<U>::DIVERSITY_TYPE == DiversityEvery) {
