@@ -32,7 +32,7 @@ enum DiversityType {
  * number of children. These intern, have Agent<U>::DEGREE children constructing a M-ary tree of Agent<U>::DEGREE
  * The leaf Agents contain nullptr children
  * 
- * The class generally manages the looping process that are executed on all Agents, and calls Agent memeber functions 
+ * The class generally manages the looping process that are executed on all Agents, and calls Agent member functions 
  * to achieve the outcome for each Agent individually. Examples are local_search, evolve, buble, and evaluate which 
  * loop from root to leaf, or leaf to root and trigger Agent member functions.
  * 
@@ -40,7 +40,7 @@ enum DiversityType {
  *
  * The Population class does not obersve the selected objective function or local search function, as these can vary based on user
  * input. Rather pointers to these functions are maintined in the Agent class as static variables. This placement is arguable,
- * but for sake of avoiding cyclic dependencies this is the current soliition (e.g. dependency is Agent requiring import of Population 
+ * but for sake of avoiding cyclic dependencies this is the current solution (e.g. dependency is Agent requiring import of Population 
  * that contains the OBJECTIVE function)
  * 
  * The core function of the Population, and primary execution of the MA is the run member function that iterates for a number of 

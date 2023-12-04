@@ -24,7 +24,7 @@ namespace mutation {
                    
             size_t params = MemeticModel<U>::IVS.size()+1;
 
-            // add global flags for each paramter
+            // add global flags for each parameter
             for(size_t i = 0; i < params; i++) {
 
                 if(i == params-1)
@@ -130,7 +130,7 @@ namespace mutation {
             size = 0;    
         };
 
-        // No copy constructor extension is neccessary as our data memeber is static
+        // No copy constructor extension is neccessary as our data member is static
         void    initialise() {
 
             auto& model = static_cast<Derived&>(*this);

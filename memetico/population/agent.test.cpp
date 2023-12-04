@@ -125,7 +125,7 @@ TEST_CASE("Agent: Agent<T>, get_depth, get_number, get_children, get_parent, is_
     RandReal::RANDREAL = &rr;
 
     
-    // 1. Not possible size_t varaible
+    // 1. Not possible size_t variable
     // 2. Construct without DEGREE set
     Agent<ModelType>::DEGREE = 0;
     try {
@@ -447,12 +447,12 @@ TEST_CASE("Agent: Agent<T>, get_depth, get_number, get_children, get_parent, is_
     REQUIRE( !(a7.get_children()[2]->get_children()[2]->get_current() == a7.get_children()[2]->get_children()[2]->get_pocket()) );
 }
 
-TEST_CASE("Agent: set_pocket, set_current, get_pocket, get_current, get_memebers, exchange") {
+TEST_CASE("Agent: set_pocket, set_current, get_pocket, get_current, get_members, exchange") {
 
     // Tests
     // 1. Set know pocket, confirm we can get pocket
     // 2. Set know current, confirm we can get current
-    // 3. Make sure returned memebers match
+    // 3. Make sure returned members match
     // 4. Trigger the exchange process
     // 5. Renew the 
     
@@ -485,7 +485,7 @@ TEST_CASE("Agent: set_pocket, set_current, get_pocket, get_current, get_memebers
     curr.set_depth(7);
     REQUIRE( !(a.get_current() == curr));
 
-    // 3. Make sure returned memebers match
+    // 3. Make sure returned members match
     pock = frac_1();
     curr = frac_2();    
     a.set_pocket(pock);

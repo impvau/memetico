@@ -30,7 +30,7 @@ using namespace std;
  * @brief A simple linear Model in the form \f$cx+c_0\f$
  * Where
  * - \f$x\f$ is the set of independent variables \f$x = \{x_1, x_2,...,x_n\} \f$
- * - \f$x\f$ is the set of coefficients for each independent varaible \f$c = \{c_1, c_2,...,c_n\} \f$ 
+ * - \f$c\f$ is the set of coefficients for each independent variable \f$c = \{c_1, c_2,...,c_n\} \f$ 
  * - \f$c_0\f$ is the constant 
  */
 template<class T>
@@ -190,7 +190,7 @@ class Regression : public MemeticModel<T> {
             return ss.str();
         }
 
-        /** @brief Get TreeNode for the coefficient varaible/value pair. Public only for testing */
+        /** @brief Get TreeNode for the coefficient variable/value pair. Public only for testing */
         void   coeff_node(TreeNode * n, float constant, int var_num);
 
     private:

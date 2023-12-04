@@ -24,7 +24,7 @@ using namespace cusr;
  * The class implements basic attributes that are common to all models, applicable equally to the TSP to Regression problems.
  * We must extend this class to handle these problems, where the TSP may implement a distance matrix and a regression problem
  * may store its elements in a Term object. Key functions are specific which must be implemented for all problems, such as
- * evaluate() and setters/getters for common varaibles such as error, penalty and fitness.
+ * evaluate() and setters/getters for common variables such as error, penalty and fitness.
  * 
  * The template is used for the benefit of the derived classes which may be of simple types such as double or more complex
  * types such as Regression<double> or even ContinuedFractions<Regression<double>>
@@ -79,7 +79,7 @@ class Model {
         virtual void    get_node(TreeNode * n)      {};
 
         /** 
-         * @brief evaluate the fiteness of the model
+         * @brief evaluate the fitness of the model
          * @param values 
          * @return model error
          * @bug technically should be type T for values? What if we have a TSP problem that

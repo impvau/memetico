@@ -142,7 +142,7 @@ double local_search::custom_nelder_mead(U* model, DataSet* data, vector<size_t>&
         ) {
         
 
-        // Get the worst point i.e. highest fiteness 
+        // Get the worst point i.e. highest fitness 
         coord& vw = simplex.begin()->second;
         double vw_fit = simplex.begin()->first;
         
@@ -307,7 +307,7 @@ double local_search::custom_nelder_mead_alg4(U* model, DataSet* data, vector<siz
         coord vn;
         double vn_fit;
 
-        // Get the worst point i.e. highest fiteness 
+        // Get the worst point i.e. highest fitness 
         coord& vw = simplex.begin()->second;
         double vw_fit = simplex.begin()->first;
 
@@ -429,7 +429,7 @@ double local_search::custom_nelder_mead_redo(U* model, DataSet* data, vector<siz
             stag < meme::NELDER_MEAD_STALE                              // We have not stagnated
         ) {
         
-        // Get the worst point i.e. highest fiteness 
+        // Get the worst point i.e. highest fitness 
         coord& vw = simplex.begin()->second;
         double vw_fit = simplex.begin()->first;
         

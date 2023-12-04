@@ -239,7 +239,7 @@ TEST_CASE("Regression: randomise()") {
         
     }
     
-    // 2. Randomise all varaibles
+    // 2. Randomise all variables
     size_t n5 = 0, n4 = 0, n3 = 0, n2 = 0, n1 = 0, z = 0, p1 = 0, p2 = 0, p3 = 0, p4 = 0, p5 = 0;
     for(size_t i = 0; i < 1000; i++) {
            

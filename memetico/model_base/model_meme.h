@@ -48,10 +48,10 @@ using namespace std;
  * structure varies between these two, so the same position 'pos' would map to different values.
  * 
  * - set_active (turn off/on variables in the solution)
- * - get_active (determine if varaible is off/on)
+ * - get_active (determine if variable is off/on)
  * - set_value (set value of the variable in the equation)
  * - get_value (determine if varaiable is on/off)
- * - get_count_active (get the number of active varaibles in equation)
+ * - get_count_active (get the number of active variables in equation)
  * - get_active_positions (get the variable positions used to optimise by local search)
  * 
  * To avoid the need for static casting from a MemeticModel<T> to the derived class in functions like
@@ -68,7 +68,7 @@ class MemeticModel : public Model {
 
         /** 
          * @brief setter for active flag at \a pos with value \a val
-         * @param pos position of paramter
+         * @param pos position of parameter
          * @param val value of active flag
          */
         virtual void    set_active(size_t pos, bool val)    {};
@@ -143,7 +143,7 @@ class MemeticModel : public Model {
         /** @brief Comparison operator for MemeticModel */
         bool operator== (Model& o)      { return  Model::operator==(o); }
 
-        /** @brief Vector of independent varaible names from the data source */
+        /** @brief Vector of independent variable names from the data source */
         static vector<string>   IVS;
 
         /** @brief local search function to explore local minima and maxima */

@@ -29,7 +29,7 @@ using namespace chrono;
  * nullptr.
  * 
  * Each agent will contain a 'pocket' as the best solution for the agent and a 'current' which is solution being modified
- * by the MA and replaces the pocket when it betters the pocket in terms of fitness. These are stored within the memebers
+ * by the MA and replaces the pocket when it betters the pocket in terms of fitness. These are stored within the members
  * attribute and are of template U type that are derived classes from Model<T> and override the mutation,
  * recombination, evalutation, show, etc. functions such that new types are introduced without modification to the core 
  * memetic algorithm.
@@ -38,7 +38,7 @@ using namespace chrono;
  * with the parent solution. Other tree behaviors are regulated by the Population class, including the recusive bubbling process that
  * spans the entire tree and not just an individual Agent and its children.
  * 
- * The static memebers Agent<U>::OBJECTIVE and Agent<U>::LOCAL_SEARCH hold the functions that the tree uses to evaluate the class U Models
+ * The static members Agent<U>::OBJECTIVE and Agent<U>::LOCAL_SEARCH hold the functions that the tree uses to evaluate the class U Models
  * i.e. they take in a U* and a DataSet* to perform these functions
  *  
  */
@@ -63,13 +63,13 @@ class Agent {
         //static DataSet* TRAIN;
       
         /**
-         * @brief Construct Agent with the provided depth, parentnumber, degree number (0 to DEGREE)
+         * @brief Construct Agent with the provided depth, parent number, degree number (0 to DEGREE)
          * - Set \a depth to \a agent_depth
          * - Set the agent number e.g. for a depth 3 tree
          *  - On the zeroth depth, 0 for the root agent
          *  - On the first depth, 1, 5, 9
          *  - On the second depth 2,3,4 6,7,8 10,11,12
-         * - Create memeber solutions of type U for the pocket and current positions
+         * - Create member solutions of type U for the pocket and current positions
          * - Recursively construct the children agents
          * - Set the childs parent
          * - Set leaf nodes children to nullptr
@@ -100,7 +100,7 @@ class Agent {
         /** @brief getter for current solution */
         U&          get_current()           { return members[Agent<U>::CURRENT]; };
 
-        /** @brief Return list of memebers */
+        /** @brief Return list of members */
         vector<U>&  get_members()           { return members; };
 
         /** @brief getter for Agent children */
@@ -115,7 +115,7 @@ class Agent {
         /** @brief setter for pocket */
         void        set_current(U& current) { members[Agent<U>::CURRENT] = current; };
 
-        /** @brief determine if current Agent is a lead node */
+        /** @brief determine if current Agent is a leaf node */
         bool        is_leaf()               { return depth == Agent<U>::MAX_DEPTH; };
         
         /** 

@@ -150,7 +150,7 @@ void Regression<T>::randomise(int min, int max, int pos) {
 
     } else {
 
-        // For all paramters in the Regression
+        // For all parameters in the Regression
         for(size_t param = 0; param < get_count(); param++) {
             
             //  Turn on with even chance of positive/negative value
@@ -244,7 +244,7 @@ ostream& operator<<(ostream& os, Regression<F>& r)
 
             }
 
-            // Indicate we have written a varaible
+            // Indicate we have written a variable
             has_written = true;
             
         }

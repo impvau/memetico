@@ -26,12 +26,12 @@
 #include <unordered_map>
 
 /**
- * @brief The ContinuedFraction class extends the Regression class for a new Model representation
+ * @brief The ContinuedFraction class extends the MemeticModel class for a new Model representation
  * 
  * A continued fraction is of the form \f$f(x)=g_0(x)+\frac{h_0(x)}{g_1(x)+\frac{h_1(x)}{g_2(x)+\cdots}}\f$ \n \n
  * Where
  * - \f$x\f$ is the set of independent variables \f$x = \{x_1, x_2,...,x_n\} \f$ \n
- * - \f$x\f$ is the set of coefficients for each independent varaible \f$c = \{c_1, c_2,...,c_n\} \f$ \n
+ * - \f$c\f$ is the set of coefficients for each independent variable \f$c = \{c_1, c_2,...,c_n\} \f$ \n
  * - Each term \f$g_i(x)\f$, \f$h_i(x)\f$ is of a linear form \f$cx+c_0\f$ \n
  * 
  * The independent variables are utilised in each term, resulting in increasing coefficients and constants to optimise as fraction depth increases.
@@ -52,9 +52,9 @@ class ContinuedFraction : public MemeticModel<typename Traits::UType>,
          * - Set count to frac_terms*params_per_term
          * - Create a T object for each term in the fraction
          * - Create the global_active array of size count
-         * - Randomise the independent varaibles and constant values
-         * - With 50% chance, globally inactive the independent varaibles 
-         *  (i.e. first N-1 paramters, leaving the constant at parameter N active)
+         * - Randomise the independent variables and constant values
+         * - With 50% chance, globally inactive the independent variables 
+         *  (i.e. first N-1 parameters, leaving the constant at parameter N active)
          * 
          * @param frac_depth depth of the fraction
          */
@@ -75,7 +75,7 @@ class ContinuedFraction : public MemeticModel<typename Traits::UType>,
             return terms[term_from_pos(pos)].get_value(param_from_pos(pos));
         };
 
-        /** @brief Return active flag given a sqeuential index pos in the fraction */
+        /** @brief Return active flag given a sequential index pos in the fraction */
         bool    get_active(size_t pos) override {
             
             // Code to force through origin
@@ -85,20 +85,20 @@ class ContinuedFraction : public MemeticModel<typename Traits::UType>,
             return terms[term_from_pos(pos)].get_active(param_from_pos(pos));
         };
 
-        /** @brief Set value of paramter at fraction pos to val */
+        /** @brief Set value of parameter at fraction pos to val */
         void    set_value(size_t pos, typename Traits::UType val) override {
             terms[term_from_pos(pos)].set_value(param_from_pos(pos), val);
         };
 
-        /** @brief Set local active flag of varaible at pos to val  */
+        /** @brief Set local active flag of variable at pos to val  */
         void    set_active(size_t pos, bool val) override {
             terms[term_from_pos(pos)].set_active(param_from_pos(pos), val);
         };
 
-        /** @brief Return total number of active paramters across the entire fraction */
+        /** @brief Return total number of active parameters across the entire fraction */
         size_t  get_count_active() override { return get_active_positions().size(); };
 
-        /** @brief Return vector of indices of the active varaibles positions*/
+        /** @brief Return vector of indices of the active variables positions*/
         vector<size_t>  get_active_positions() override;
 
         /** @brief Return TreeNode for GPU processing */
@@ -164,7 +164,7 @@ class ContinuedFraction : public MemeticModel<typename Traits::UType>,
 
         /** 
          * @brief Evaluate a ContinuedFraction given sample values
-         * - Substitue \a values for the independent varaibles in the terms of the continued fraction
+         * - Substitue \a values for the independent variables in the terms of the continued fraction
          *
          * @param values an array of sample values to evaluate at (\f$c\f$) which is params_per_term in length
          * @return value of the continued fraction evaluated at \a values 
@@ -192,10 +192,10 @@ class ContinuedFraction : public MemeticModel<typename Traits::UType>,
         /** @brief Return number of terms 2*d+1 */
         size_t  get_frac_terms() const              { return depth*2+1;  };
 
-        /** @brief Return maximum number of varaibles/constants per term (some may be masked) */
+        /** @brief Return maximum number of variables/constants per term (some may be masked) */
         size_t  get_params_per_term() const         { return params_per_term; };
 
-        /** @brief Return total maximum number of paramters over all fraction terms (some may be masked) */
+        /** @brief Return total maximum number of parameters over all fraction terms (some may be masked) */
         size_t  get_param_count() const             { return params_per_term*get_frac_terms(); };
 
         /** @brief Return term at specific position in the fraction t0, t1, t2.. etc. */

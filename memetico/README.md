@@ -4,7 +4,7 @@ An implementation of a C++ memetic algorithm under the direction of its inceptor
 
 Prof. Moscato collaborated with Haoyuan Sun in 2018 to introduce <a href="https://ieeexplore.ieee.org/abstract/document/8789889" target="_blank">a memetico algorithm for symbolic regression that utilised a continued fractions representation </a> known as Continued Fractions Regression (CFR). This was later adapted by Mohammad Haque and later Andrew Ciezak.
 
-This repository is a major re-developement and has aspects based on this original work. It's aim achieve a generalised memetic framework utilisatble by CFR but can be extended to problem classes outside of regression and any solution representation (e.g. graph, distance matrix, etc.) in the aim of greater maintainability and extendability.
+This repository is a major re-developement and has aspects based on this original work. It's aim achieve a generalised memetic framework utilisable by CFR but can be extended to problem classes outside of regression and any solution representation (e.g. graph, distance matrix, etc.) in the aim of greater maintainability and extendability.
 
 # Regression Usage
 
@@ -21,9 +21,8 @@ Papers related to this development include the following
 
 # Documentation
 
-Project documentation is viewable at `.../memetico-cpp/docs/index.html` and rebuilt with `doxygen doxy.config` from the base directory
-
-Adherance to the <a href="https://people.canonical.com/~msawicz/guides/c++/cppguide.html" target="_blank"> Canonical C++ Style Guide </a> is observed and <a href="https://www.doxygen.nl/index.html" target="_blank"> Doxygen </a> rebuilds the documentation output to the `docs/` directory with `doxygen doxy.config`. 
+Project documentation is viewable at `.../memetico-cpp/docs/index.html` and rebuilt with `doxygen doxy.config` from the base directory.
+<a href="https://www.doxygen.nl/index.html" target="_blank"> Doxygen </a> rebuilds the documentation output to the `docs/` directory with `doxygen doxy.config`. 
 
 # Code
 
@@ -33,7 +32,7 @@ See [main.cpp](./main_8cpp.html) for entry into the program and key global varia
 
 // Define how they are extendable
 
-// Define how the main.cpp is prepped up for an experiement
+// Define how the main.cpp is prepped up for an experiment
 
 `.tpp` usage: Due to heavy reliance on templates, class definitions are within `.tpp` files referenced at the end of `.h` files so that explicit definition of template classes (e.g. Population\<ContinuedFraction\<int\>\>) are not required for compilation.
 
