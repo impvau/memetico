@@ -127,7 +127,7 @@ double local_search::custom_nelder_mead(U* model, DataSet* data, vector<size_t>&
 
             // Sum the values from each dimension
             // Caclulate the average value on the fly to minimise risk of overflow
-            cent[i] += it->second[i] /= params;
+            cent[i] += it->second[i] / params;
         
     }
     cent_fit = local_search::model_evaluate(cent, positions, model, data, selected);
@@ -292,7 +292,7 @@ double local_search::custom_nelder_mead_alg4(U* model, DataSet* data, vector<siz
         cent[i] = 0;
         for (auto it = ++simplex.begin(); it != simplex.end(); ++it)
             // Caclulate the average value on the fly to minimise risk of overflow
-            cent[i] += it->second[i] /= params;
+            cent[i] += it->second[i] / params;
     }
     double cent_fit = local_search::model_evaluate(cent, positions, model, data, selected);
 
@@ -415,7 +415,7 @@ double local_search::custom_nelder_mead_redo(U* model, DataSet* data, vector<siz
 
             // Sum the values from each dimension
             // Caclulate the average value on the fly to minimise risk of overflow
-            cent[i] += it->second[i] /= ndim;
+            cent[i] += it->second[i] / ndim;
         
     }
 
