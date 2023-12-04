@@ -61,38 +61,30 @@ template <typename Traits>
 double ContinuedFraction<Traits>::evaluate(vector<double>& values) {
 
     double ret = 0;
-
-    // Catch all under/overflows that occur
-    try {
-
-        // For all terms, starting from the closing term
-        for(int term = get_frac_terms()-1; term > -1; term -= 2 )
-
-            if( term != 0) {
-                // We sum the previously calculated portion with the next denominator up the fraction
-                // We then divide this sum by the next numerator up the fraction
-                // Consider a+b/(c+d/(e+f/g))
-                // - ret1 = f/(g+ret) = f/(g+0)
-                // - ret2 = d/(e+ret1)
-                // - ret3 = b/(c+ret2) 
-                // - Then we add the final term at 0
-                //
-                ret = divide(
-                    terms[term-1].evaluate(values),
-                    add(
-                        terms[term].evaluate(values),
-                        ret
-                    )
-                );
-            } else
-                ret = add(ret, terms[term].evaluate(values));
-
-    } catch (exception& e) { 
+    double An2 = 1.0;
+    double An1 = terms[0].evaluate(values);
+    double An = An1;
+    double Bn2 = 0.0;
+    double Bn1 = 1.0;
+    double Bn = Bn1;
+    for(int i=1; i<=get_depth(); i++){
+        An = add(multiply(terms[2*i].evaluate(values),An1), multiply(terms[2*i-1].evaluate(values),An2));
+        Bn = add(multiply(terms[2*i].evaluate(values),Bn1), multiply(terms[2*i-1].evaluate(values),Bn2));
+        An2 = An1;
+        An1 = An;
+        Bn2 = Bn1;
+        Bn1 = Bn;
+    }
+    try{
+        ret = divide(An, Bn);
+    }
+    catch (exception& e) {
+        cout << "exception in evaluate()" << endl;
         return numeric_limits<double>::max();
     }
 
-    return ret;
-    
+  return ret;
+
 }
 
 template <typename Traits>
@@ -255,47 +247,54 @@ void ContinuedFraction<Traits>::set_depth(size_t new_depth) {
 template <typename Traits2>
 ostream& operator<<(std::ostream& os, ContinuedFraction<Traits2>& c) {
 
+    if( Model::EXPRESSION == Recurrence ){ // case Model::EXPRESSION == Recurrence
+    string An2 = "(1.0)";
+    string An1 = "("+c.get_terms(0).str()+")";
+    string An;
+    string Bn2 = "(0.0)";
+    string Bn1 = "(1.0)";
+    string Bn;
+    for(int i=1; i<=c.get_depth(); i++){
+      An = "(("+c.get_terms(2*i).str()+")*"+An1+"+("+c.get_terms(2*i-1).str()+")*"+An2+")";
+      Bn = "(("+c.get_terms(2*i).str()+")*"+Bn1+"+("+c.get_terms(2*i-1).str()+")*"+Bn2+")";
+      An2 = An1;
+      An1 = An;
+      Bn2 = Bn1;
+      Bn1 = Bn;
+    }
+    os << "("+An+")/("+Bn+")";
+  } // end case Model::EXPRESSION == Recurrence  
+  else{ // case Model::EXPRESSION == Naive
     size_t close = 0;
     for( size_t i = 0; i < c.get_frac_terms(); i++) {
-
         // For odd terms place the diver to make it the next denominator
         if( i % 2 == 0 && i != 0) {
-
             if( Model::FORMAT == PrintLatex )
                 os << "}{(";
             else if( Model::FORMAT == PrintExcel)
                 os << "/(";
-
             close++;
         }
-
         // Print term in braces
         os << "(" << c.get_terms(i) << ")";
-
         //if( Model::FORMAT == PrintLatex && i != c.get_frac_terms() )
         //  os << "}";
-
         // Add plus for even terms exluding the closing term
         if( (i % 2 == 0 || i == 0) && i != c.get_frac_terms()-1 ) {
             os << "+";
             if( Model::FORMAT == PrintLatex && i+1 < c.get_frac_terms() )
                 os << "\\frac{";
         }
-
-        
-
     }
-    
     // Close the open braces
     for(size_t i = 0; i < close; i++) {
-
         if( Model::FORMAT == PrintLatex )
             os << ")}";
         else if( Model::FORMAT == PrintExcel)
             os << ")";
-
     }
-        
-    return os;
+  } // case Model::EXPRESSION == Naive
+  
+  return os;
 
 }

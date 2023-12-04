@@ -112,6 +112,9 @@ class Model {
         /** @brief Format to print all regressions as */
         static PrintType        FORMAT;
 
+    /** @brief Format to print all CF as naive or recurrence */
+        static ExpressionType        EXPRESSION;
+
         /** @brief TreeNode representation for GPU processing */
         TreeNode* node = nullptr;
 

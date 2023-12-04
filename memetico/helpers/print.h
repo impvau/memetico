@@ -8,4 +8,9 @@ enum PrintType {
     PrintNumpy
 };
 
+enum ExpressionType {
+    Naive,
+    Recurrence
+};
+
 #endif
