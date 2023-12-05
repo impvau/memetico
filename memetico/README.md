@@ -21,8 +21,7 @@ Papers related to this development include the following
 
 # Documentation
 
-Project documentation is viewable at `.../memetico-cpp/docs/index.html` and rebuilt with `doxygen doxy.config` from the base directory.
-<a href="https://www.doxygen.nl/index.html" target="_blank"> Doxygen </a> rebuilds the documentation output to the `docs/` directory with `doxygen doxy.config`. 
+Project documentation is viewable at `.../memetico-cpp/docs/index.html` and rebuilt with <a href="https://www.doxygen.nl/index.html" target="_blank"> Doxygen </a> via the command `doxygen doxy.config` from the base directory. You will need to run from the docs directory `git clone https://github.com/jothepro/doxygen-awesome-css` for pretty docs before building with doxygen.
 
 # Code
 
