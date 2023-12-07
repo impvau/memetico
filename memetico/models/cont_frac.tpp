@@ -66,7 +66,7 @@ double ContinuedFraction<Traits>::evaluate(vector<double>& values) {
     double An = An1;
     double Bn2 = 0.0;
     double Bn1 = 1.0;
-    double Bn = Bn1;
+    double Bn = Bn1;     
     for(int i=1; i<=get_depth(); i++){
         An = add(multiply(terms[2*i].evaluate(values),An1), multiply(terms[2*i-1].evaluate(values),An2));
         Bn = add(multiply(terms[2*i].evaluate(values),Bn1), multiply(terms[2*i-1].evaluate(values),Bn2));
@@ -79,7 +79,6 @@ double ContinuedFraction<Traits>::evaluate(vector<double>& values) {
         ret = divide(An, Bn);
     }
     catch (exception& e) {
-        cout << "exception in evaluate()" << endl;
         return numeric_limits<double>::max();
     }
 
