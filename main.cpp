@@ -117,8 +117,9 @@ int main(int argc, char *argv[]) {
         double test_score = ModelType::OBJECTIVE(&p.best_soln, &test, all);
         
         // Log data
-        log << "Seed,Train MSE,Test MSE,Dur,Model" << endl;
+        log << "Seed,Score,Train MSE,Test MSE,Dur,Model" << endl;
         log << meme::SEED;
+        log << "," << MemeticModel<DataType>::OBJECTIVE_NAME;
         log << "," << train_score;
         log << "," << test_score;
         log << "," << meme::RUN_TIME/1000.0;
