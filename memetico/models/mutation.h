@@ -144,6 +144,9 @@ namespace mutation {
 
             auto& model = static_cast<Derived&>(*this);
 
+            // Re-determine size in case the fraction has been modified since initialise()
+            size = model.get_params_per_term()*model.get_frac_terms();
+
             vector<bool> set = unique_vector();
 
             for(size_t i = 0; i < set.size(); i++)
