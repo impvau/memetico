@@ -104,6 +104,7 @@ void arg_objective(int argc, char * argv[]) {
     if( MemeticModel<DataType>::OBJECTIVE_NAME == "mse" )   MemeticModel<DataType>::OBJECTIVE = objective::mse<DataType>;
     if( MemeticModel<DataType>::OBJECTIVE_NAME == "mae" )   MemeticModel<DataType>::OBJECTIVE = objective::mae<DataType>;
     if( MemeticModel<DataType>::OBJECTIVE_NAME == "rmse" )   MemeticModel<DataType>::OBJECTIVE = objective::rmse<DataType>;
+    if( MemeticModel<DataType>::OBJECTIVE_NAME == "mape" )   MemeticModel<DataType>::OBJECTIVE = objective::mape<DataType>;
     if( MemeticModel<DataType>::OBJECTIVE_NAME == "pcor" )   MemeticModel<DataType>::OBJECTIVE = objective::p_cor<DataType>;
     if( MemeticModel<DataType>::OBJECTIVE_NAME == "scor" )   MemeticModel<DataType>::OBJECTIVE = objective::s_cor<DataType>;
 }

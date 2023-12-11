@@ -187,6 +187,91 @@ double objective::mae(MemeticModel<U>* model, DataSet* train, vector<size_t>& se
 }
 
 template <class U>
+double objective::mape(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected) {
+
+    auto start = chrono::system_clock::now();
+
+    if( !train->get_gpu() ) {
+
+        try {
+
+            double error_sum = 0;
+            double error;
+        
+            if( selected.size() == 0) {
+                
+                for(size_t i = 0; i < train->get_count(); i++) {
+
+                    double pred_val = model->evaluate(train->samples[i]);
+
+                    // Calculate absolute percentage error
+                    if (train->y[i] != 0) { // Avoid division by zero
+                        error = fabs((pred_val - train->y[i]) / train->y[i]);
+                    } else {
+                        error = 0; // Handle zero actual value case
+                    }
+
+                    // Weight error
+                    if(train->has_weight())
+                        error = multiply(error, train->weight[i]);
+
+                    // Sum of errors
+                    error_sum = add(error_sum, error);
+
+                }
+
+                model->set_error(error_sum / train->get_count());
+
+            } else {
+
+                for(size_t i : selected) {
+
+                    double pred_val = model->evaluate(train->samples[i]);
+
+                    // Calculate absolute percentage error
+                    if (train->y[i] != 0) {
+                        error = fabs((pred_val - train->y[i]) / train->y[i]);
+                    } else {
+                        error = 0;
+                    }
+
+                    // Weight error
+                    if(train->has_weight())
+                        error = multiply(error, train->weight[i]);
+
+                    // Sum of errors
+                    error_sum = add(error_sum, error);
+                }
+                
+                model->set_error(error_sum / selected.size());
+
+            }
+            
+            model->set_penalty( 1+model->get_count_active()*meme::PENALTY );
+            model->set_fitness( multiply(model->get_error(),model->get_penalty()) );
+
+        } catch (exception& e) {
+
+            model->set_error(numeric_limits<double>::max());
+            model->set_penalty(numeric_limits<double>::max());
+            model->set_fitness(numeric_limits<double>::max());
+
+        }
+
+    } else  {
+
+        throw std::runtime_error("GPU branch not implemented for MAPE");
+
+    }
+    
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double, milli> ms = end-start;
+    
+    return model->get_fitness();
+
+}
+
+template <class U>
 double objective::rmse(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected ) {
 
     mse(model, train, selected);

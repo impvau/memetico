@@ -27,6 +27,9 @@ template <class U>
 double mae(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected = vector<size_t>());
 
 template <class U>
+double mape(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected = vector<size_t>());
+
+template <class U>
 double rmse(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected = vector<size_t>());
 
 template <class U>
