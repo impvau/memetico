@@ -53,7 +53,7 @@ namespace cusr {
      * @param dataset
      * @param label
      */
-    void copyDatasetAndLabel(GPUDataset *dsStruct, vector<vector<float>> &dataset, vector<float> &label);
+    void copyDatasetAndLabel(GPUDataset *dsStruct, vector<vector<float>> &dataset, vector<float> &label, vector<float> &weights);
 
     /**
      * free data structure on the device side.

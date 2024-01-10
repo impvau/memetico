@@ -19,6 +19,8 @@ namespace cusr {
         float *dataset;         // Pointer to GPU 1D array containing the flattened data
         size_t dataset_pitch;   // Pitch is some sort of translation factor used when transferring 2D memeory arrays between GPU and host
         float *label;           // Pointer to GPU 1D array containing the target variable
+        float *weight;           // Pointer to GPU 1D array containing the weight variable
+        bool is_weighted;
         int dataset_size;       // Number of samples in GPU data
         size_t *subset;         // Pointer to GPU 1D array containing subset_size number of indices within dataset to evaluate
         int subset_size;        // Number of samples to evaluate in GPU data

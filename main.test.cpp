@@ -23,6 +23,7 @@ long int        meme::RUN_TIME = 0;
 size_t          meme::DIVERSITY_COUNT = 5;
 size_t          meme::STALE_RESET = 10;
 size_t          meme::DEPTH = 4;
+bool            meme::GPU = false;
 
 RandReal        meme::RANDREAL;
 RandInt         meme::RANDINT;

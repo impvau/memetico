@@ -109,8 +109,14 @@ class DataSet {
             vector<float> float_y;
             for(size_t i = 0; i < y.size(); i++)
                 float_y.push_back(y[i]);
+            
+            vector<float> float_w;
+            if( has_weight() ) {
+                for(size_t i = 0; i < y.size(); i++)
+                    float_w.push_back(weight[i]);
+            }
 
-            copyDatasetAndLabel(&device_data, float_samples, float_y); 
+            copyDatasetAndLabel(&device_data, float_samples, float_y, float_w); 
             device_data.subset_size = 0;
         }
     

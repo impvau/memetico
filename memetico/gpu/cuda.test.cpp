@@ -55,6 +55,7 @@ inline void init(string filename) {
 
 }
 
+
 TEST_CASE("CUSR: calculateFitness ") {
 
     RandInt ri = RandInt(42);
@@ -87,7 +88,7 @@ TEST_CASE("CUSR: calculateFitness ") {
 
     // Thread per block = 512, so all threads are in a single block, therefore we pass in 1
     float res = calculateFitness(ds.device_data, 1, pop, metric_t::mean_square_error );
-    REQUIRE(  (res-6845.240365625) < 0.0000001 );
+    REQUIRE(  abs(res-6845.240365625) < 0.001 );
     delete node;
 
 }
