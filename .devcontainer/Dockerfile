@@ -15,7 +15,12 @@ RUN apt-get -y install nlohmann-json3-dev
 
 # Documentation Tools
 RUN apt-get -y install doxygen
-RUN apt-get -y install graphviz
-RUN apt-get -y install git
+#RUN apt-get -y install graphviz
+#RUN apt-get -y install git
 
-WORKDIR /root
+WORKDIR /workspaces
+
+RUN apt-get install -y nfs-common
+RUN apt-get install -y vim
+
+COPY run.sh /workspaces/run.sh
