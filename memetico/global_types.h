@@ -30,6 +30,7 @@ typedef Regression<DataType> TermType;      // Model terms are Regression<double
 
 //typedef ContinuedFraction<ContinuedFractionTraits<TermType, DataType, mutation::MutateUniqueMask>> ModelType;
 typedef ContinuedFractionDynamicDepth<ContinuedFractionTraits<TermType, DataType, mutation::MutateUniqueMask>> ModelType;
+//typedef ContinuedFractionDynamicDepth<ContinuedFractionTraits<TermType, DataType, mutation::MutateHardSoft>> ModelType;
 //typedef BranchedContinuedFraction<ContinuedFractionTraits<TermType, DataType, mutation::MutateUniqueMask>> ModelType;
 
 #endif
