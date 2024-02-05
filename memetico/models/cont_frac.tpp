@@ -35,55 +35,91 @@ ContinuedFraction<Traits>::ContinuedFraction(const ContinuedFraction<Traits> &o)
 
 }
 
+
 template <typename Traits>
 void ContinuedFraction<Traits>::sanitise() {
-
-    // Check all terms
-    for(size_t term = 0; term < get_frac_terms(); term++) {
-
-        // if no terms are active on the fraction, at least set the constant on
-        // This could occur by soft mutation where the constant is turned off
-        if( terms[term].get_count_active() == 0 ) {
-            
-            terms[term].set_active(params_per_term-1, true);
-
-            // If the constant is 0, make it 1 to cause as little impact as possible
-            // e.g. if its a denominator term is it /1 rather than .../0
-            // if it is numnerator it is 1/... instead of 0/...
-            double safe_value = 1;
-            terms[term].set_value(params_per_term-1, safe_value);
-
-        }
+    
+    // Avoid having all coeffs inactive or 0 at denominator
+    bool actives_are_zero_even;
+    bool actives_are_zero_odd;
+    for(size_t idx_term = 2; idx_term < get_frac_terms()-1; idx_term+=2) {
+	actives_are_zero_even = true;
+	actives_are_zero_odd = true;
+	for(size_t j : terms[idx_term].get_active_positions()){
+	    if( fabs(terms[idx_term].get_value(j))>1e-16 ){
+		actives_are_zero_even = false;
+		break;
+	    }
+	}
+	for(size_t j : terms[idx_term+1].get_active_positions()){
+	    if( fabs(terms[idx_term+1].get_value(j))>1e-16 ){
+		actives_are_zero_odd = false;
+		break;
+	    }
+	}
+	// at this point, actives_are_zero_even is true if, for terms[idx_term], no coeffs are active or if the active coeffs are 0 
+	// same for actives_are_zero_odd and terms[idx_term+1]
+	if( actives_are_zero_even && actives_are_zero_odd ){
+	    terms[idx_term+1].set_active(params_per_term-1, true);
+	    if( fabs(terms[idx_term+1].get_value(params_per_term-1))<1e-16 )
+		terms[idx_term+1].set_value(params_per_term-1, 1.0);
+	}
+    }
+    // last term of the CF
+    actives_are_zero_even = true;
+    for(size_t j : terms[get_frac_terms()-1].get_active_positions()){
+	if( fabs(terms[get_frac_terms()-1].get_value(j))>1e-16 ){
+	    actives_are_zero_even = false;
+	    break;
+	}
+    }    
+    if( actives_are_zero_even ){
+	terms[get_frac_terms()-1].set_active(params_per_term-1, true);
+	if( fabs(terms[get_frac_terms()-1].get_value(params_per_term-1))<1e-16 )
+	    terms[get_frac_terms()-1].set_value(params_per_term-1, 1.0);
     }
 }
 
 template <typename Traits>
 double ContinuedFraction<Traits>::evaluate(vector<double>& values) {
 
+    sanitise();
     double ret = 0;
-    double An2 = 1.0;
-    double An1 = terms[0].evaluate(values);
-    double An = An1;
-    double Bn2 = 0.0;
-    double Bn1 = 1.0;
-    double Bn = Bn1;     
-    for(int i=1; i<=get_depth(); i++){
-        An = add(multiply(terms[2*i].evaluate(values),An1), multiply(terms[2*i-1].evaluate(values),An2));
-        Bn = add(multiply(terms[2*i].evaluate(values),Bn1), multiply(terms[2*i-1].evaluate(values),Bn2));
-        An2 = An1;
-        An1 = An;
-        Bn2 = Bn1;
-        Bn1 = Bn;
-    }
+
+    //--------------- modified Lentz algorithm
     try{
-        ret = divide(An, Bn);
+	double fj_1 = terms[0].evaluate(values);
+	if ( fabs(fj_1) < 1.0e-30 )
+	    fj_1 = 1.0e-30;
+	double Cj_1 = fj_1;
+	double Dj_1 = 0.0;
+	double fj = fj_1;
+	double Cj;
+	double Dj;
+	double Deltaj;
+	for(int i=1; i<=get_depth(); i++){
+	    Dj = terms[2*i].evaluate(values) + terms[2*i-1].evaluate(values)*Dj_1;
+	    if ( fabs(Dj) < 1.0e-30 )
+		Dj = 1.0e-30;
+	    Dj = 1.0/Dj;
+	    Cj = terms[2*i].evaluate(values) + terms[2*i-1].evaluate(values)/Cj_1;
+	    if ( fabs(Cj) < 1.0e-30 )
+		Cj = 1.0e-30;
+	    Deltaj = Dj*Cj;
+	    fj = fj_1*Deltaj;
+
+	    Dj_1 = Dj;
+	    Cj_1 = Cj;
+	    fj_1 = fj;
+	}
+	ret = fj;
     }
     catch (exception& e) {
-        return numeric_limits<double>::max();
+	// cout << "[cont_frac.tpp] numerical exception in evaluate()" << endl;
+	// print();
+	return numeric_limits<double>::max();
     }
-
-  return ret;
-
+    return ret;
 }
 
 template <typename Traits>
