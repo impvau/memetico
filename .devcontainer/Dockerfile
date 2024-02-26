@@ -15,12 +15,13 @@ RUN apt-get -y install nlohmann-json3-dev
 
 # Documentation Tools
 RUN apt-get -y install doxygen
-#RUN apt-get -y install graphviz
-#RUN apt-get -y install git
-
-WORKDIR /workspaces
-
+RUN apt-get -y install graphviz
 RUN apt-get install -y nfs-common
+RUN apt-get install -y git
 RUN apt-get install -y vim
 
-COPY run.sh /workspaces/run.sh
+RUN apt-get install -y mpich
+
+WORKDIR /workspaces/memetico
+
+#COPY run.sh /workspaces/memetico/run.sh
