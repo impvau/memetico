@@ -8,7 +8,9 @@ ROOT_DIR:=$(shell pwd)
 
 # Flags for compiling with NVCC
 CU = nvcc
-CUFLAGS = -std=c++17 -O3 -g -ccbin g++-11 -I "/usr/include/eigen3" -I "/usr/include/nlohmann/" -I "$(ROOT_DIR)/"
+# CUFLAGS = -std=c++17 -O3 -g -ccbin g++-10 -I "/usr/include/eigen3" -I "/usr/include/nlohmann/" -I "$(ROOT_DIR)/"
+CUFLAGS = -std=c++17 -O3 -g -ccbin mpic++ -I "/usr/include/eigen3" -I "/usr/include/nlohmann/" -I "$(ROOT_DIR)/"
+
 
 LDFLAGS =  -lgomp
 
@@ -19,7 +21,7 @@ LIST_MODELS_CODE =
 LIST_POP_CODE =			
 LIST_DATA_CODE =		memetico/data/data_set
 LIST_GPU_CODE =			memetico/gpu/cuda
-	
+
 # List the .cu cuda files. We can technically compile these files with NVCC and all others with g++ 
 # However there are no impacts in debugging or optimisation that work differently with NVCC and
 # when comparing -O3 optimisation it was 3 seconds faster on a 50second run
@@ -47,8 +49,8 @@ bin/%.o : %.cu
 
 # Compiile main executable.
 main: $(OBJ)
-	$(CU) $^ $(LDFLAGS) -o bin/main 
+	$(CU) -ccbin mpic++ $^ $(LDFLAGS) -o bin/main 
 
 # Clean bin directories to ensure recompilation
 clean:
-	rm -f bin/memetico/* bin/memetico/helpers/* bin/memetico/models/* bin/memetico/model_base/* bin/memetico/population/* bin/memetico/data/* bin/memetico/gpu/* bin/memetico/optimise/*  bin/*
+		rm -f bin/memetico/helpers/* bin/memetico/models/* bin/memetico/model_base/* bin/memetico/population/* bin/memetico/data/* bin/memetico/optimise/*  bin/main* bin/memetico/gpu/*
