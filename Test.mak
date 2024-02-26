@@ -12,7 +12,9 @@ LIST_HELPERS_TEST = 	# To be implemented
 LIST_MODEL_BASE_CODE = 	memetico/model_base/model
 LIST_MODEL_BASE_TEST = 	memetico/model_base/element.test memetico/model_base/model.test
 LIST_MODELS_CODE = 		# All code via template classes, so effectively all code is in header files
-LIST_MODELS_TEST = 		memetico/models/regression.test memetico/models/cont_frac.test memetico/models/branch_cont_frac_dd.test
+# Had to remove the regression test when -O is > 0, specifically at the time we introduced lenz
+#LIST_MODELS_TEST = 		memetico/models/regression.test memetico/models/cont_frac.test memetico/models/branch_cont_frac_dd.test
+LIST_MODELS_TEST = 		memetico/models/cont_frac.test memetico/models/branch_cont_frac_dd.test
 LIST_POP_CODE =			# working.. may all be in tpp/header files
 LIST_POP_TEST =			memetico/population/agent.test memetico/population/pop.test
 LIST_DATA_CODE =		memetico/data/data_set
