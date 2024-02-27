@@ -53,4 +53,4 @@ main: $(OBJ)
 
 # Clean bin directories to ensure recompilation
 clean:
-		rm -f bin/memetico/helpers/* bin/memetico/models/* bin/memetico/model_base/* bin/memetico/population/* bin/memetico/data/* bin/memetico/optimise/*  bin/main* bin/memetico/gpu/*
+	rm -f bin/memetico/helpers/* bin/memetico/models/* bin/memetico/model_base/* bin/memetico/population/* bin/memetico/data/* bin/memetico/optimise/*  bin/main* bin/memetico/gpu/*
