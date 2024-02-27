@@ -53,12 +53,36 @@ void DataSet::load_header(string line) {
             word.replace(index, 1, ""); 
 
         // Process element between commans
-        if( word.compare("w") == 0 )            // If weight header
+        if( word.compare("w") == 0 )                // If weight header
             weight_column = column;
-        else if( word.compare("dy") == 0 )      // If uncertainty header
+        else if( word.compare("dy") == 0 )          // If uncertainty header
             uncertainty_column  = column;
-        else if( word.compare("y") == 0 )       // If target header
-            target_column = column;     
+        else if( word.compare("y") == 0 )           // If target header
+            target_column = column;
+        else if( word.compare("yder") == 0 ) {      // If derivative header
+            derivative_column = column;
+            if(meme::MAX_DER_ORD>=1) {
+                Yder.push_back({});
+                yder_min.push_back(0.0);
+                yder_max.push_back(1.0);
+            }
+        }
+        else if( word.compare("yder2") == 0 ) {     // If derivative header
+            derivative2_column = column;
+            if(meme::MAX_DER_ORD>=2) {
+                Yder.push_back({});
+                yder_min.push_back(0.0);
+                yder_max.push_back(1.0);
+            }
+        }
+        else if( word.compare("yder3") == 0 ) {     // If derivative header
+            derivative3_column = column;
+            if(meme::MAX_DER_ORD>=3) {
+                Yder.push_back({});
+                yder_min.push_back(0.0);
+                yder_max.push_back(1.0);
+            }
+        }
         else                                    // else its a variable
             DataSet::IVS.push_back(word);    
 
@@ -91,6 +115,13 @@ void DataSet::load_data(string line ) {
             dy.push_back(stod(word));
         else if( column == target_column )      
             y.push_back(stod(word));
+        else if( column == derivative_column && meme::MAX_DER_ORD >= 1 )
+                Yder[0].push_back(stod(word));
+        else if( column == derivative2_column && meme::MAX_DER_ORD >= 2 )
+                Yder[1].push_back(stod(word));
+        else if( column == derivative3_column && meme::MAX_DER_ORD >= 3 )
+                Yder[2].push_back(stod(word));
+
         else           
             vars.push_back(stod(word));
 
