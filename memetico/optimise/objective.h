@@ -24,6 +24,12 @@ template <class U>
 double mse(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected = vector<size_t>());
 
 template <class U>
+double mse_der(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected = vector<size_t>());
+
+template <class U>
+vector<vector<double>> compute_succ_der(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected);
+
+template <class U>
 double mae(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected = vector<size_t>());
 
 template <class U>
