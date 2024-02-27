@@ -30,6 +30,5 @@ RandInt         meme::RANDINT;
 
 // Derivative Globals
 size_t          meme::IFR = 0;
-string          meme::PB_NAME = "";
 string          meme::IN_DER = "exact";
 size_t          meme::MAX_DER_ORD = 3;
