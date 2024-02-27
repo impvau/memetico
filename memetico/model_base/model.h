@@ -86,6 +86,11 @@ class Model {
          * takes a graph? Is double appropriate for an error score in all cases?
          */
         virtual double  evaluate(vector<double> & values) { return numeric_limits<double>::max(); };
+
+        virtual vector<double>  evaluate_der(vector<double> & values) { return {numeric_limits<double>::max(),numeric_limits<double>::max()}; };
+        virtual vector<double>  evaluate_der2(vector<double> & values) { return {numeric_limits<double>::max(),numeric_limits<double>::max(),numeric_limits<double>::max()}; };
+
+        virtual vector<double>  evaluate_der3(vector<double> & values) { return {numeric_limits<double>::max(),numeric_limits<double>::max(),numeric_limits<double>::max(),numeric_limits<double>::max()}; };
         
         virtual void    print()                     {   cout << "model" << endl;};
 

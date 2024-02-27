@@ -171,6 +171,12 @@ class ContinuedFraction : public MemeticModel<typename Traits::UType>,
          */
         double  evaluate(vector<double>& values) override;
 
+        vector<double>  evaluate_der(vector<double>& values) override;
+
+        vector<double>  evaluate_der2(vector<double>& values) override;
+
+        vector<double>  evaluate_der3(vector<double>& values) override;
+    
         /** @brief Print the solution to stdout */
         void print() override { 
             cout << *this << endl; 
