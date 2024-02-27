@@ -306,10 +306,6 @@ namespace args {
         arg_string = arg_value(argv, argv+argc, string("-ifr"), string("--index-first-repetition"));
         if(arg_string != "")    meme::IFR = stoi(arg_string);
 
-        // Problem name
-        arg_string = arg_value(argv, argv+argc, "-p", "--problem");
-        if(arg_string != "")        meme::PB_NAME = arg_string;
-
         // Input derivative mode
         arg_string = arg_value(argv, argv+argc, string("-id"), string("--inder"));
         if(arg_string != "")    meme::IN_DER = arg_string;
