@@ -21,6 +21,7 @@
 #include <memetico/models/branch_cont_frac_dd.h>
 #include <memetico/population/pop.h>
 #include <memetico/global_types.h>
+#include <mpi.h>
 
 // Std
 #include <cstdlib>
@@ -47,6 +48,11 @@ long int        meme::RUN_TIME = 0;
 size_t          meme::DEPTH = 4;
 size_t          meme::POCKET_DEPTH = 1;
 size_t          meme::DIVERSITY_COUNT = 3;
+
+// Derivative Globals
+size_t          meme::IFR = 0;
+string          meme::IN_DER = "exact";
+size_t          meme::MAX_DER_ORD = 3;
 
 DynamicDepthType meme::DYNAMIC_DEPTH_TYPE = DynamicNone;
 
@@ -77,6 +83,12 @@ FILE*           meme::STD_ERR;
  */
 int main(int argc, char *argv[]) {
 
+    // Initialise MPI functionality
+    // int mpi_size, mpi_rank;
+    // MPI_Init(&argc, &argv);
+    // MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
+    // MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+
     cout << setprecision(18);
 
     // Parse arguments
@@ -96,6 +108,12 @@ int main(int argc, char *argv[]) {
     DataSet test = DataSet(meme::TEST_FILE, meme::GPU);
     test.load();
     test.csv(meme::LOG_DIR+to_string(meme::SEED)+".Test.csv");
+
+    // Approximate derivative
+    //if( meme::IN_DER == "app-fd" )
+    //	train.compute_app_der(meme::MAX_DER_ORD);
+    //train.print();
+    //train.normalise();
 
     // Copy IVs to Model
     for(size_t i = 0; i < DataSet::IVS.size(); i++)
@@ -138,7 +156,9 @@ int main(int argc, char *argv[]) {
         cout << "====================================================" << endl << endl;
 
     }
-
+    
+    // MPI_Finalize();     // Close out MPI
+    
     // Write Training results
     ofstream train_log(meme::LOG_DIR+to_string(meme::SEED)+".Train.Predict.csv");
     if (train_log.is_open()) {
