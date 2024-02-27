@@ -40,13 +40,12 @@ void Population<U>::run() {
 
     // Initialise population variables
     stale_count = 0, stale_times = 0;      
-    set_best_soln(root_agent->get_pocket());     
+    set_best_soln(root_agent->get_pocket());
+
+    cout << "generation,best fitness,elapsed time,depth, best CFR model" << endl;
 
     // Loop for generations
     for( meme::GEN = 0; meme::GEN < meme::GENERATIONS; meme::GEN++ ) {
-
-        // Start timer
-        auto generation_start = chrono::system_clock::now();
 
         evolve();
 
@@ -57,18 +56,19 @@ void Population<U>::run() {
         // Run stale checks
         stale();
 
-        auto generation_end = chrono::high_resolution_clock::now();
-        chrono::duration<double, milli> generation_ms = generation_end-generation_start;
-        cout << setw(5) << GEN << " " << setw(15) << best_soln.get_fitness() <<  " (" << setw(15) << best_soln.get_error() << ") " << setw(10) << " duration: " << setw(10) << generation_ms.count() << "ms root_depth: " << meme::POCKET_DEPTH << " frac: " << best_soln << endl;       
+	    // logging
+        auto now_time = chrono::high_resolution_clock::now();
+	    chrono::duration<double, milli> runtime = now_time-start_time;
+	    cout << GEN << "," << best_soln.get_fitness() << "," << (runtime.count()/1000) << "," << meme::POCKET_DEPTH << "," << best_soln << endl;
 
+	    // stopping criteria
         if( best_soln.get_fitness() < 1e-10 ) {
-            cout << "Solution found" << endl;
+            cout << "[pop.tpp] early stopping convergence < 1e^-10" << endl;
             break;
         }
-
         auto end_time = chrono::system_clock::now();
         if( MAX_TIME*1000 < chrono::duration_cast<chrono::milliseconds>(end_time-start_time).count() ) {
-            cout << "Maximum time (" << MAX_TIME << " s) reached on gen " << GEN << ". Exiting after " << chrono::duration_cast<chrono::milliseconds>(end_time-start_time).count() << " ms" << endl;
+            cout << "[pop.tpp] Maximum time (" << MAX_TIME << " s) reached on gen " << GEN << ". Exiting after " << chrono::duration_cast<chrono::milliseconds>(end_time-start_time).count() << " ms" << endl;
             break;
         }
 
