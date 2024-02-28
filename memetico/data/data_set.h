@@ -357,7 +357,6 @@ class DataSet {
 
         }
 
-        
         static vector<vector<double>> compute_FD_weights(const unsigned mdo, vector<vector<double>> samples, const double around) {
 
             // Compute Finite Difference weights
