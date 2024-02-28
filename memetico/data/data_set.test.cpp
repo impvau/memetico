@@ -56,6 +56,7 @@ TEST_CASE("load() ") {
     REQUIRE( ds.get_file() == "test_data.csv" );
     REQUIRE( !ds.has_uncertainty() );
     REQUIRE( !ds.has_weight() );
+    REQUIRE( !ds.has_derivative() );
     REQUIRE( ds.get_count() == 2 );
     REQUIRE( ds.weight.size() == 0 );
     REQUIRE( ds.dy.size() == 0 );
@@ -91,11 +92,11 @@ TEST_CASE("load() ") {
     f3.open(fn3);
     if (!f3.is_open())
         throw runtime_error("Unable to open file "+ fn3);
-    f3 << "y,x1,x2,x3,x4,x5,x6,dy,w" << endl;
-    f3 << "5,10.4,335,123,356,12.4,16.2,0.1,1.1" << endl;
-    f3 << "6,11.4,336,124,357,12.5,16.3,0.2,1.2" << endl;
-    f3 << "7,12.4,337,125,358,12.6,16.4,0.3,1.3" << endl;
-    f3 << "8,13.4,338,126,359,12.7,16.5,0.4,1.4" << endl;
+    f3 << "y,yd,ydd,yddd,x1,x2,x3,x4,x5,x6,dy,w" << endl;
+    f3 << "5,8,5,7,10.4,335,123,356,12.4,16.2,0.1,1.1" << endl;
+    f3 << "6,6,2,6,11.4,336,124,357,12.5,16.3,0.2,1.2" << endl;
+    f3 << "7,5,8,4,12.4,337,125,358,12.6,16.4,0.3,1.3" << endl;
+    f3 << "8,4,8,9,13.4,338,126,359,12.7,16.5,0.4,1.4" << endl;
     f3.close();
     DataSet ds3 = DataSet(fn3);
     //
@@ -104,7 +105,26 @@ TEST_CASE("load() ") {
     REQUIRE( ds3.get_file() == "test_data.csv" );
     REQUIRE( ds3.has_uncertainty() );
     REQUIRE( ds3.has_weight() );
+    REQUIRE( ds3.has_derivative() );
     REQUIRE( ds3.get_count() == 4 );
+    // 0th Derviative
+    REQUIRE( ds3.Yder[0].size() == 4 );
+    REQUIRE( float(ds3.Yder[0][0]) == float(8));
+    REQUIRE( float(ds3.Yder[0][1]) == float(6));
+    REQUIRE( float(ds3.Yder[0][2]) == float(5));
+    REQUIRE( float(ds3.Yder[0][3]) == float(4));
+    // 1st Derviative
+    REQUIRE( ds3.Yder[1].size() == 4 );
+    REQUIRE( float(ds3.Yder[1][0]) == float(5));
+    REQUIRE( float(ds3.Yder[1][1]) == float(2));
+    REQUIRE( float(ds3.Yder[1][2]) == float(8));
+    REQUIRE( float(ds3.Yder[1][3]) == float(8));
+    // 2nd Derviative
+    REQUIRE( ds3.Yder[2].size() == 4 );
+    REQUIRE( float(ds3.Yder[2][0]) == float(7));
+    REQUIRE( float(ds3.Yder[2][1]) == float(6));
+    REQUIRE( float(ds3.Yder[2][2]) == float(4));
+    REQUIRE( float(ds3.Yder[2][3]) == float(9));
     // Weight
     REQUIRE( ds3.weight.size() == 4 );
     REQUIRE( float(ds3.weight[0]) == float(1.1));
