@@ -59,7 +59,7 @@ void DataSet::load_header(string line) {
             uncertainty_column  = column;
         else if( word.compare("y") == 0 )           // If target header
             target_column = column;
-        else if( word.compare("yder") == 0 ) {      // If derivative header
+        else if( word.compare("yd") == 0 ) {      // If derivative header
             derivative_column = column;
             if(meme::MAX_DER_ORD>=1) {
                 Yder.push_back({});
@@ -67,7 +67,7 @@ void DataSet::load_header(string line) {
                 yder_max.push_back(1.0);
             }
         }
-        else if( word.compare("yder2") == 0 ) {     // If derivative header
+        else if( word.compare("ydd") == 0 ) {     // If derivative header
             derivative2_column = column;
             if(meme::MAX_DER_ORD>=2) {
                 Yder.push_back({});
@@ -75,7 +75,7 @@ void DataSet::load_header(string line) {
                 yder_max.push_back(1.0);
             }
         }
-        else if( word.compare("yder3") == 0 ) {     // If derivative header
+        else if( word.compare("yddd") == 0 ) {     // If derivative header
             derivative3_column = column;
             if(meme::MAX_DER_ORD>=3) {
                 Yder.push_back({});

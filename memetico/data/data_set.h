@@ -104,6 +104,9 @@ class DataSet {
         /** @brief Return if all samples have uncertainty */
         bool has_uncertainty()  { return dy.size() == get_count();}
 
+        /** @brief Return if all samples have derivatives  */    
+        bool has_derivative()  { return Yder.size() > 0; }
+
         /** @brief Load data from filename into the object */
         void load();
 
@@ -291,7 +294,7 @@ class DataSet {
                 weights.clear();
 
                 // interval [samples[-3], samples[-2], samples[-1]]
-                weights = compute_FD_weights(2, {samples[y.size()-3], samples[y.size()-2], samples[y.size()-1]}, samples[y.size()-2][0]);
+                weights = compute_FD_weights(2, {samples[y.size()-3], samples[y.size()-2], samples[y.size()-1]}, samples[y.size()-1][0]);
                 fd_weights[1].push_back(weights[2]);
                 Yder[1].push_back( weights[2][0]*y[y.size()-3] + weights[2][1]*y[y.size()-2] + weights[2][2]*y[y.size()-1] );
                 weights.clear();
