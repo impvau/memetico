@@ -115,13 +115,18 @@ void DataSet::load_data(string line ) {
             dy.push_back(stod(word));
         else if( column == target_column )      
             y.push_back(stod(word));
-        else if( column == derivative_column && meme::MAX_DER_ORD >= 1 )
+        else if( column == derivative_column ) {
+            if( meme::MAX_DER_ORD >= 1 )
                 Yder[0].push_back(stod(word));
-        else if( column == derivative2_column && meme::MAX_DER_ORD >= 2 )
+        }
+        else if( column == derivative2_column ) {
+            if( meme::MAX_DER_ORD >= 2 )
                 Yder[1].push_back(stod(word));
-        else if( column == derivative3_column && meme::MAX_DER_ORD >= 3 )
+        }
+        else if( column == derivative3_column ) {
+            if( meme::MAX_DER_ORD >= 3 )
                 Yder[2].push_back(stod(word));
-
+        }
         else           
             vars.push_back(stod(word));
 
