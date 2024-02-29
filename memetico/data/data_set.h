@@ -372,7 +372,8 @@ class DataSet {
          * \f$f^{m}(x_0) \approx \sum_limits_{i=0}^n w_i\cdot f(x_i) \f$
          * 
          * @param mdo derivative or m value
-         * @param samples set of points \f$\mathbf{x}\f$
+         * @param samples set of points for determining the derivative.
+         * These will be a subset of the full dataset \f$\mathbf{x}\f$ centered around \f$x_0\f$
          * @param around the \f$x\f$ value to compute the derivative around
          * 
          */
@@ -385,7 +386,7 @@ class DataSet {
                 throw std::logic_error("size of samples insufficient");
             }
 
-            // Prepare for the n+1 weights that will be summed for the approximate derivative
+            // Prepare for the n weights that will be summed for the approximate derivative
             // For each derivative
             for( unsigned i = 0; i <= mdo; i++ ) {
 
@@ -400,39 +401,65 @@ class DataSet {
             weights[0][0] = 1;
 
             // compute the weights
-            double c1, c2, c2_r, c3, c3_r, c4, c5;
-            double tmp1, tmp2;
+            double 
+                scaleFactor,        // Initially 1, updated with each iteration to reflect cumulative scaling based on point differences
+                prodDiff,           // Product of differences between the current and all previous points
+                invProdDiff,        // Inverse of prodDiff, used to normalize weight calculations
+                pointDiff,          // Difference between two sample points being considered
+                invPointDiff,       // Inverse of pointDiff, for scaling weights inversely to point distances.
+                curDist,            // Distance from the current sample point to the target point.
+                prevDist;           // Distance from the previous sample point to the target, carried over from the last iteration.
+
             int mn;
-            c1 = 1;
-            c4 = samples[0][0] - around;
+            scaleFactor = 1;
+            curDist = samples[0][0] - around;
+
+            // For each sample in the subset of x
             for (unsigned i=1; i < samples.size(); ++i) {
 
-                mn = std::min(i, mdo);
-                c2 = 1;
-                c5 = c4;
-                c4 = samples[i][0] - around;
+                mn = min(i, mdo);       // get at most the derivative number or points
+                                        // and if we are on early samples, we get fewer
 
+                prodDiff = 1;
+                prevDist = curDist;
+                curDist = samples[i][0] - around;
+
+                // For the samples before the current sample
                 for (unsigned j=0; j<i; ++j) {
 
-                    c3 = samples[i][0] - samples[j][0];
-                    c3_r = 1/c3;
-                    c2 = c2*c3;
+                    // Determine the difference between the current point and the previous point being processed
+                    pointDiff = samples[i][0] - samples[j][0];
+                    invPointDiff = 1/pointDiff;
 
+                    // Multiply the differences of each point as we go through them
+                    prodDiff = prodDiff*pointDiff;
+
+                    // If its the last point before the current
                     if (j == i-1) {
 
-                        c2_r = 1/c2;
-                        for (int k=mn; k>=1; --k)
-                            weights[k][i] = c1*(k*weights[k-1][i-1] - c5*weights[k][i-1])*c2_r;
+                        invProdDiff = 1/prodDiff;
 
-                        weights[0][i] = -c1*c5*weights[0][i-1]*c2_r;
+                        // For the number of points we have, or the number of points for the derivative order should we have that many
+                        for (int k=mn; k>=1; --k)
+
+                            // Set the weight for the current sample for the kth derivative 
+                            // to some hideous thing that is hard to interpret the meaning of
+                            // - With k*weights[k-1][i-1] we are looking at the previous derivative
+                            // - At the start scaleFactor us 1, but this changes after processing each sample
+                            // - 
+
+                            weights[k][i] = scaleFactor*(k*weights[k-1][i-1] - prevDist*weights[k][i-1])*invProdDiff;
+
+                        // For the 1st derivative, 
+                        weights[0][i] = -scaleFactor*prevDist*weights[0][i-1]*invProdDiff;
                     }
 
                     for (unsigned k=mn; k>=1; --k)
-                        weights[k][j] = (c4*weights[k][j] - k*weights[k-1][j])*c3_r;
+                        weights[k][j] = (curDist*weights[k][j] - k*weights[k-1][j])*invPointDiff;
 
-                    weights[0][j] = c4*weights[0][j]*c3_r;
+                    weights[0][j] = curDist*weights[0][j]*invPointDiff;
                 }
-                c1 = c2;
+                scaleFactor = prodDiff;
             }
 
             return weights;
