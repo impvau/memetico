@@ -227,6 +227,8 @@ class DataSet {
          * 
          */
         void compute_app_der(size_t mdo) {
+
+            // computes the approximate 1st order derivative
             
             Yder.clear();
             yder_min.clear();
@@ -362,7 +364,7 @@ class DataSet {
             }
 
         }
-
+        
         /**
          * @brief Compute finite difference weights for Fornberg method
          * 
@@ -378,7 +380,7 @@ class DataSet {
          * 
          */
         static vector<vector<double>> compute_FD_weights(const unsigned mdo, vector<vector<double>> samples, const double around) {
-
+  
             // Ensure we have the minimum sample counts
             vector<vector<double>> weights;
             if (samples.size() < mdo + 1){
@@ -463,8 +465,9 @@ class DataSet {
             }
 
             return weights;
+            
         }
-        
+
     private: 
 
         /** Load first row of file */
