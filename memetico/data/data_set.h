@@ -180,10 +180,10 @@ class DataSet {
             }
         }
 
-        /** @brief Normalise data */
+        /** @brief Normalise the target and derivative data */
         void normalise() {
         
-            // 0th order derivative
+            // For target (0th order derivative)
             y_min = numeric_limits<double>::max();
             y_max = -y_min;
             for(int i=0; i<y.size(); i++) {
@@ -195,11 +195,13 @@ class DataSet {
             for(int i=0; i<y.size(); i++)
                 y[i] = ( y[i] - y_min )/( y_max - y_min );
 
-            // higher order derivatives
+            // Higher order derivatives
             double min;
             double max;
             yder_min.clear();
             yder_max.clear();
+
+            // For each derivative
             for(int k=0; k<Yder.size(); k++) {
 
                 min = numeric_limits<double>::max();
@@ -217,10 +219,14 @@ class DataSet {
         
         }
 
-        /** @brief Compute approximate derivative */
+        /**
+         * @brief Compute finite difference weights for Fornberg method
+         * 
+         * The function \f$f(x)\f$ is approximated at point \f$x_0\f$ using a set of points n+1 \f$\{x_i\}\f$ around \f$x_0\f$
+         * This is done for any order derivative m.
+         * 
+         */
         void compute_app_der(size_t mdo) {
-
-            // computes the approximate 1st order derivative
             
             Yder.clear();
             yder_min.clear();
@@ -357,25 +363,40 @@ class DataSet {
 
         }
 
+        /**
+         * @brief Compute finite difference weights for Fornberg method
+         * 
+         * In the Fornberg method we need to compute the weights \f$w_i\f$ for each point in \f$ \{x_i\} \f$
+         * To approximate the derivative of  \f$f(x)\f$ at \f$x_0\f$ using the weighted sum:
+         * 
+         * \f$f^{m}(x_0) \approx \sum_limits_{i=0}^n w_i\cdot f(x_i) \f$
+         * 
+         * @param mdo derivative or m value
+         * @param samples set of points \f$\mathbf{x}\f$
+         * @param around the \f$x\f$ value to compute the derivative around
+         * 
+         */
         static vector<vector<double>> compute_FD_weights(const unsigned mdo, vector<vector<double>> samples, const double around) {
 
-            // Compute Finite Difference weights
-            // Based on Fornberg formula
-
-            // initialise weights
+            // Ensure we have the minimum sample counts
             vector<vector<double>> weights;
             if (samples.size() < mdo + 1){
                 cout << "[data_set.h] size of samples insufficient" << endl;
                 throw std::logic_error("size of samples insufficient");
             }
 
+            // Prepare for the n+1 weights that will be summed for the approximate derivative
+            // For each derivative
             for( unsigned i = 0; i <= mdo; i++ ) {
+
+                // Create a weights array and initialise with 0 value
                 weights.push_back({});
-                for( unsigned j = 0; j < samples.size(); j++ ){
-                weights[i].push_back(0.0);
+                for( unsigned j = 0; j < samples.size(); j++ ) {
+                    weights[i].push_back(0.0);
                 }
             }
         
+            // Set the weight of the first derivatives first sample to 1 !!! not clear why
             weights[0][0] = 1;
 
             // compute the weights

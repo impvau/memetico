@@ -111,7 +111,19 @@ int main(int argc, char *argv[]) {
 
     // Approximate derivative
     //if( meme::IN_DER == "app-fd" )
-    //	train.compute_app_der(meme::MAX_DER_ORD);
+
+    train.compute_app_der(meme::MAX_DER_ORD);
+
+    //compute_FD_weights(1, train.samples, )
+
+    cout << "f1,f2,f3" << endl;
+    for( size_t i = 0; i < train.fd_weights[0].size(); i++ ) {
+        cout << train.fd_weights[0][i];
+        cout << train.fd_weights[1][i];
+        cout << train.fd_weights[2][i];
+        cout << endl;
+    }
+    
     //train.print();
     //train.normalise();
 
