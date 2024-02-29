@@ -20,7 +20,7 @@
                 "-f", "2",
                 "-g", "200",
                 "-ld", "0.2",
-                "-dd", "1"               
+                "-dd", "1"
                 //"-mr", "0.1",
                 //"-p", "0.35"
                 //"-t", "${workspaceFolder}/TestData/Argon1dx.csv",
@@ -65,18 +65,17 @@
         },
         {
             "name": "Python Data Plots",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/postproc/regen.py",
             "console": "integratedTerminal"
         },
         {
             "name": "Python Evolution Plots",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/postproc/evolve.py",
             "console": "integratedTerminal"
         },
-    ],
-    
+    ]
 }
