@@ -106,23 +106,45 @@ double objective::mse_der(MemeticModel<U>* model, DataSet* train, vector<size_t>
 	    int counter = 0;
 
 	    Ypreds = compute_succ_der(model, train, selected);
-	    // 0th order derivative
-	    for(size_t i = 0; i < Ypreds[0].size(); i++) {
-		error = (Ypreds[0][i] - train->y_min) / (train->y_max - train->y_min);
-		error = add(error, -train->y[i]);
-		error = multiply(error, error);
-		error_sum = add(error_sum, error);
-		counter++;
-	    }
-	    // higher order derivatives
-	    for(size_t k = 1; k < Ypreds.size(); k++){
-		for(size_t i = 0; i < Ypreds[k].size(); i++) {
-		    error = (Ypreds[k][i] - train->yder_min[k-1]) / (train->yder_max[k-1] - train->yder_min[k-1]);
-		    error = add(error, -train->Yder[k-1][i]);
-		    error = multiply(error, error);
-		    error_sum = add(error_sum, error);
-		    counter++;
-		}
+
+	    if( selected.size() == 0) {
+            // 0th order derivative
+            for(size_t i = 0; i < Ypreds[0].size(); i++) {
+                error = (Ypreds[0][i] - train->y_min) / (train->y_max - train->y_min);
+                error = add(error, -train->y[i]);
+                error = multiply(error, error);
+                error_sum = add(error_sum, error);
+                counter++;
+            }
+            // higher order derivatives
+            for(size_t k = 1; k < Ypreds.size(); k++) {
+                for(size_t i = 0; i < Ypreds[k].size(); i++) {
+                    error = (Ypreds[k][i] - train->yder_min[k-1]) / (train->yder_max[k-1] - train->yder_min[k-1]);
+                    error = add(error, -train->Yder[k-1][i]);
+                    error = multiply(error, error);
+                    error_sum = add(error_sum, error);
+                    counter++;
+                }
+            }
+        } else {
+            // 0th order derivative
+            for(size_t i = 0; i < Ypreds[0].size(); i++) {
+                error = (Ypreds[0][i] - train->y_min) / (train->y_max - train->y_min);
+                error = add(error, -train->y[selected[i]]);
+                error = multiply(error, error);
+                error_sum = add(error_sum, error);
+                counter++;
+            }
+            // higher order derivatives
+            for(size_t k = 1; k < Ypreds.size(); k++) {
+                for(size_t i = 0; i < Ypreds[k].size(); i++) {
+                    error = (Ypreds[k][i] - train->yder_min[k-1]) / (train->yder_max[k-1] - train->yder_min[k-1]);
+                    error = add(error, -train->Yder[k-1][selected[i]]);
+                    error = multiply(error, error);
+                    error_sum = add(error_sum, error);
+                    counter++;
+                }
+            }
 	    }
 	    model->set_error(error_sum / counter);
 	    model->set_penalty( 1+model->get_count_active()*meme::PENALTY );
