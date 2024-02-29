@@ -291,7 +291,7 @@ class DataSet {
                 weights.clear();
 
                 // interval [samples[-3], samples[-2], samples[-1]]
-                weights = compute_FD_weights(2, {samples[y.size()-3], samples[y.size()-2], samples[y.size()-1]}, samples[y.size()-2][0]);
+                weights = compute_FD_weights(2, {samples[y.size()-3], samples[y.size()-2], samples[y.size()-1]}, samples[y.size()-1][0]);
                 fd_weights[1].push_back(weights[2]);
                 Yder[1].push_back( weights[2][0]*y[y.size()-3] + weights[2][1]*y[y.size()-2] + weights[2][2]*y[y.size()-1] );
                 weights.clear();
