@@ -86,8 +86,6 @@ double objective::mse(MemeticModel<U>* model, DataSet* train, vector<size_t>& se
     return model->get_fitness();
 }
 
-
-
 /**
  * mse_der
  * 
@@ -166,12 +164,6 @@ double objective::mse_der(MemeticModel<U>* model, DataSet* train, vector<size_t>
     
     return model->get_fitness();
 }
-
-
-
-
-
-
 
 template <class U>
 double objective::mae(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected ) {
@@ -742,7 +734,6 @@ double objective::compare(MemeticModel<U>* m1, MemeticModel<U>* m2, DataSet* tra
     return error_dist;
 }
 
-
 /**
  * compute_succ_der
  * 
@@ -1119,4 +1110,3 @@ vector<vector<double>> objective::compute_succ_der(MemeticModel<U>* model, DataS
 
     return Y;    
 }
-
