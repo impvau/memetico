@@ -10,23 +10,24 @@
             "request": "launch",
             "program": "${workspaceFolder}/bin/main",
             "args": [
+                
+                "-s","1433120488"
+                ,"-t", "${workspaceFolder}/data/data.csv"
+                ,"-T", "${workspaceFolder}/data/data.csv"
+                ,"-lt", "${workspaceFolder}/out/"
+                ,"-f", "2"
+                ,"-g", "200"
+                ,"-ld", "0.2"
+                ,"-dd", "1"
+                ,"-lt", "${workspaceFolder}/out"
+
                 //"-d", "0.1",
                 //"-f", "4",
                 //"-sd", "0.75",
-                "-s","1433120488",
-                "-t", "${workspaceFolder}/data/yacht.csv",
-                "-T", "${workspaceFolder}/data/yacht2.csv",
-                "-lt", "${workspaceFolder}/out/",
-                "-f", "2",
-                "-g", "200",
-                "-ld", "0.2",
-                "-dd", "1"
                 //"-mr", "0.1",
                 //"-p", "0.35"
-                //"-t", "${workspaceFolder}/TestData/Argon1dx.csv",
-                //"-T", "${workspaceFolder}/TestData/Argon1dx.csv",
-                //"-log", "${workspaceFolder}/Output/Run.log",
-                //"-t", "~/codes/datas/enviro/airfoil.csv",
+                //
+
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
