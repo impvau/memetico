@@ -10,9 +10,9 @@
 
 	"runArgs": [ "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined", "--gpus=all"],
 
-    "mounts": [
+    /*"mounts": [
         "source=/home/charlie/codes/data,target=/workspaces/memetico/data,type=bind,consistency=cached"
-    ],
+    ],*/
 
 	// Add the IDs of extensions you want installed when the container is created.
 	"customizations": {
