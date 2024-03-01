@@ -103,7 +103,8 @@ double objective::mse_der(MemeticModel<U>* model, DataSet* train, vector<size_t>
 	    double error;
 	    int counter = 0;
 
-	    Ypreds = compute_succ_der(model, train, selected);
+        if( meme::IN_DER == "app-fd" )  Ypreds = fornberg(model, train, selected);
+        else                            Ypreds = derivative(model, train, selected);
 
 	    if( selected.size() == 0) {
             // 0th order derivative
@@ -734,379 +735,375 @@ double objective::compare(MemeticModel<U>* m1, MemeticModel<U>* m2, DataSet* tra
     return error_dist;
 }
 
-/**
- * compute_succ_der
- * 
- */
+
 template <class U>
-vector<vector<double>> objective::compute_succ_der(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected) {
+vector<vector<double>> objective::derivative(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected) {
 
     vector<vector<double>> Y{{}};
-    // Y[0] 0th order derivative, Y[1] 1st order derivative and so on
-    // Y[0]=f(samples), Y[1]=f'(Xder[0],fd_weights[0]), Y[2]=f''(Xder[1],fd_weights[1]) and so on
 
+    // Exact derivative
+    // 0th and 1st order derivative
+    if(meme::MAX_DER_ORD==1) {
 
-    //// Finite differences
-    if( meme::IN_DER == "app-fd" ) {
-
-        // 100% training samples
+        vector<double> der_0_1;
+        Y.push_back({});
         if( selected.size() == 0) {
-            
-            // 0th order derivative
-            for(size_t i = 0; i < train->samples.size(); i++)
-                Y[0].push_back(model->evaluate(train->samples[i]));
 
+            for(size_t i = 0; i < train->samples.size(); i++) {
+                der_0_1 = model->evaluate_der(train->samples[i]);
+                Y[0].push_back(der_0_1[0]);
+                Y[1].push_back(der_0_1[1]);
+                der_0_1.clear();
+            }
+        } else {
+
+            for(size_t i : selected) {
+                der_0_1 = model->evaluate_der(train->samples[i]);
+                Y[0].push_back(der_0_1[0]);
+                Y[1].push_back(der_0_1[1]);
+                der_0_1.clear();		
+            }
+        }
+    }
+
+    // 0th, 1st and 2nd order derivative
+    if(meme::MAX_DER_ORD==2) {
+
+        vector<double> ders;
+        Y.push_back({});
+        Y.push_back({});
+        if( selected.size() == 0) {
+            for(size_t i = 0; i < train->samples.size(); i++) {
+                ders = model->evaluate_der2(train->samples[i]);
+                Y[0].push_back(ders[0]);
+                Y[1].push_back(ders[1]);
+                Y[2].push_back(ders[2]);
+                ders.clear();
+            }
+        } else {
+            for(size_t i : selected) {
+                ders = model->evaluate_der2(train->samples[i]);
+                Y[0].push_back(ders[0]);
+                Y[1].push_back(ders[1]);
+                Y[2].push_back(ders[2]);
+                ders.clear();		
+            }
+        }
+    }
+
+    // 0th, 1st, 2nd and 3rd order derivative
+    if(meme::MAX_DER_ORD==3) {
+
+        vector<double> ders;
+        Y.push_back({});
+        Y.push_back({});
+        Y.push_back({});
+        if( selected.size() == 0) {
+            for(size_t i = 0; i < train->samples.size(); i++) {
+                ders = model->evaluate_der3(train->samples[i]);
+                Y[0].push_back(ders[0]);
+                Y[1].push_back(ders[1]);
+                Y[2].push_back(ders[2]);
+                Y[3].push_back(ders[3]);
+                ders.clear();
+            }
+        } else {
+            for(size_t i : selected) {
+                ders = model->evaluate_der3(train->samples[i]);
+                Y[0].push_back(ders[0]);
+                Y[1].push_back(ders[1]);
+                Y[2].push_back(ders[2]);
+                Y[3].push_back(ders[3]);
+                ders.clear();		
+            }
+        }
+    }
+
+    return Y;
+}
+
+template <class U>
+vector<vector<double>> objective::fornberg(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected) {
+    
+    vector<vector<double>> Y{{}};
+
+    // 100% training samples
+    if( selected.size() == 0) {
+        
+        // Store in first return the target value
+        for(size_t i = 0; i < train->samples.size(); i++)
+            Y[0].push_back(model->evaluate(train->samples[i]));
+
+        // Calculate the 1st order derivative given the predicted values from model
+        if(meme::MAX_DER_ORD>=1) {
+
+            Y.push_back({});
+            
+            // first interval samples[0], samples[1]
+            Y[1].push_back( train->fd_weights[0][0][0]*Y[0][0] + train->fd_weights[0][0][1]*Y[0][1] );
+            
+            // intermediate intervals samples[i-1], samples[i], samples[i+1]
+            for(size_t i = 1; i < Y[0].size()-1; i++)
+                Y[1].push_back( train->fd_weights[0][i][0]*Y[0][i-1] + train->fd_weights[0][i][1]*Y[0][i] + train->fd_weights[0][i][2]*Y[0][i+1] );
+            
+            // last interval samples[-2], samples[-1]
+            Y[1].push_back( train->fd_weights[0][Y[0].size()-1][0]*Y[0][Y[0].size()-2] + train->fd_weights[0][Y[0].size()-1][1]*Y[0][Y[0].size()-1] );
+
+        }
+        
+        // Calculate the 2nd order derivative given the predicted values from model
+        if(meme::MAX_DER_ORD>=2) {
+
+            Y.push_back({});
+
+            // first interval samples[0], samples[1], samples[2]
+            Y[2].push_back( train->fd_weights[1][0][0]*Y[0][0] + train->fd_weights[1][0][1]*Y[0][1] + train->fd_weights[1][0][2]*Y[0][2] );
+            
+            // second interval samples[0], samples[1], samples[2], samples[3]
+            Y[2].push_back( train->fd_weights[1][1][0]*Y[0][0] + train->fd_weights[1][1][1]*Y[0][1] + train->fd_weights[1][1][2]*Y[0][2] + train->fd_weights[1][1][3]*Y[0][3] );
+            
+            // intermediate intervals samples[i-2], samples[i-1], samples[i], samples[i+1], samples[i+2]
+            for(size_t i = 2; i < Y[0].size()-2; i++)
+                Y[2].push_back( train->fd_weights[1][i][0]*Y[0][i-2] + train->fd_weights[1][i][1]*Y[0][i-1] + train->fd_weights[1][i][2]*Y[0][i] + train->fd_weights[1][i][3]*Y[0][i+1] + train->fd_weights[1][i][4]*Y[0][i+2] );
+            
+            // one before last interval samples[-4], samples[-3], samples[-2], samples[-1]
+            Y[2].push_back( train->fd_weights[1][Y[0].size()-2][0]*Y[0][Y[0].size()-4] + train->fd_weights[1][Y[0].size()-2][1]*Y[0][Y[0].size()-3] + train->fd_weights[1][Y[0].size()-2][2]*Y[0][Y[0].size()-2] + train->fd_weights[1][Y[0].size()-2][3]*Y[0][Y[0].size()-1] );
+            
+            // last interval samples[-3], samples[-2], samples[-1]
+            Y[2].push_back( train->fd_weights[1][Y[0].size()-1][0]*Y[0][Y[0].size()-3] + train->fd_weights[1][Y[0].size()-1][1]*Y[0][Y[0].size()-2] + train->fd_weights[1][Y[0].size()-1][2]*Y[0][Y[0].size()-1] );
+        }
+
+        // 3rd order derivative
+        if(meme::MAX_DER_ORD>=3) {
+
+            Y.push_back({});
+
+            // first interval samples[0], samples[1], samples[2], samples[3]
+            Y[3].push_back(
+                train->fd_weights[2][0][0]*Y[0][0]
+                + train->fd_weights[2][0][1]*Y[0][1]
+                + train->fd_weights[2][0][2]*Y[0][2]
+                + train->fd_weights[2][0][3]*Y[0][3] 
+            );
+
+            // second interval samples[0], samples[1], samples[2], samples[3], samples[4]
+            Y[3].push_back(
+                train->fd_weights[2][1][0]*Y[0][0]
+                + train->fd_weights[2][1][1]*Y[0][1]
+                + train->fd_weights[2][1][2]*Y[0][2]
+                + train->fd_weights[2][1][3]*Y[0][3]
+                + train->fd_weights[2][1][4]*Y[0][4] 
+            );
+
+            // third interval samples[0], samples[1], samples[2], samples[3], samples[4], samples[5]
+            Y[3].push_back(
+                train->fd_weights[2][2][0]*Y[0][0]
+                + train->fd_weights[2][2][1]*Y[0][1]
+                + train->fd_weights[2][2][2]*Y[0][2]
+                + train->fd_weights[2][2][3]*Y[0][3]
+                + train->fd_weights[2][2][4]*Y[0][4]
+                + train->fd_weights[2][2][5]*Y[0][5] 
+            );
+
+            // intermediate intervals samples[i-3], samples[i-2], samples[i-1], samples[i], samples[i+1], samples[i+2], samples[i+3]
+            for(size_t i = 3; i < Y[0].size()-3; i++) {
+                Y[3].push_back(
+                    train->fd_weights[2][i][0]*Y[0][i-3]
+                    + train->fd_weights[2][i][1]*Y[0][i-2]
+                    + train->fd_weights[2][i][2]*Y[0][i-1]
+                    + train->fd_weights[2][i][3]*Y[0][i]
+                    + train->fd_weights[2][i][4]*Y[0][i+1]
+                    + train->fd_weights[2][i][5]*Y[0][i+2]
+                    + train->fd_weights[2][i][6]*Y[0][i+3] 
+                );
+            }
+
+            // two before last interval samples[-6], samples[-5], samples[-4], samples[-3], samples[-2], samples[-1]
+            Y[3].push_back(
+                train->fd_weights[2][Y[0].size()-3][0]*Y[0][Y[0].size()-6]
+                + train->fd_weights[2][Y[0].size()-3][1]*Y[0][Y[0].size()-5]
+                + train->fd_weights[2][Y[0].size()-3][2]*Y[0][Y[0].size()-4]
+                + train->fd_weights[2][Y[0].size()-3][3]*Y[0][Y[0].size()-3]
+                + train->fd_weights[2][Y[0].size()-3][4]*Y[0][Y[0].size()-2]
+                + train->fd_weights[2][Y[0].size()-3][5]*Y[0][Y[0].size()-1] 
+            );
+
+            // one before last interval samples[-5], samples[-4], samples[-3], samples[-2], samples[-1]
+            Y[3].push_back(
+                train->fd_weights[2][Y[0].size()-2][0]*Y[0][Y[0].size()-5]
+                + train->fd_weights[2][Y[0].size()-2][1]*Y[0][Y[0].size()-4]
+                + train->fd_weights[2][Y[0].size()-2][2]*Y[0][Y[0].size()-3]
+                + train->fd_weights[2][Y[0].size()-2][3]*Y[0][Y[0].size()-2]
+                + train->fd_weights[2][Y[0].size()-2][4]*Y[0][Y[0].size()-1] 
+            );
+
+            // last interval samples[-4], samples[-3], samples[-2], samples[-1]
+            Y[3].push_back(
+                train->fd_weights[2][Y[0].size()-1][0]*Y[0][Y[0].size()-4]
+                + train->fd_weights[2][Y[0].size()-1][1]*Y[0][Y[0].size()-3]
+                + train->fd_weights[2][Y[0].size()-1][2]*Y[0][Y[0].size()-2]
+                + train->fd_weights[2][Y[0].size()-1][3]*Y[0][Y[0].size()-1] 
+            );
+        }
+
+    } else { 
+        
+        // 20% training samples
+        
+        if(meme::MAX_DER_ORD>=1)    Y.push_back({});
+        if(meme::MAX_DER_ORD>=2)    Y.push_back({});
+        if(meme::MAX_DER_ORD>=3)    cout << "";
+
+        double ypred_after;
+        double ypred_before;
+        for(size_t i : selected) {
+
+            // 0th order derivative
+            Y[0].push_back(model->evaluate(train->samples[i]));
+        
             // 1st order derivative
             if(meme::MAX_DER_ORD>=1) {
-
-                Y.push_back({});
                 
                 // first interval samples[0], samples[1]
-                Y[1].push_back( train->fd_weights[0][0][0]*Y[0][0] + train->fd_weights[0][0][1]*Y[0][1] );
+                if(i==0) {
+                    ypred_after = model->evaluate(train->samples[1]);
+                    Y[1].push_back( train->fd_weights[0][0][0]*Y[0][Y[0].size()-1] + train->fd_weights[0][0][1]*ypred_after );
+                }
+
+                // last interval samples[-2], samples[-1]
+                if(i==train->samples.size()-1) {
+                    ypred_before = model->evaluate(train->samples[train->samples.size()-2]);
+                    Y[1].push_back( train->fd_weights[0][train->samples.size()-1][0]*ypred_before + train->fd_weights[0][train->samples.size()-1][1]*Y[0][Y[0].size()-1] );
+                }
                 
                 // intermediate intervals samples[i-1], samples[i], samples[i+1]
-                for(size_t i = 1; i < Y[0].size()-1; i++)
-                    Y[1].push_back( train->fd_weights[0][i][0]*Y[0][i-1] + train->fd_weights[0][i][1]*Y[0][i] + train->fd_weights[0][i][2]*Y[0][i+1] );
-                
-                // last interval samples[-2], samples[-1]
-                Y[1].push_back( train->fd_weights[0][Y[0].size()-1][0]*Y[0][Y[0].size()-2] + train->fd_weights[0][Y[0].size()-1][1]*Y[0][Y[0].size()-1] );
-
+                if(i>0 && i<train->samples.size()-1) {
+                    ypred_before = model->evaluate(train->samples[i-1]);
+                    ypred_after = model->evaluate(train->samples[i+1]);
+                    Y[1].push_back( train->fd_weights[0][i][0]*ypred_before + train->fd_weights[0][i][1]*Y[0][Y[0].size()-1] + train->fd_weights[0][i][2]*ypred_after );
+                }
             }
-            
+        
             // 2nd order derivative
             if(meme::MAX_DER_ORD>=2) {
 
-                Y.push_back({});
+                double ypred_after_2;
+                double ypred_before_2;
 
                 // first interval samples[0], samples[1], samples[2]
-                Y[2].push_back( train->fd_weights[1][0][0]*Y[0][0] + train->fd_weights[1][0][1]*Y[0][1] + train->fd_weights[1][0][2]*Y[0][2] );
-                
+                if(i==0) {
+                    ypred_after = model->evaluate(train->samples[1]);
+                    ypred_after_2 = model->evaluate(train->samples[2]);
+                    Y[2].push_back( train->fd_weights[1][0][0]*Y[0][Y[0].size()-1] + train->fd_weights[1][0][1]*ypred_after + train->fd_weights[1][0][2]*ypred_after_2 );
+                }
+
                 // second interval samples[0], samples[1], samples[2], samples[3]
-                Y[2].push_back( train->fd_weights[1][1][0]*Y[0][0] + train->fd_weights[1][1][1]*Y[0][1] + train->fd_weights[1][1][2]*Y[0][2] + train->fd_weights[1][1][3]*Y[0][3] );
-                
-                // intermediate intervals samples[i-2], samples[i-1], samples[i], samples[i+1], samples[i+2]
-                for(size_t i = 2; i < Y[0].size()-2; i++)
-                    Y[2].push_back( train->fd_weights[1][i][0]*Y[0][i-2] + train->fd_weights[1][i][1]*Y[0][i-1] + train->fd_weights[1][i][2]*Y[0][i] + train->fd_weights[1][i][3]*Y[0][i+1] + train->fd_weights[1][i][4]*Y[0][i+2] );
+                if(i==1) {
+                    ypred_before = model->evaluate(train->samples[0]);
+                    ypred_after = model->evaluate(train->samples[2]);
+                    ypred_after_2 = model->evaluate(train->samples[3]);
+                    Y[2].push_back( train->fd_weights[1][1][0]*ypred_before + train->fd_weights[1][1][1]*Y[0][Y[0].size()-1] + train->fd_weights[1][1][2]*ypred_after  + train->fd_weights[1][1][3]*ypred_after_2);
+                }
                 
                 // one before last interval samples[-4], samples[-3], samples[-2], samples[-1]
-                Y[2].push_back( train->fd_weights[1][Y[0].size()-2][0]*Y[0][Y[0].size()-4] + train->fd_weights[1][Y[0].size()-2][1]*Y[0][Y[0].size()-3] + train->fd_weights[1][Y[0].size()-2][2]*Y[0][Y[0].size()-2] + train->fd_weights[1][Y[0].size()-2][3]*Y[0][Y[0].size()-1] );
-                
+                if(i==train->samples.size()-2) {
+                    ypred_before_2 = model->evaluate(train->samples[train->samples.size()-4]);
+                    ypred_before = model->evaluate(train->samples[train->samples.size()-3]);
+                    ypred_after = model->evaluate(train->samples[train->samples.size()-1]);
+                    Y[2].push_back( train->fd_weights[1][train->samples.size()-2][0]*ypred_before_2 + train->fd_weights[1][train->samples.size()-2][1]*ypred_before + train->fd_weights[1][train->samples.size()-2][2]*Y[0][Y[0].size()-1] + train->fd_weights[1][train->samples.size()-2][3]*ypred_after );
+                }
+
                 // last interval samples[-3], samples[-2], samples[-1]
-                Y[2].push_back( train->fd_weights[1][Y[0].size()-1][0]*Y[0][Y[0].size()-3] + train->fd_weights[1][Y[0].size()-1][1]*Y[0][Y[0].size()-2] + train->fd_weights[1][Y[0].size()-1][2]*Y[0][Y[0].size()-1] );
+                if(i==train->samples.size()-1) {
+                    ypred_before_2 = model->evaluate(train->samples[train->samples.size()-3]);
+                    ypred_before = model->evaluate(train->samples[train->samples.size()-2]);
+                    Y[2].push_back( train->fd_weights[1][train->samples.size()-1][0]*ypred_before_2 + train->fd_weights[1][train->samples.size()-1][1]*ypred_before + train->fd_weights[1][train->samples.size()-1][2]*Y[0][Y[0].size()-1] );
+                }
+
+                // intermediate intervals
+                if(i>1 && i<train->samples.size()-2) {
+                    ypred_before_2 = model->evaluate(train->samples[i-2]);
+                    ypred_before = model->evaluate(train->samples[i-1]);
+                    ypred_after = model->evaluate(train->samples[i+1]);
+                    ypred_after_2 = model->evaluate(train->samples[i+2]);
+                    Y[2].push_back( train->fd_weights[1][i][0]*ypred_before_2 + train->fd_weights[1][i][1]*ypred_before + train->fd_weights[1][i][2]*Y[0][Y[0].size()-1] + train->fd_weights[1][i][3]*ypred_after + train->fd_weights[1][i][4]*ypred_after_2 );
+                }
             }
 
             // 3rd order derivative
             if(meme::MAX_DER_ORD>=3) {
-
-                Y.push_back({});
+                
+                double ypred_after_2;
+                double ypred_before_2;
+                double ypred_after_3;
+                double ypred_before_3;
 
                 // first interval samples[0], samples[1], samples[2], samples[3]
-                Y[3].push_back(
-                    train->fd_weights[2][0][0]*Y[0][0]
-                    + train->fd_weights[2][0][1]*Y[0][1]
-                    + train->fd_weights[2][0][2]*Y[0][2]
-                    + train->fd_weights[2][0][3]*Y[0][3] 
-                );
+                if(i==0) {
+                    ypred_after = model->evaluate(train->samples[1]);
+                    ypred_after_2 = model->evaluate(train->samples[2]);
+                    ypred_after_3 = model->evaluate(train->samples[3]);
+                    Y[3].push_back( train->fd_weights[2][0][0]*Y[0][Y[0].size()-1] + train->fd_weights[2][0][1]*ypred_after + train->fd_weights[2][0][2]*ypred_after_2 + train->fd_weights[2][0][3]*ypred_after_3 );
+                }
 
                 // second interval samples[0], samples[1], samples[2], samples[3], samples[4]
-                Y[3].push_back(
-                    train->fd_weights[2][1][0]*Y[0][0]
-                    + train->fd_weights[2][1][1]*Y[0][1]
-                    + train->fd_weights[2][1][2]*Y[0][2]
-                    + train->fd_weights[2][1][3]*Y[0][3]
-                    + train->fd_weights[2][1][4]*Y[0][4] 
-                );
-
-                // third interval samples[0], samples[1], samples[2], samples[3], samples[4], samples[5]
-                Y[3].push_back(
-                    train->fd_weights[2][2][0]*Y[0][0]
-                    + train->fd_weights[2][2][1]*Y[0][1]
-                    + train->fd_weights[2][2][2]*Y[0][2]
-                    + train->fd_weights[2][2][3]*Y[0][3]
-                    + train->fd_weights[2][2][4]*Y[0][4]
-                    + train->fd_weights[2][2][5]*Y[0][5] 
-                );
-
-                // intermediate intervals samples[i-3], samples[i-2], samples[i-1], samples[i], samples[i+1], samples[i+2], samples[i+3]
-                for(size_t i = 3; i < Y[0].size()-3; i++) {
-                    Y[3].push_back(
-                        train->fd_weights[2][i][0]*Y[0][i-3]
-                        + train->fd_weights[2][i][1]*Y[0][i-2]
-                        + train->fd_weights[2][i][2]*Y[0][i-1]
-                        + train->fd_weights[2][i][3]*Y[0][i]
-                        + train->fd_weights[2][i][4]*Y[0][i+1]
-                        + train->fd_weights[2][i][5]*Y[0][i+2]
-                        + train->fd_weights[2][i][6]*Y[0][i+3] 
-                    );
+                if(i==1) {
+                    ypred_before = model->evaluate(train->samples[0]);
+                    ypred_after = model->evaluate(train->samples[2]);
+                    ypred_after_2 = model->evaluate(train->samples[3]);
+                    ypred_after_3 = model->evaluate(train->samples[4]);
+                    Y[3].push_back( train->fd_weights[2][1][0]*ypred_before + train->fd_weights[2][1][1]*Y[0][Y[0].size()-1] + train->fd_weights[2][1][2]*ypred_after  + train->fd_weights[2][1][3]*ypred_after_2  + train->fd_weights[2][1][4]*ypred_after_3 );
                 }
 
+                // third interval  samples[0], samples[1], samples[2], samples[3], samples[4], samples[5]
+                if(i==2) {			
+                    ypred_before_2 = model->evaluate(train->samples[0]);
+                    ypred_before = model->evaluate(train->samples[1]);
+                    ypred_after = model->evaluate(train->samples[3]);
+                    ypred_after_2 = model->evaluate(train->samples[4]);
+                    ypred_after_3 = model->evaluate(train->samples[5]);
+                    Y[3].push_back( train->fd_weights[2][2][0]*ypred_before_2 + train->fd_weights[2][2][1]*ypred_before + train->fd_weights[2][2][2]*Y[0][Y[0].size()-1] + train->fd_weights[2][2][3]*ypred_after + train->fd_weights[2][2][4]*ypred_after_2 + train->fd_weights[2][2][5]*ypred_after_3 );
+                }
                 // two before last interval samples[-6], samples[-5], samples[-4], samples[-3], samples[-2], samples[-1]
-                Y[3].push_back(
-                    train->fd_weights[2][Y[0].size()-3][0]*Y[0][Y[0].size()-6]
-                    + train->fd_weights[2][Y[0].size()-3][1]*Y[0][Y[0].size()-5]
-                    + train->fd_weights[2][Y[0].size()-3][2]*Y[0][Y[0].size()-4]
-                    + train->fd_weights[2][Y[0].size()-3][3]*Y[0][Y[0].size()-3]
-                    + train->fd_weights[2][Y[0].size()-3][4]*Y[0][Y[0].size()-2]
-                    + train->fd_weights[2][Y[0].size()-3][5]*Y[0][Y[0].size()-1] 
-                );
+                    if(i==train->samples.size()-3) {
+                    ypred_before_3 = model->evaluate(train->samples[train->samples.size()-6]);
+                    ypred_before_2 = model->evaluate(train->samples[train->samples.size()-5]);
+                    ypred_before = model->evaluate(train->samples[train->samples.size()-4]);
+                    ypred_after = model->evaluate(train->samples[train->samples.size()-2]);
+                    ypred_after_2 = model->evaluate(train->samples[train->samples.size()-1]);
+                    Y[3].push_back( train->fd_weights[2][train->samples.size()-3][0]*ypred_before_3 + train->fd_weights[2][train->samples.size()-3][1]*ypred_before_2 + train->fd_weights[2][train->samples.size()-3][2]*ypred_before + train->fd_weights[2][train->samples.size()-3][3]*Y[0][Y[0].size()-1] + train->fd_weights[2][train->samples.size()-3][4]*ypred_after + train->fd_weights[2][train->samples.size()-3][5]*ypred_after_2 );
+                }
 
                 // one before last interval samples[-5], samples[-4], samples[-3], samples[-2], samples[-1]
-                Y[3].push_back(
-                    train->fd_weights[2][Y[0].size()-2][0]*Y[0][Y[0].size()-5]
-                    + train->fd_weights[2][Y[0].size()-2][1]*Y[0][Y[0].size()-4]
-                    + train->fd_weights[2][Y[0].size()-2][2]*Y[0][Y[0].size()-3]
-                    + train->fd_weights[2][Y[0].size()-2][3]*Y[0][Y[0].size()-2]
-                    + train->fd_weights[2][Y[0].size()-2][4]*Y[0][Y[0].size()-1] 
-                );
+                if(i==train->samples.size()-2) {
+                    ypred_before_3 = model->evaluate(train->samples[train->samples.size()-5]);
+                    ypred_before_2 = model->evaluate(train->samples[train->samples.size()-4]);
+                    ypred_before = model->evaluate(train->samples[train->samples.size()-3]);
+                    ypred_after = model->evaluate(train->samples[train->samples.size()-1]);
+                    Y[3].push_back( train->fd_weights[2][train->samples.size()-2][0]*ypred_before_3 + train->fd_weights[2][train->samples.size()-2][1]*ypred_before_2 + train->fd_weights[2][train->samples.size()-2][2]*ypred_before + train->fd_weights[2][train->samples.size()-2][3]*Y[0][Y[0].size()-1] + train->fd_weights[2][train->samples.size()-2][4]*ypred_after );
+                }
 
                 // last interval samples[-4], samples[-3], samples[-2], samples[-1]
-                Y[3].push_back(
-                    train->fd_weights[2][Y[0].size()-1][0]*Y[0][Y[0].size()-4]
-                    + train->fd_weights[2][Y[0].size()-1][1]*Y[0][Y[0].size()-3]
-                    + train->fd_weights[2][Y[0].size()-1][2]*Y[0][Y[0].size()-2]
-                    + train->fd_weights[2][Y[0].size()-1][3]*Y[0][Y[0].size()-1] 
-                );
-            }
-
-        } else { // 20% training samples
-            
-            if(meme::MAX_DER_ORD>=1)    Y.push_back({});
-            if(meme::MAX_DER_ORD>=2)    Y.push_back({});
-            if(meme::MAX_DER_ORD>=3)    cout << "";
-
-            double ypred_after;
-            double ypred_before;
-            for(size_t i : selected) {
-
-                // 0th order derivative
-                Y[0].push_back(model->evaluate(train->samples[i]));
-            
-                // 1st order derivative
-                if(meme::MAX_DER_ORD>=1) {
-                    
-                    // first interval samples[0], samples[1]
-                    if(i==0) {
-                        ypred_after = model->evaluate(train->samples[1]);
-                        Y[1].push_back( train->fd_weights[0][0][0]*Y[0][Y[0].size()-1] + train->fd_weights[0][0][1]*ypred_after );
-                    }
-
-                    // last interval samples[-2], samples[-1]
-                    if(i==train->samples.size()-1) {
-                        ypred_before = model->evaluate(train->samples[train->samples.size()-2]);
-                        Y[1].push_back( train->fd_weights[0][train->samples.size()-1][0]*ypred_before + train->fd_weights[0][train->samples.size()-1][1]*Y[0][Y[0].size()-1] );
-                    }
-                    
-                    // intermediate intervals samples[i-1], samples[i], samples[i+1]
-                    if(i>0 && i<train->samples.size()-1) {
-                        ypred_before = model->evaluate(train->samples[i-1]);
-                        ypred_after = model->evaluate(train->samples[i+1]);
-                        Y[1].push_back( train->fd_weights[0][i][0]*ypred_before + train->fd_weights[0][i][1]*Y[0][Y[0].size()-1] + train->fd_weights[0][i][2]*ypred_after );
-                    }
-                }
-            
-                // 2nd order derivative
-                if(meme::MAX_DER_ORD>=2) {
-
-                    double ypred_after_2;
-                    double ypred_before_2;
-
-                    // first interval samples[0], samples[1], samples[2]
-                    if(i==0) {
-                        ypred_after = model->evaluate(train->samples[1]);
-                        ypred_after_2 = model->evaluate(train->samples[2]);
-                        Y[2].push_back( train->fd_weights[1][0][0]*Y[0][Y[0].size()-1] + train->fd_weights[1][0][1]*ypred_after + train->fd_weights[1][0][2]*ypred_after_2 );
-                    }
-
-                    // second interval samples[0], samples[1], samples[2], samples[3]
-                    if(i==1) {
-                        ypred_before = model->evaluate(train->samples[0]);
-                        ypred_after = model->evaluate(train->samples[2]);
-                        ypred_after_2 = model->evaluate(train->samples[3]);
-                        Y[2].push_back( train->fd_weights[1][1][0]*ypred_before + train->fd_weights[1][1][1]*Y[0][Y[0].size()-1] + train->fd_weights[1][1][2]*ypred_after  + train->fd_weights[1][1][3]*ypred_after_2);
-                    }
-                    
-                    // one before last interval samples[-4], samples[-3], samples[-2], samples[-1]
-                    if(i==train->samples.size()-2) {
-                        ypred_before_2 = model->evaluate(train->samples[train->samples.size()-4]);
-                        ypred_before = model->evaluate(train->samples[train->samples.size()-3]);
-                        ypred_after = model->evaluate(train->samples[train->samples.size()-1]);
-                        Y[2].push_back( train->fd_weights[1][train->samples.size()-2][0]*ypred_before_2 + train->fd_weights[1][train->samples.size()-2][1]*ypred_before + train->fd_weights[1][train->samples.size()-2][2]*Y[0][Y[0].size()-1] + train->fd_weights[1][train->samples.size()-2][3]*ypred_after );
-                    }
-
-                    // last interval samples[-3], samples[-2], samples[-1]
-                    if(i==train->samples.size()-1) {
-                        ypred_before_2 = model->evaluate(train->samples[train->samples.size()-3]);
-                        ypred_before = model->evaluate(train->samples[train->samples.size()-2]);
-                        Y[2].push_back( train->fd_weights[1][train->samples.size()-1][0]*ypred_before_2 + train->fd_weights[1][train->samples.size()-1][1]*ypred_before + train->fd_weights[1][train->samples.size()-1][2]*Y[0][Y[0].size()-1] );
-                    }
-
-                    // intermediate intervals
-                    if(i>1 && i<train->samples.size()-2) {
-                        ypred_before_2 = model->evaluate(train->samples[i-2]);
-                        ypred_before = model->evaluate(train->samples[i-1]);
-                        ypred_after = model->evaluate(train->samples[i+1]);
-                        ypred_after_2 = model->evaluate(train->samples[i+2]);
-                        Y[2].push_back( train->fd_weights[1][i][0]*ypred_before_2 + train->fd_weights[1][i][1]*ypred_before + train->fd_weights[1][i][2]*Y[0][Y[0].size()-1] + train->fd_weights[1][i][3]*ypred_after + train->fd_weights[1][i][4]*ypred_after_2 );
-                    }
+                if(i==train->samples.size()-1) {
+                    ypred_before_3 = model->evaluate(train->samples[train->samples.size()-4]);
+                    ypred_before_2 = model->evaluate(train->samples[train->samples.size()-3]);
+                    ypred_before = model->evaluate(train->samples[train->samples.size()-2]);
+                    Y[3].push_back( train->fd_weights[2][train->samples.size()-1][0]*ypred_before_3 + train->fd_weights[2][train->samples.size()-1][1]*ypred_before_2 + train->fd_weights[2][train->samples.size()-1][2]*ypred_before + train->fd_weights[2][train->samples.size()-1][3]*Y[0][Y[0].size()-1] );
                 }
 
-                // 3rd order derivative
-                if(meme::MAX_DER_ORD>=3) {
-                    
-                    double ypred_after_2;
-                    double ypred_before_2;
-                    double ypred_after_3;
-                    double ypred_before_3;
-
-                    // first interval samples[0], samples[1], samples[2], samples[3]
-                    if(i==0) {
-                        ypred_after = model->evaluate(train->samples[1]);
-                        ypred_after_2 = model->evaluate(train->samples[2]);
-                        ypred_after_3 = model->evaluate(train->samples[3]);
-                        Y[3].push_back( train->fd_weights[2][0][0]*Y[0][Y[0].size()-1] + train->fd_weights[2][0][1]*ypred_after + train->fd_weights[2][0][2]*ypred_after_2 + train->fd_weights[2][0][3]*ypred_after_3 );
-                    }
-
-                    // second interval samples[0], samples[1], samples[2], samples[3], samples[4]
-                    if(i==1) {
-                        ypred_before = model->evaluate(train->samples[0]);
-                        ypred_after = model->evaluate(train->samples[2]);
-                        ypred_after_2 = model->evaluate(train->samples[3]);
-                        ypred_after_3 = model->evaluate(train->samples[4]);
-                        Y[3].push_back( train->fd_weights[2][1][0]*ypred_before + train->fd_weights[2][1][1]*Y[0][Y[0].size()-1] + train->fd_weights[2][1][2]*ypred_after  + train->fd_weights[2][1][3]*ypred_after_2  + train->fd_weights[2][1][4]*ypred_after_3 );
-                    }
-
-                    // third interval  samples[0], samples[1], samples[2], samples[3], samples[4], samples[5]
-                    if(i==2) {			
-                        ypred_before_2 = model->evaluate(train->samples[0]);
-                        ypred_before = model->evaluate(train->samples[1]);
-                        ypred_after = model->evaluate(train->samples[3]);
-                        ypred_after_2 = model->evaluate(train->samples[4]);
-                        ypred_after_3 = model->evaluate(train->samples[5]);
-                        Y[3].push_back( train->fd_weights[2][2][0]*ypred_before_2 + train->fd_weights[2][2][1]*ypred_before + train->fd_weights[2][2][2]*Y[0][Y[0].size()-1] + train->fd_weights[2][2][3]*ypred_after + train->fd_weights[2][2][4]*ypred_after_2 + train->fd_weights[2][2][5]*ypred_after_3 );
-                    }
-                    // two before last interval samples[-6], samples[-5], samples[-4], samples[-3], samples[-2], samples[-1]
-                        if(i==train->samples.size()-3) {
-                        ypred_before_3 = model->evaluate(train->samples[train->samples.size()-6]);
-                        ypred_before_2 = model->evaluate(train->samples[train->samples.size()-5]);
-                        ypred_before = model->evaluate(train->samples[train->samples.size()-4]);
-                        ypred_after = model->evaluate(train->samples[train->samples.size()-2]);
-                        ypred_after_2 = model->evaluate(train->samples[train->samples.size()-1]);
-                        Y[3].push_back( train->fd_weights[2][train->samples.size()-3][0]*ypred_before_3 + train->fd_weights[2][train->samples.size()-3][1]*ypred_before_2 + train->fd_weights[2][train->samples.size()-3][2]*ypred_before + train->fd_weights[2][train->samples.size()-3][3]*Y[0][Y[0].size()-1] + train->fd_weights[2][train->samples.size()-3][4]*ypred_after + train->fd_weights[2][train->samples.size()-3][5]*ypred_after_2 );
-                    }
-
-                    // one before last interval samples[-5], samples[-4], samples[-3], samples[-2], samples[-1]
-                    if(i==train->samples.size()-2) {
-                        ypred_before_3 = model->evaluate(train->samples[train->samples.size()-5]);
-                        ypred_before_2 = model->evaluate(train->samples[train->samples.size()-4]);
-                        ypred_before = model->evaluate(train->samples[train->samples.size()-3]);
-                        ypred_after = model->evaluate(train->samples[train->samples.size()-1]);
-                        Y[3].push_back( train->fd_weights[2][train->samples.size()-2][0]*ypred_before_3 + train->fd_weights[2][train->samples.size()-2][1]*ypred_before_2 + train->fd_weights[2][train->samples.size()-2][2]*ypred_before + train->fd_weights[2][train->samples.size()-2][3]*Y[0][Y[0].size()-1] + train->fd_weights[2][train->samples.size()-2][4]*ypred_after );
-                    }
-
-                    // last interval samples[-4], samples[-3], samples[-2], samples[-1]
-                    if(i==train->samples.size()-1) {
-                        ypred_before_3 = model->evaluate(train->samples[train->samples.size()-4]);
-                        ypred_before_2 = model->evaluate(train->samples[train->samples.size()-3]);
-                        ypred_before = model->evaluate(train->samples[train->samples.size()-2]);
-                        Y[3].push_back( train->fd_weights[2][train->samples.size()-1][0]*ypred_before_3 + train->fd_weights[2][train->samples.size()-1][1]*ypred_before_2 + train->fd_weights[2][train->samples.size()-1][2]*ypred_before + train->fd_weights[2][train->samples.size()-1][3]*Y[0][Y[0].size()-1] );
-                    }
-
-                    // intermediate intervals
-                    if(i>2 && i<train->samples.size()-3) {
-                        ypred_before_3 = model->evaluate(train->samples[i-3]);
-                        ypred_before_2 = model->evaluate(train->samples[i-2]);
-                        ypred_before = model->evaluate(train->samples[i-1]);
-                        ypred_after = model->evaluate(train->samples[i+1]);
-                        ypred_after_2 = model->evaluate(train->samples[i+2]);
-                        ypred_after_3 = model->evaluate(train->samples[i+3]);
-                        Y[3].push_back( train->fd_weights[2][i][0]*ypred_before_3 + train->fd_weights[2][i][1]*ypred_before_2 + train->fd_weights[2][i][2]*ypred_before + train->fd_weights[2][i][3]*Y[0][Y[0].size()-1] + train->fd_weights[2][i][4]*ypred_after + train->fd_weights[2][i][5]*ypred_after_2 + train->fd_weights[2][i][6]*ypred_after_3 );
-                    }
+                // intermediate intervals
+                if(i>2 && i<train->samples.size()-3) {
+                    ypred_before_3 = model->evaluate(train->samples[i-3]);
+                    ypred_before_2 = model->evaluate(train->samples[i-2]);
+                    ypred_before = model->evaluate(train->samples[i-1]);
+                    ypred_after = model->evaluate(train->samples[i+1]);
+                    ypred_after_2 = model->evaluate(train->samples[i+2]);
+                    ypred_after_3 = model->evaluate(train->samples[i+3]);
+                    Y[3].push_back( train->fd_weights[2][i][0]*ypred_before_3 + train->fd_weights[2][i][1]*ypred_before_2 + train->fd_weights[2][i][2]*ypred_before + train->fd_weights[2][i][3]*Y[0][Y[0].size()-1] + train->fd_weights[2][i][4]*ypred_after + train->fd_weights[2][i][5]*ypred_after_2 + train->fd_weights[2][i][6]*ypred_after_3 );
                 }
             }
         }
-	    
-    } else {
-
-        // Exact derivative
-
-        // 0th and 1st order derivative
-        if(meme::MAX_DER_ORD==1) {
-
-            vector<double> der_0_1;
-            Y.push_back({});
-            if( selected.size() == 0) {
-
-                for(size_t i = 0; i < train->samples.size(); i++) {
-                    der_0_1 = model->evaluate_der(train->samples[i]);
-                    Y[0].push_back(der_0_1[0]);
-                    Y[1].push_back(der_0_1[1]);
-                    der_0_1.clear();
-                }
-            } else {
-
-                for(size_t i : selected) {
-                    der_0_1 = model->evaluate_der(train->samples[i]);
-                    Y[0].push_back(der_0_1[0]);
-                    Y[1].push_back(der_0_1[1]);
-                    der_0_1.clear();		
-                }
-            }
-        }
-
-        // 0th, 1st and 2nd order derivative
-        if(meme::MAX_DER_ORD==2) {
-
-            vector<double> ders;
-            Y.push_back({});
-            Y.push_back({});
-            if( selected.size() == 0) {
-                for(size_t i = 0; i < train->samples.size(); i++) {
-                    ders = model->evaluate_der2(train->samples[i]);
-                    Y[0].push_back(ders[0]);
-                    Y[1].push_back(ders[1]);
-                    Y[2].push_back(ders[2]);
-                    ders.clear();
-                }
-            } else {
-                for(size_t i : selected) {
-                    ders = model->evaluate_der2(train->samples[i]);
-                    Y[0].push_back(ders[0]);
-                    Y[1].push_back(ders[1]);
-                    Y[2].push_back(ders[2]);
-                    ders.clear();		
-                }
-            }
-        }
-
-        // 0th, 1st, 2nd and 3rd order derivative
-        if(meme::MAX_DER_ORD==3) {
-
-            vector<double> ders;
-            Y.push_back({});
-            Y.push_back({});
-            Y.push_back({});
-            if( selected.size() == 0) {
-                for(size_t i = 0; i < train->samples.size(); i++) {
-                    ders = model->evaluate_der3(train->samples[i]);
-                    Y[0].push_back(ders[0]);
-                    Y[1].push_back(ders[1]);
-                    Y[2].push_back(ders[2]);
-                    Y[3].push_back(ders[3]);
-                    ders.clear();
-                }
-            } else {
-                for(size_t i : selected) {
-                    ders = model->evaluate_der3(train->samples[i]);
-                    Y[0].push_back(ders[0]);
-                    Y[1].push_back(ders[1]);
-                    Y[2].push_back(ders[2]);
-                    Y[3].push_back(ders[3]);
-                    ders.clear();		
-                }
-            }
-        }
-
     }
-
-    return Y;    
+	    
+    return Y;
 }
