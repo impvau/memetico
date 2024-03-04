@@ -766,7 +766,7 @@ TEST_CASE("Objective: mse_der ") {
 
     ds.normalise();
 
-    ///*
+    /*
 
     // Output CSV for manual computation (performed to setup the initial test)
 
@@ -807,6 +807,8 @@ TEST_CASE("Objective: mse_der ") {
 
         cout << endl;
     }    
+    
+    */
 
     // 100% of samples
     vector<size_t> selected;
@@ -923,5 +925,9 @@ TEST_CASE("Objective: mse_der ") {
         CHECK( res[3][i] == doctest::Approx(derv[i][3]).epsilon(1e-5) );
 
     }
+
+    // See manual generation in derviatve_test sheet 
+    double der = objective::mse_der(&m, &ds, selected);
+    CHECK(der == doctest::Approx(2.3973849854).epsilon(1e-10) );
 
 }
