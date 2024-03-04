@@ -72,13 +72,11 @@ class DataSet {
         vector<vector<double>> Yder;
         // Yder[0] 1st order derivative, Yder[1] 2nd order derivative and so on
 
-        /** minimum yder value */
+        /** Minimum derivative value for the 0th, 1st, 2nd etc. */
         vector<double> yder_min;
-        // yder_min[0] min of Yder[0], yder_min[1] min of Yder[1] and so on
 
-        /** maximum yder value */
+        /** Maximum derivative value for the 0th, 1st, 2nd etc. */
         vector<double> yder_max;
-        // yder_max[0] max of Yder[0], yder_max[1] max of Yder[1] and so on
 
         /** Finite Difference weights */
         vector<vector<vector<double>>> fd_weights;
@@ -229,6 +227,7 @@ class DataSet {
         void compute_app_der(size_t mdo) {
 
             // computes the approximate 1st order derivative
+            // !!! WE HAVE TO NORMALISE AFTER calling this function
             
             Yder.clear();
             yder_min.clear();
