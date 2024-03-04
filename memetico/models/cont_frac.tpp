@@ -190,73 +190,86 @@ vector<double> ContinuedFraction<Traits>::evaluate_der(vector<double>& values) {
     vector<double> ret = {0.0, 0.0};
 
     //--------------- modified Lentz algorithm
-    try{
-	double f_old = terms[0].evaluate(values);
-	if ( fabs(f_old) < 1.0e-30 )
-	    f_old = 1.0e-30;
-	double C_old = f_old;
-	double D_old = 0.0;
-	double f_new = f_old;
-	double C_new = C_old;
-	double D_new = D_old;
-	double Delta;
-	
-	double df_old = 0;
-	if(terms[0].get_active(0))
-	    df_old = terms[0].get_value(0);
-	double dC_old = df_old;
-	double dD_old = 0;
-	double df_new = df_old;
-	double dC_new = dC_old;
-	double dD_new = dD_old;
+    try {
 
-	double dbj;
-	double daj;
-	for(int i=1; i<=get_depth(); i++){
-	    // function evaluation
-	    D_new = terms[2*i].evaluate(values) + terms[2*i-1].evaluate(values)*D_old;
-	    if ( fabs(D_new) < 1.0e-30 )
-		D_new = 1.0e-30;
-	    D_new = 1.0/D_new;
-	    C_new = terms[2*i].evaluate(values) + terms[2*i-1].evaluate(values)/C_old;
-	    if ( fabs(C_new) < 1.0e-30 )
-		C_new = 1.0e-30;
-	    Delta = D_new*C_new;
-	    f_new = f_old*Delta;
+        double f_old = terms[0].evaluate(values);
 
-	    // derivative evaluation
-	    if ( terms[2*i].get_active(0) )
-		dbj = terms[2*i].get_value(0);
-	    else
-		dbj = 0;
-	    if ( terms[2*i-1].get_active(0) )
-		daj = terms[2*i-1].get_value(0);
-	    else
-		daj = 0;
-	    dC_new = dbj + (daj*C_old - terms[2*i-1].evaluate(values)*dC_old)/(C_old*C_old);
-	    dD_new = -D_new*D_new*(dbj + daj*D_old + terms[2*i-1].evaluate(values)*dD_old);	    
-	    df_new = df_old*Delta + f_old*dC_new*D_new + f_old*C_new*dD_new;
+        if ( fabs(f_old) < 1.0e-30 )
+            f_old = 1.0e-30;
 
-	    D_old = D_new;
-	    C_old = C_new;
-	    f_old = f_new;
-	    dD_old = dD_new;
-	    dC_old = dC_new;
-	    df_old = df_new;	    
-	    
-	}
-	ret[0] = f_new;
-	ret[1] = df_new;
+        double C_old = f_old;
+        double D_old = 0.0;
+        double f_new = f_old;
+        double C_new = C_old;
+        double D_new = D_old;
+        double Delta;
+        
+        double df_old = 0;
+
+        if(terms[0].get_active(0))
+            df_old = terms[0].get_value(0);
+
+        double dC_old = df_old;
+        double dD_old = 0;
+        double df_new = df_old;
+        double dC_new = dC_old;
+        double dD_new = dD_old;
+
+        double dbj;
+        double daj;
+
+        for(int i=1; i<=get_depth(); i++){
+            
+            // function evaluation
+            D_new = terms[2*i].evaluate(values) + terms[2*i-1].evaluate(values)*D_old;
+            
+            if ( fabs(D_new) < 1.0e-30 )
+                D_new = 1.0e-30;
+
+            D_new = 1.0/D_new;
+            C_new = terms[2*i].evaluate(values) + terms[2*i-1].evaluate(values)/C_old;
+
+            if ( fabs(C_new) < 1.0e-30 )
+                C_new = 1.0e-30;
+
+            Delta = D_new*C_new;
+            f_new = f_old*Delta;
+
+            // derivative evaluation
+            if ( terms[2*i].get_active(0) )
+                dbj = terms[2*i].get_value(0);
+            else
+                dbj = 0;
+
+            if ( terms[2*i-1].get_active(0) )
+                daj = terms[2*i-1].get_value(0);
+            else
+                daj = 0;
+
+            dC_new = dbj + (daj*C_old - terms[2*i-1].evaluate(values)*dC_old)/(C_old*C_old);
+            dD_new = -D_new*D_new*(dbj + daj*D_old + terms[2*i-1].evaluate(values)*dD_old);	    
+            df_new = df_old*Delta + f_old*dC_new*D_new + f_old*C_new*dD_new;
+
+            D_old = D_new;
+            C_old = C_new;
+            f_old = f_new;
+            dD_old = dD_new;
+            dC_old = dC_new;
+            df_old = df_new;	    
+            
+        }
+        ret[0] = f_new;
+        ret[1] = df_new;
     }
     catch (exception& e) {
-	// cout << "[cont_frac.tpp] numerical exception in evaluate_der()" << endl;
-	// print();
-	ret[0] = numeric_limits<double>::max();
-	ret[1] = numeric_limits<double>::max();
-	return ret;
+        // cout << "[cont_frac.tpp] numerical exception in evaluate_der()" << endl;
+        // print();
+        ret[0] = numeric_limits<double>::max();
+        ret[1] = numeric_limits<double>::max();
+        return ret;
     }
-    return ret;
 
+    return ret;
 }
 
 template <typename Traits>
@@ -302,40 +315,54 @@ vector<double> ContinuedFraction<Traits>::evaluate_der2(vector<double>& values) 
 	    
     	    // function evaluation
     	    D_new = terms[2*i].evaluate(values) + terms[2*i-1].evaluate(values)*D_old;
+
     	    if ( fabs(D_new) < 1.0e-30 )
-    		D_new = 1.0e-30;
+    		    D_new = 1.0e-30;
+
     	    D_new = 1.0/D_new;
     	    C_new = terms[2*i].evaluate(values) + terms[2*i-1].evaluate(values)/C_old;
+
     	    if ( fabs(C_new) < 1.0e-30 )
-    		C_new = 1.0e-30;
+    		    C_new = 1.0e-30;
+
     	    Delta = D_new*C_new;
     	    f_new = f_old*Delta;
 
     	    // 1st derivative evaluation
     	    if ( terms[2*i].get_active(0) )
-    		dbj = terms[2*i].get_value(0);
+    		    dbj = terms[2*i].get_value(0);
     	    else
-    		dbj = 0;
+    		    dbj = 0;
+
     	    if ( terms[2*i-1].get_active(0) )
-    		daj = terms[2*i-1].get_value(0);
+    		    daj = terms[2*i-1].get_value(0);
     	    else
-    		daj = 0;
+    		    daj = 0;
+
     	    dC_new = dbj + (daj*C_old - terms[2*i-1].evaluate(values)*dC_old)/(C_old*C_old);
-	    if ( fabs(dC_new) < 1.0e-30 )
-    		dC_new = 1.0e-30;
-    	    dD_new = -D_new*D_new*(dbj + daj*D_old + terms[2*i-1].evaluate(values)*dD_old);
-	    if ( fabs(dD_new) < 1.0e-30 )
-    		dD_new = 1.0e-30;
-    	    df_new = df_old*Delta + f_old*dC_new*D_new + f_old*C_new*dD_new;
+
+	        if ( fabs(dC_new) < 1.0e-30 )
+    		    dC_new = 1.0e-30;
+    	    
+            dD_new = -D_new*D_new*(dbj + daj*D_old + terms[2*i-1].evaluate(values)*dD_old);
+	        
+            if ( fabs(dD_new) < 1.0e-30 )
+    		    dD_new = 1.0e-30;
+    	    
+            df_new = df_old*Delta + f_old*dC_new*D_new + f_old*C_new*dD_new;
 
     	    // 2nd derivative evaluation
     	    d2C_new = (-terms[2*i-1].evaluate(values)*d2C_old)/(C_old*C_old) - (2*daj*dC_old)/(C_old*C_old) + (2*terms[2*i-1].evaluate(values)*dC_old*dC_old)/(C_old*C_old*C_old);
-	    if ( fabs(d2C_new) < 1.0e-30 )
-    		d2C_new = 1.0e-30;
-	    d2D_new = -D_new*D_new*(2.0*daj*dD_old+terms[2*i-1].evaluate(values)*d2D_old) + D_new*D_new*D_new*2.0*(dbj+daj*D_old+terms[2*i-1].evaluate(values)*dD_old)*(dbj+daj*D_old+terms[2*i-1].evaluate(values)*dD_old);
-	    if ( fabs(d2D_new) < 1.0e-30 )
-    		d2D_new = 1.0e-30;
-	    d2f_new = d2f_old*D_new*C_new + 2.0*df_old*dD_new*C_new + 2.0*df_old*D_new*dC_new + f_old*d2D_new*C_new + f_old*D_new*d2C_new + 2.0*f_old*dD_new*dC_new;
+	        
+            if ( fabs(d2C_new) < 1.0e-30 )
+                d2C_new = 1.0e-30;
+
+	        d2D_new = -D_new*D_new*(2.0*daj*dD_old+terms[2*i-1].evaluate(values)*d2D_old) + D_new*D_new*D_new*2.0*(dbj+daj*D_old+terms[2*i-1].evaluate(values)*dD_old)*(dbj+daj*D_old+terms[2*i-1].evaluate(values)*dD_old);
+	        
+            if ( fabs(d2D_new) < 1.0e-30 )
+    		    d2D_new = 1.0e-30;
+	    
+            d2f_new = d2f_old*D_new*C_new + 2.0*df_old*dD_new*C_new + 2.0*df_old*D_new*dC_new + f_old*d2D_new*C_new + f_old*D_new*d2C_new + 2.0*f_old*dD_new*dC_new;
 
     	    D_old = D_new;
     	    C_old = C_new;
@@ -343,20 +370,20 @@ vector<double> ContinuedFraction<Traits>::evaluate_der2(vector<double>& values) 
     	    dD_old = dD_new;
     	    dC_old = dC_new;
     	    df_old = df_new;
-	    d2D_old = d2D_new;
+	        d2D_old = d2D_new;
     	    d2C_old = d2C_new;
     	    d2f_old = d2f_new;
     	}
     	ret[0] = f_new;
     	ret[1] = df_new;
-	ret[2] = d2f_new;
+	    ret[2] = d2f_new;
     }
     catch (exception& e) {
     	// cout << "[cont_frac.tpp] numerical exception in evaluate_der2()" << endl;
     	// print();
     	ret[0] = numeric_limits<double>::max();
     	ret[1] = numeric_limits<double>::max();
-	ret[2] = numeric_limits<double>::max();
+	    ret[2] = numeric_limits<double>::max();
     	return ret;
     }
     return ret;
@@ -409,53 +436,71 @@ vector<double> ContinuedFraction<Traits>::evaluate_der3(vector<double>& values) 
     	double d3C_new = d3C_old;
     	double d3D_new = d3D_old;
 	
-    	for(int i=1; i<=get_depth(); i++){
+    	for(int i=1; i<=get_depth(); i++) {
 	    
     	    // function evaluation
     	    D_new = terms[2*i].evaluate(values) + terms[2*i-1].evaluate(values)*D_old;
-    	    if ( fabs(D_new) < 1.0e-30 )
-    		D_new = 1.0e-30;
+    	    
+            if ( fabs(D_new) < 1.0e-30 )    
+                D_new = 1.0e-30;
+
     	    D_new = 1.0/D_new;
     	    C_new = terms[2*i].evaluate(values) + terms[2*i-1].evaluate(values)/C_old;
-    	    if ( fabs(C_new) < 1.0e-30 )
-    		C_new = 1.0e-30;
+    	    
+            if ( fabs(C_new) < 1.0e-30 )
+    		    C_new = 1.0e-30;
+
     	    Delta = D_new*C_new;
     	    f_new = f_old*Delta;
 
     	    // 1st derivative evaluation
     	    if ( terms[2*i].get_active(0) )
-    		dbj = terms[2*i].get_value(0);
+    		    dbj = terms[2*i].get_value(0);
     	    else
-    		dbj = 0;
+    		    dbj = 0;
+
     	    if ( terms[2*i-1].get_active(0) )
-    		daj = terms[2*i-1].get_value(0);
+    		    daj = terms[2*i-1].get_value(0);
     	    else
-    		daj = 0;
+    		    daj = 0;
+
     	    dC_new = dbj + (daj*C_old - terms[2*i-1].evaluate(values)*dC_old)/(C_old*C_old);
-	    if ( fabs(dC_new) < 1.0e-30 )
-    		dC_new = 1.0e-30;
-    	    dD_new = -D_new*D_new*(dbj + daj*D_old + terms[2*i-1].evaluate(values)*dD_old);
-	    if ( fabs(dD_new) < 1.0e-30 )
-    		dD_new = 1.0e-30;
+
+	        if ( fabs(dC_new) < 1.0e-30 )
+    		    dC_new = 1.0e-30;
+    	    
+            dD_new = -D_new*D_new*(dbj + daj*D_old + terms[2*i-1].evaluate(values)*dD_old);
+
+	        if ( fabs(dD_new) < 1.0e-30 )
+    		    dD_new = 1.0e-30;
+
     	    df_new = df_old*Delta + f_old*dC_new*D_new + f_old*C_new*dD_new;
 
     	    // 2nd derivative evaluation
     	    d2C_new = (-terms[2*i-1].evaluate(values)*d2C_old)/(C_old*C_old) - (2*daj*dC_old)/(C_old*C_old) + (2*terms[2*i-1].evaluate(values)*dC_old*dC_old)/(C_old*C_old*C_old);
-	    if ( fabs(d2C_new) < 1.0e-30 )
-    		d2C_new = 1.0e-30;
-	    d2D_new = -D_new*D_new*(2.0*daj*dD_old+terms[2*i-1].evaluate(values)*d2D_old) + D_new*D_new*D_new*2.0*(dbj+daj*D_old+terms[2*i-1].evaluate(values)*dD_old)*(dbj+daj*D_old+terms[2*i-1].evaluate(values)*dD_old);
-	    if ( fabs(d2D_new) < 1.0e-30 )
-    		d2D_new = 1.0e-30;
-	    d2f_new = d2f_old*D_new*C_new + 2.0*df_old*dD_new*C_new + 2.0*df_old*D_new*dC_new + f_old*d2D_new*C_new + f_old*D_new*d2C_new + 2.0*f_old*dD_new*dC_new;
 
-	    // 3rd derivative evaluation
-	    d3C_new = (-3*daj*d2C_old-terms[2*i-1].evaluate(values)*d3C_old)/(C_old*C_old) + (6*terms[2*i-1].evaluate(values)*dC_old*d2C_old+6*daj*dC_old*dC_old)/(C_old*C_old*C_old) + (-6*terms[2*i-1].evaluate(values)*dC_old*dC_old*dC_old)/(C_old*C_old*C_old*C_old);
-	    if ( fabs(d3C_new) < 1.0e-30 )
-    		d3C_new = 1.0e-30;
-	    d3D_new = pow(D_new,2)*(-3*daj*d2D_old-terms[2*i-1].evaluate(values)*d3D_old) - 6*pow(D_new,4)*pow(dbj+daj*D_old+terms[2*i-1].evaluate(values)*dD_old,3) + pow(D_new,3)*(6*dbj*terms[2*i-1].evaluate(values)*d2D_old+12*dbj*daj*dD_old+12*pow(daj,2)*D_old*dD_old+12*terms[2*i-1].evaluate(values)*daj*pow(dD_old,2)+6*terms[2*i-1].evaluate(values)*daj*D_old*d2D_old+6*pow(terms[2*i-1].evaluate(values),2)*dD_old*d2D_old);
-	    if ( fabs(d3D_new) < 1.0e-30 )
-    		d3D_new = 1.0e-30;
-	    d3f_new = d3f_old*D_new*C_new + d2f_old*(3*dD_new*C_new+3*D_new*dC_new) + df_old*(3*d2D_new*C_new+6*dD_new*dC_new+3*D_new*d2C_new) + f_old*(d3D_new*C_new+D_new*d3C_new+3*d2D_new*dC_new+3*dD_new*d2C_new);
+	        if ( fabs(d2C_new) < 1.0e-30 )
+    		    d2C_new = 1.0e-30;
+
+	        d2D_new = -D_new*D_new*(2.0*daj*dD_old+terms[2*i-1].evaluate(values)*d2D_old) + D_new*D_new*D_new*2.0*(dbj+daj*D_old+terms[2*i-1].evaluate(values)*dD_old)*(dbj+daj*D_old+terms[2*i-1].evaluate(values)*dD_old);
+	        
+            if ( fabs(d2D_new) < 1.0e-30 )
+    		    d2D_new = 1.0e-30;
+
+	        d2f_new = d2f_old*D_new*C_new + 2.0*df_old*dD_new*C_new + 2.0*df_old*D_new*dC_new + f_old*d2D_new*C_new + f_old*D_new*d2C_new + 2.0*f_old*dD_new*dC_new;
+
+	        // 3rd derivative evaluation
+	        d3C_new = (-3*daj*d2C_old-terms[2*i-1].evaluate(values)*d3C_old)/(C_old*C_old) + (6*terms[2*i-1].evaluate(values)*dC_old*d2C_old+6*daj*dC_old*dC_old)/(C_old*C_old*C_old) + (-6*terms[2*i-1].evaluate(values)*dC_old*dC_old*dC_old)/(C_old*C_old*C_old*C_old);
+
+	        if ( fabs(d3C_new) < 1.0e-30 )
+    		    d3C_new = 1.0e-30;
+
+	        d3D_new = pow(D_new,2)*(-3*daj*d2D_old-terms[2*i-1].evaluate(values)*d3D_old) - 6*pow(D_new,4)*pow(dbj+daj*D_old+terms[2*i-1].evaluate(values)*dD_old,3) + pow(D_new,3)*(6*dbj*terms[2*i-1].evaluate(values)*d2D_old+12*dbj*daj*dD_old+12*pow(daj,2)*D_old*dD_old+12*terms[2*i-1].evaluate(values)*daj*pow(dD_old,2)+6*terms[2*i-1].evaluate(values)*daj*D_old*d2D_old+6*pow(terms[2*i-1].evaluate(values),2)*dD_old*d2D_old);
+	        
+            if ( fabs(d3D_new) < 1.0e-30 )
+    		    d3D_new = 1.0e-30;
+	            
+            d3f_new = d3f_old*D_new*C_new + d2f_old*(3*dD_new*C_new+3*D_new*dC_new) + df_old*(3*d2D_new*C_new+6*dD_new*dC_new+3*D_new*d2C_new) + f_old*(d3D_new*C_new+D_new*d3C_new+3*d2D_new*dC_new+3*dD_new*d2C_new);
 	    
     	    D_old = D_new;
     	    C_old = C_new;
@@ -463,25 +508,25 @@ vector<double> ContinuedFraction<Traits>::evaluate_der3(vector<double>& values) 
     	    dD_old = dD_new;
     	    dC_old = dC_new;
     	    df_old = df_new;
-	    d2D_old = d2D_new;
+	        d2D_old = d2D_new;
     	    d2C_old = d2C_new;
     	    d2f_old = d2f_new;
-	    d3D_old = d3D_new;
+	        d3D_old = d3D_new;
     	    d3C_old = d3C_new;
     	    d3f_old = d3f_new;
     	}
     	ret[0] = f_new;
     	ret[1] = df_new;
-	ret[2] = d2f_new;
-	ret[3] = d3f_new;
+        ret[2] = d2f_new;
+        ret[3] = d3f_new;
     }
     catch (exception& e) {
     	// cout << "[cont_frac.tpp] numerical exception in evaluate_der2()" << endl;
     	// print();
     	ret[0] = numeric_limits<double>::max();
     	ret[1] = numeric_limits<double>::max();
-	ret[2] = numeric_limits<double>::max();
-	ret[3] = numeric_limits<double>::max();
+	    ret[2] = numeric_limits<double>::max();
+	    ret[3] = numeric_limits<double>::max();
     	return ret;
     }
     return ret;
