@@ -282,7 +282,7 @@ vector<double> ContinuedFraction<Traits>::evaluate_der2(vector<double>& values) 
     vector<double> ret = {0.0, 0.0, 0.0};
 
     //--------------- modified Lentz algorithm
-    try{
+    try {
     	double f_old = terms[0].evaluate(values);
     	if ( fabs(f_old) < 1.0e-30 )
     	    f_old = 1.0e-30;
