@@ -735,7 +735,6 @@ double objective::compare(MemeticModel<U>* m1, MemeticModel<U>* m2, DataSet* tra
     return error_dist;
 }
 
-
 template <class U>
 vector<vector<double>> objective::derivative(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected) {
 
