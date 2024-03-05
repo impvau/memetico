@@ -740,6 +740,28 @@ vector<vector<double>> objective::derivative(MemeticModel<U>* model, DataSet* tr
 
     vector<vector<double>> Y{{}};
 
+    // 0th derviative
+    if(meme::MAX_DER_ORD==0) {
+
+        vector<double> der_0_1;
+        Y.push_back({});
+        if( selected.size() == 0) {
+
+            for(size_t i = 0; i < train->samples.size(); i++) {
+                der_0_1 = model->evaluate_der(train->samples[i]);
+                Y[0].push_back(der_0_1[0]);
+                der_0_1.clear();
+            }
+        } else {
+
+            for(size_t i : selected) {
+                der_0_1 = model->evaluate_der(train->samples[i]);
+                Y[0].push_back(der_0_1[0]);
+                der_0_1.clear();		
+            }
+        }
+    }
+
     // Exact derivative
     // 0th and 1st order derivative
     if(meme::MAX_DER_ORD==1) {
