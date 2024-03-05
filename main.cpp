@@ -110,16 +110,11 @@ int main(int argc, char *argv[]) {
     test.csv(meme::LOG_DIR+to_string(meme::SEED)+".Test.csv");
 
     // Approximate derivative
-    //if( meme::IN_DER == "app-fd" )
+    if( meme::IN_DER == "app-fd" )
+        train.compute_app_der(meme::MAX_DER_ORD);
 
-    train.compute_app_der(meme::MAX_DER_ORD);
-
-    //compute_FD_weights(1, train.samples, )
-
-    
-    //train.print();
-    //train.normalise();
-
+    train.normalise();
+        
     // Copy IVs to Model
     for(size_t i = 0; i < DataSet::IVS.size(); i++)
         ModelType::IVS.push_back(DataSet::IVS[i]);
@@ -127,6 +122,11 @@ int main(int argc, char *argv[]) {
     // Create Population & run
     Population<ModelType> p(&train);
     p.run();
+
+    // Evaluate without derviative information for return
+    meme::MAX_DER_ORD = 0;
+    train = DataSet(meme::TRAIN_FILE, meme::GPU);
+    train.load();
 
     // Write Run.log
     ofstream log(meme::LOG_DIR+to_string(meme::SEED)+".Run.log");
@@ -163,7 +163,7 @@ int main(int argc, char *argv[]) {
     }
     
     // MPI_Finalize();     // Close out MPI
-    
+
     // Write Training results
     ofstream train_log(meme::LOG_DIR+to_string(meme::SEED)+".Train.Predict.csv");
     if (train_log.is_open()) {
