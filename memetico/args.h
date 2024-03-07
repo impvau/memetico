@@ -181,6 +181,9 @@ namespace args {
                                                                 stale-ext: As per stale but every two consecutive --stale's, 50% of the solutions are replaced
                                                             Defaults to 0
 
+                            -e --epsilon                    Error threshold for stopping condition
+                                                            Defaults to 0
+
                             -id --inder                     Input derivative mode (exact or app-fd)
                                                             Defaults to exact
 
@@ -282,6 +285,10 @@ namespace args {
         arg_string = arg_value(argv, argv+argc, "-mt", "--max-time");
         if(arg_string != "")        meme::MAX_TIME = stoi(arg_string);
 
+        // Error epsilon
+        arg_string = arg_value(argv, argv+argc, "-e", "--error");
+        if(arg_string != "")        meme::EPSILON = stod(arg_string);
+
         arg_seed(argc, argv);
         arg_log(argc, argv);
         arg_local_search(argc, argv);
@@ -313,18 +320,7 @@ namespace args {
         // Maximum derivative order
         arg_string = arg_value(argv, argv+argc, "-mdo", "--max-der-ord");
         if(arg_string != "")        meme::MAX_DER_ORD = stoi(arg_string);
-        
-        // Train
-        /*
-        arg_string = arg_value(argv, argv+argc, string("-t"), string("--train"));
-        if(arg_string != ""){
-            string arg_string_ifr = arg_value(argv, argv+argc, string("-ifr"), string("--index-first-repetition"));
-            if(arg_string_ifr != "") {
-                meme::TRAIN_FILE = arg_string+"/"+meme::PB_NAME+"."+to_string(meme::SEED)+".Train.csv";
-            }
-        }
-        */
-       
+               
         // Master log
         meme::master_log = ofstream(meme::LOG_DIR+to_string(meme::SEED)+".Master.log");
 

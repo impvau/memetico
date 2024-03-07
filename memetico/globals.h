@@ -103,6 +103,9 @@ namespace meme {
     /** Run time of program */
     extern long int         RUN_TIME;
 
+    /** Threshold for found solution */
+    extern double           EPSILON;
+
     extern bool             DEBUG;
 
     /** Master log */

@@ -62,8 +62,8 @@ void Population<U>::run() {
 	    cout << GEN << "," << best_soln.get_fitness() << "," << (runtime.count()/1000) << "," << meme::POCKET_DEPTH << "," << best_soln << endl;
 
 	    // stopping criteria
-        if( best_soln.get_fitness() < 1e-10 ) {
-            cout << "[pop.tpp] early stopping convergence < 1e^-10" << endl;
+        if( best_soln.get_fitness() < meme::EPSILON ) {
+            cout << "[pop.tpp] early stopping convergence < " << meme::EPSILON << endl;
             break;
         }
         auto end_time = chrono::system_clock::now();

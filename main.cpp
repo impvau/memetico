@@ -44,6 +44,7 @@ double          meme::PENALTY = 0;
 size_t          meme::GEN = 0;
 long int        meme::MAX_TIME = 10*60;
 long int        meme::RUN_TIME = 0;
+double          meme::EPSILON = 0;
 
 size_t          meme::DEPTH = 4;
 size_t          meme::POCKET_DEPTH = 1;
