@@ -12,21 +12,19 @@
             "args": [
                 
                 "-s","1433120488"
-                ,"-t", "${workspaceFolder}/data/data.csv"
-                ,"-T", "${workspaceFolder}/data/data.csv"
+                ,"-t", "${workspaceFolder}/data/ellipse_hp_t.csv"
+                ,"-T", "${workspaceFolder}/data/ellipse_hp_t.csv"
                 ,"-lt", "${workspaceFolder}/out/"
-                ,"-f", "2"
-                ,"-g", "200"
+                ,"-f", "5"
+                ,"-g", "-1"
                 ,"-ld", "0.2"
-                ,"-dd", "1"
+                ,"-dd", "adp-rnd"
+                ,"-dc", "5"
+                ,"-dm", "stale-ext"
                 ,"-lt", "${workspaceFolder}/out"
+                ,"-mt", "3600"
+                ,"-e", "1e-8"
 
-                //"-d", "0.1",
-                //"-f", "4",
-                //"-sd", "0.75",
-                //"-mr", "0.1",
-                //"-p", "0.35"
-                //
 
             ],
             "stopAtEntry": false,
