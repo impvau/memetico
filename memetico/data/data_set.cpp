@@ -225,6 +225,8 @@ void DataSet::csv(string file_name) {
     if (!f.is_open())
         throw runtime_error("Unable to open file "+ file_name);
     
+    f << setprecision(meme::PREC);
+
     for(size_t i = 0; i < get_count(); i++) {
 
         // Header
