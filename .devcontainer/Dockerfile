@@ -22,6 +22,11 @@ RUN apt-get install -y vim
 
 RUN apt-get install -y mpich
 
+RUN apt-get update
+RUN apt-get install -y python3-pip
+RUN python3 -m pip install numpy 
+RUN python3 -m pip install finitediff 
+
 WORKDIR /workspaces/memetico
 
 #COPY run.sh /workspaces/memetico/run.sh
