@@ -111,11 +111,13 @@ int main(int argc, char *argv[]) {
     test.csv(meme::LOG_DIR+to_string(meme::SEED)+".Test.csv");
 
     // Approximate derivative
+    /*
     if( meme::IN_DER == "app-fd" )
         train.compute_app_der(meme::MAX_DER_ORD);
 
     train.normalise();
-        
+    */
+
     // Copy IVs to Model
     for(size_t i = 0; i < DataSet::IVS.size(); i++)
         ModelType::IVS.push_back(DataSet::IVS[i]);
