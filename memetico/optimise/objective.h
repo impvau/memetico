@@ -15,6 +15,7 @@
 #include <memetico/model_base/model_meme.h>
 #include <memetico/gpu/cuda.cuh>
 #include <memetico/globals.h>
+#include "finitediff_templated.hpp"
 
 namespace objective {
 
@@ -52,6 +53,9 @@ double s_cor(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected = 
 
 template <class U>
 vector<vector<double>> fornberg(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected = vector<size_t>());
+
+template <class U>
+vector<vector<double>> fornberg2(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected = vector<size_t>());
 
 template <class U>
 vector<vector<double>> derivative(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected = vector<size_t>());

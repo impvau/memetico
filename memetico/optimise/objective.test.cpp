@@ -582,7 +582,7 @@ TEST_CASE("Objective: derivative ") {
 
     // 100% of samples
     vector<size_t> selected;
-    vector<vector<double>> res = objective::fornberg(&o, &ds, selected);
+    vector<vector<double>> res = objective::fornberg2(&o, &ds, selected);
 
     for( size_t i = 0; i < res[0].size(); i++) {
 
