@@ -9,7 +9,11 @@ ROOT_DIR:=$(shell pwd)
 # Flags for compiling with NVCC
 CU = nvcc
 # CUFLAGS = -std=c++17 -O3 -g -ccbin g++-10 -I "/usr/include/eigen3" -I "/usr/include/nlohmann/" -I "$(ROOT_DIR)/"
-CUFLAGS = -std=c++17 -O3 -g -ccbin mpic++ -I "/usr/include/eigen3" -I "/usr/include/nlohmann/" -I "$(ROOT_DIR)/"
+CUFLAGS = -std=c++17 -O3 -g -ccbin mpic++ \
+          -I "/usr/include/eigen3" \
+          -I "/usr/include/nlohmann/" \
+          -I "$(ROOT_DIR)/" \
+          -I "/usr/local/lib/python3.10/dist-packages/finitediff/include/"
 
 
 LDFLAGS =  -lgomp

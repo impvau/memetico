@@ -467,6 +467,47 @@ class DataSet {
             
         }
 
+        /**
+         */
+        static vector<vector<double>> compute_FD_weights2(const unsigned mdo, vector<vector<double>> samples, const double around) {
+  
+            /*
+            // Example grid and function values
+            vector<double> x = {0, 1, 2, 3, 4}; // Grid points
+            vector<double> y = {0, 1, 4, 9, 16}; // Function values at grid points, y = x^2
+
+            // Maximum derivative order to compute (k derivatives)
+            unsigned max_deriv = 2; // Change this value to compute higher derivatives
+
+            // Compute and apply weights for each point, adjusting the subset size based on max_deriv
+            for (size_t point = 0; point < x.size(); ++point) {
+                // Calculate the range of points to use
+                int start = max(0, static_cast<int>(point) - max_deriv);
+                int end = min(static_cast<int>(x.size()) - 1, static_cast<int>(point) + max_deriv);
+
+                // Subset of points and function values
+                vector<double> subset_x(x.begin() + start, x.begin() + end + 1);
+                vector<double> subset_y(y.begin() + start, y.begin() + end + 1);
+
+                // Compute weights for the subset
+                vector<double> weights(subset_x.size() * (max_deriv + 1));
+                calculate_weights<double>(&subset_x[0], subset_x.size(), max_deriv, &weights[0], x[point]);
+
+                // Apply the weights to compute the derivatives up to max_deriv
+                cout << "Derivatives at x = " << x[point] << ":\n";
+                for (unsigned deriv = 0; deriv <= max_deriv; ++deriv) {
+                    double derivative = 0.0;
+                    for (size_t i = 0; i < subset_x.size(); ++i) {
+                        derivative += weights[i + deriv * subset_x.size()] * subset_y[i];
+                    }
+                    cout << "  Order " << deriv << " derivative is approximately: " << derivative << endl;
+                }
+            }
+            */
+            vector<vector<double>> weights;
+            return weights;
+        }
+
     private: 
 
         /** Load first row of file */

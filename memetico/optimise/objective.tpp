@@ -1128,3 +1128,29 @@ vector<vector<double>> objective::fornberg(MemeticModel<U>* model, DataSet* trai
 	    
     return Y;
 }
+
+template <class U>
+vector<vector<double>> objective::fornberg2(MemeticModel<U>* model, DataSet* train, vector<size_t>& selected) {
+    
+    vector<vector<double>> Y{{}};
+
+    const unsigned max_deriv = MAX_DER_ORD;
+    vector<string> labels {"0th derivative", "1st derivative", "2nd derivative", "3rd derivative"};
+
+    vector<double> x;
+    for(size_t i = 0; i < train->y.size(); i++)
+        x.push_back(train->y[i]);
+
+    vector<vector<double>> test = fornberg(model, train, selected);
+    auto coeffs = finitediff::generate_weights(x, max_deriv);
+
+    for (unsigned deriv_i = 0; deriv_i <= max_deriv; deriv_i++) {
+        cout << labels[deriv_i] << ": ";
+        for (unsigned idx = 0; idx < x.size(); idx++){
+            cout << coeffs[deriv_i*x.size() + idx] << " ";
+        }
+        cout << endl;
+    }
+
+    return Y;
+}
