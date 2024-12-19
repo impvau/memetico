@@ -171,9 +171,19 @@ int main(int argc, char *argv[]) {
     ofstream train_log(meme::LOG_DIR+to_string(meme::SEED)+".Train.Predict.csv");
     if (train_log.is_open()) {
 
-        train_log << setprecision(meme::PREC) << "y" << endl;
-        for(size_t i = 0; i < train.get_count(); i++)
-            train_log << p.root_agent->get_pocket().evaluate(train.samples[i]) << endl;
+        train_log << setprecision(meme::PREC) << "y";
+        for(size_t i = 0; i < DataSet::IVS.size(); i++)
+            train_log << "," << DataSet::IVS[i];
+        train_log << endl;
+
+        for(size_t i = 0; i < train.get_count(); i++) {
+
+            train_log << p.root_agent->get_pocket().evaluate(train.samples[i]);
+            for(size_t j = 0; j < DataSet::IVS.size(); j++)                    
+                train_log << ","  << train.samples[i][j];
+            train_log << endl;
+            
+        }
 
     }
 
@@ -181,9 +191,19 @@ int main(int argc, char *argv[]) {
     ofstream test_log(meme::LOG_DIR+to_string(meme::SEED)+".Test.Predict.csv");
     if (test_log.is_open()) {
 
-        test_log << setprecision(meme::PREC) << "y" << endl;
-        for(size_t i = 0; i < test.get_count(); i++)
-            test_log << p.root_agent->get_pocket().evaluate(test.samples[i]) << endl;
+        test_log << setprecision(meme::PREC) << "y";
+        for(size_t i = 0; i < DataSet::IVS.size(); i++)
+            test_log << "," << DataSet::IVS[i];
+        test_log << endl;
+            
+        for(size_t i = 0; i < test.get_count(); i++) {
+            
+            test_log << p.root_agent->get_pocket().evaluate(test.samples[i]);
+            for(size_t j = 0; j < DataSet::IVS.size(); j++)                    
+                test_log << ","  << test.samples[i][j];
+            test_log << endl;
+            
+        }
 
     }
 
