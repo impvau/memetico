@@ -18,13 +18,14 @@ RUN apt-get -y install doxygen
 RUN apt-get -y install graphviz
 RUN apt-get install -y nfs-common
 RUN apt-get install -y git
-RUN apt-get install -y vim
+#RUN apt-get install -y vim
 
 RUN apt-get install -y mpich
 
 RUN apt-get update
 RUN apt-get install -y python3-pip
-RUN python3 -m pip install numpy 
+#RUN python3 -m pip install pandas==1.3.5
+RUN python3 -m pip install numpy==1.21.6
 RUN python3 -m pip install finitediff 
 
 WORKDIR /workspaces/memetico
