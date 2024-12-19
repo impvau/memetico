@@ -12,12 +12,14 @@
 #include <cstdlib>
 #include <iomanip>
 #include <fstream>
+#include <filesystem>
 #include <memetico/gpu/gpu_dataset.h>
 #include <memetico/gpu/cuda.cuh>
 #include <memetico/helpers/rng.h>
 #include <memetico/helpers/text.h>
 
 using namespace cusr;
+using namespace filesystem;
 
 /**
  * Class representing a set of data samples

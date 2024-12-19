@@ -220,6 +220,18 @@ void DataSet::show(ostream& out, size_t precision) {
 
 void DataSet::csv(string file_name) {
 
+    // Extract the directory path
+    path dir = path(file_name).parent_path();
+
+    // Create directory if it doesn't exist
+    if (!exists(dir)) {
+        try {
+            create_directories(dir); // This function creates all parent directories if they don't exist
+        } catch (const filesystem_error& e) {
+            throw runtime_error("Failed to create directory: " + string(e.what()));
+        }
+    }
+
     ofstream f;
     f.open(file_name);
     if (!f.is_open())
