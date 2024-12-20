@@ -174,14 +174,14 @@ int main(int argc, char *argv[]) {
         train_log << setprecision(meme::PREC) << "y";
         for(size_t i = 0; i < DataSet::IVS.size(); i++)
             train_log << "," << DataSet::IVS[i];
-        train_log << endl;
+        train_log << ",yd" << endl;
 
         for(size_t i = 0; i < train.get_count(); i++) {
 
-            train_log << p.root_agent->get_pocket().evaluate(train.samples[i]);
+            train_log << train.y[i];
             for(size_t j = 0; j < DataSet::IVS.size(); j++)                    
                 train_log << ","  << train.samples[i][j];
-            train_log << endl;
+            train_log << "," << p.root_agent->get_pocket().evaluate(train.samples[i]) << endl;
             
         }
 
@@ -194,14 +194,14 @@ int main(int argc, char *argv[]) {
         test_log << setprecision(meme::PREC) << "y";
         for(size_t i = 0; i < DataSet::IVS.size(); i++)
             test_log << "," << DataSet::IVS[i];
-        test_log << endl;
+        test_log << ",yd" << endl;
             
         for(size_t i = 0; i < test.get_count(); i++) {
             
-            test_log << p.root_agent->get_pocket().evaluate(test.samples[i]);
+            test_log << test.y[i];
             for(size_t j = 0; j < DataSet::IVS.size(); j++)                    
                 test_log << ","  << test.samples[i][j];
-            test_log << endl;
+            test_log << "," << p.root_agent->get_pocket().evaluate(test.samples[i]) << endl;
             
         }
 
