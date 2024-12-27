@@ -10,23 +10,29 @@
             "request": "launch",
             "program": "${workspaceFolder}/bin/main",
             "args": [
-                
-                "-s","1433120488"
-                ,"-t", "${workspaceFolder}/data/ellipse_hp_t.csv"
-                ,"-T", "${workspaceFolder}/data/ellipse_hp_t.csv"
-                ,"-lt", "${workspaceFolder}/out/"
-                ,"-f", "5"
-                ,"-g", "-1"
-                ,"-ld", "0.2"
-                ,"-dd", "adp-rnd"
-                ,"-dc", "5"
-                ,"-dm", "stale-ext"
-                ,"-lt", "${workspaceFolder}/out"
-                ,"-mt", "3600"
-                ,"-e", "1e-8"
-
-
+                "-cu",
+                "-t", "/workspaces/memetico/data/female/Japan/all/mv/t1.csv",
+                "-T", "/workspaces/memetico/data/female/Japan/all/mv/Te1.csv",
+                "-mr", "0.2",
+                "-d", "0.01",
+                "-g", "200",
+                "-ld", "0.2",
+                "-st", "",
+                "-mt", "3600",
+                "-e", "",
+                "-s", "1339061",
+                "-lt", "/workspaces/memetico/out",
+                "-ls", "cnm",
+                "-o", "rmse",
+                "-f", "6",
+                "-dc", "5",
+                "-dd", "adp-rnd",
+                "-dm", "stale-ext",
+                "-ifr", "",
+                "-id", "",
+                "-mdo", "",
             ],
+
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
